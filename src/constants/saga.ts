@@ -58,3 +58,10 @@ export const TaskPausedNextStates = [
   TaskStates.TimeOut,
   TaskStates.Paused,
 ];
+
+export enum TaskTypes = {
+  Task = 'TASK',
+  Parallel = 'PARALLEL',
+  SubWorkflow = 'SUB_WORKFLOW',
+  Decision = 'DECISION'
+}
