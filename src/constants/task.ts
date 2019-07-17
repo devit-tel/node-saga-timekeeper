@@ -5,6 +5,14 @@ export enum TaskTypes {
   Decision = 'DECISION',
 }
 
+export enum FailureStrategies {
+  Failed = 'FAILED',
+  RecoveryWorkflow = 'RECOVERY_WORKFLOW',
+  Retry = 'RETRY',
+  Rewide = 'REWIDE',
+  Ignore = 'IGNORE',
+}
+
 export enum TaskStates {
   Scheduled = 'SCHEDULED',
   Completed = 'COMPLETED',
@@ -35,3 +43,17 @@ export const TaskPausedNextStates = [
   TaskStates.TimeOut,
   TaskStates.Paused,
 ];
+
+export interface TaskDefinition = {
+  name: string;
+  partitionsCount: number;
+  topicConfiguration: any;
+  responseTimeoutSecond: number;
+  timeoutSecond: number;
+  timeoutStrategy: FailureStrategies;
+  failureStrategy: FailureStrategies;
+  retryLimit: number;
+  retryDelaySecond: number;
+  recoveryWorkflowName: string;
+  recoveryWorkflowRev: number;
+};
