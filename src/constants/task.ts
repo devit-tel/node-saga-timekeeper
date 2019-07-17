@@ -17,7 +17,7 @@ export enum TaskStates {
   Scheduled = 'SCHEDULED',
   Completed = 'COMPLETED',
   Failed = 'FAILED',
-  TimeOut = 'TIMEOUT',
+  Timeout = 'TIMEOUT',
   Inprogress = 'INPROGRESS',
   Paused = 'PAUSED',
 }
@@ -28,19 +28,19 @@ export const TaskScheduledNextStates = [
 ];
 export const TaskCompletedNextStates = [];
 export const TaskFailedNextStates = [TaskStates.Scheduled];
-export const TaskTimeOutNextStates = [TaskStates.Scheduled];
+export const TaskTimeoutNextStates = [TaskStates.Scheduled];
 export const TaskInprogressNextStates = [
   TaskStates.Completed,
   TaskStates.Failed,
   TaskStates.Inprogress,
-  TaskStates.TimeOut,
+  TaskStates.Timeout,
   TaskStates.Paused,
 ];
 export const TaskPausedNextStates = [
   TaskStates.Completed,
   TaskStates.Failed,
   TaskStates.Inprogress,
-  TaskStates.TimeOut,
+  TaskStates.Timeout,
   TaskStates.Paused,
 ];
 
