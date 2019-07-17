@@ -7,6 +7,13 @@ export enum WorkflowStates {
   Cancelled = 'CANCELLED',
 }
 
+export enum FailureStrategies {
+  Failed = 'FAILED',
+  RecoveryWorkflow = 'RECOVERY_WORKFLOW',
+  Retry = 'RETRY',
+  Rewide = 'REWIDE',
+}
+
 export const WorkflowCompletedNextStates = [];
 export const WorkflowFailedNextStates = [];
 export const WorkflowTimeoutNextStates = [];
@@ -27,3 +34,15 @@ export const WorkflowPausedNextStates = [
   WorkflowStates.Cancelled,
 ];
 export const WorkflowCancelledNextStates = [];
+
+export interface WorkflowDefinition = {
+  name: string;
+  rev: number;
+  description: string;
+  tasks: [any];
+  failureStrategy: FailureStrategies;
+  retryLimit: number;
+  retryDelaySecond: number;
+  recoveryWorkflowName: string;
+  recoveryWorkflowRev: number;
+};

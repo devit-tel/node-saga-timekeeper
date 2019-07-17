@@ -9,7 +9,6 @@ export enum FailureStrategies {
   Failed = 'FAILED',
   RecoveryWorkflow = 'RECOVERY_WORKFLOW',
   Retry = 'RETRY',
-  Rewide = 'REWIDE',
   Ignore = 'IGNORE',
 }
 
@@ -46,6 +45,7 @@ export const TaskPausedNextStates = [
 
 export interface TaskDefinition = {
   name: string;
+  description: string;
   partitionsCount: number;
   topicConfiguration: any;
   responseTimeoutSecond: number;
