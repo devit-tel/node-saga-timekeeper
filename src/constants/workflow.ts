@@ -60,6 +60,7 @@ export interface DecisionTask extends Task {
   decisions: {
     [decision: string]: Task | ParallelTask | SubWorkflowTask;
   };
+  defaultDecision: Task | ParallelTask | SubWorkflowTask;
 }
 
 export interface WorkflowDefinition {
