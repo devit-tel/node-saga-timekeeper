@@ -45,15 +45,21 @@ export const TaskPausedNextStates = [
 
 export interface TaskDefinition {
   name: string;
-  description: string;
-  partitionsCount: number;
-  topicConfiguration: any;
-  responseTimeoutSecond: number;
-  timeoutSecond: number;
-  timeoutStrategy: FailureStrategies;
-  failureStrategy: FailureStrategies;
-  retryLimit: number;
-  retryDelaySecond: number;
-  recoveryWorkflowName: string;
-  recoveryWorkflowRev: number;
+  description?: string;
+  partitionsCount?: number;
+  topicConfigurations?: {
+    [configuration: string]: string | number;
+  };
+  responseTimeoutSecond?: number;
+  timeoutSecond?: number;
+  timeoutStrategy?: FailureStrategies;
+  failureStrategy?: FailureStrategies;
+  retry?: {
+    limit: number;
+    delaySecond: number;
+  };
+  recoveryWorkflow?: {
+    name: string;
+    rev: number;
+  };
 }

@@ -41,7 +41,7 @@ export interface Task {
   name: string;
   type: TaskTypes;
   taskReferenceName: string;
-  overideOptions: TaskDefinition;
+  overideOptions?: TaskDefinition;
   inputParameters: {
     [key: string]: string | number;
   };
@@ -58,17 +58,23 @@ export interface SubWorkflowTask extends Task {
 }
 
 export interface DecisionTask extends Task {
-  [decision: string]: Task | ParallelTask | SubWorkflowTask;
+  decisions: {
+    [decision: string]: Task | ParallelTask | SubWorkflowTask;
+  };
 }
 
 export interface WorkflowDefinition {
   name: string;
   rev: number;
-  description: string;
+  description?: string;
   tasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[];
-  failureStrategy: FailureStrategies;
-  retryLimit: number;
-  retryDelaySecond: number;
-  recoveryWorkflowName: string;
-  recoveryWorkflowRev: number;
+  failureStrategy?: FailureStrategies;
+  retry?: {
+    limit: number;
+    delaySecond: number;
+  };
+  recoveryWorkflow?: {
+    name: string;
+    rev: number;
+  };
 }
