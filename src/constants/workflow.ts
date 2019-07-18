@@ -48,11 +48,7 @@ export interface Task {
 }
 
 export interface ParallelTask extends Task {
-  parallelTasks:
-    | Task[][]
-    | ParallelTask[][]
-    | SubWorkflowTask[][]
-    | DecisionTask[][];
+  parallelTasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[][];
 }
 export interface SubWorkflowTask extends Task {
   workflow: {
@@ -69,7 +65,7 @@ export interface WorkflowDefinition {
   name: string;
   rev: number;
   description: string;
-  tasks: [any];
+  tasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[];
   failureStrategy: FailureStrategies;
   retryLimit: number;
   retryDelaySecond: number;
