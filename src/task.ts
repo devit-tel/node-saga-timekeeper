@@ -8,6 +8,9 @@ const defaultTopicConfigurations = {
   'file.delete.delay.ms': 60000,
 };
 
+const isNumber = R.is(Number);
+const isString = R.is(String);
+
 const isRecoveryWorkflowConfigValid = (
   taskDefinition: TaskC.TaskDefinition,
 ): boolean =>
@@ -15,16 +18,16 @@ const isRecoveryWorkflowConfigValid = (
     TaskC.FailureStrategies.RecoveryWorkflow ||
     taskDefinition.failureStrategy ===
       TaskC.FailureStrategies.RecoveryWorkflow) &&
-  (R.isNil(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
-    R.isNil(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
+  (!isString(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
+    !isNumber(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
 
 const isFailureStrategiesConfigValid = (
   taskDefinition: TaskC.TaskDefinition,
 ): boolean =>
   (taskDefinition.timeoutStrategy === TaskC.FailureStrategies.Retry ||
     taskDefinition.failureStrategy === TaskC.FailureStrategies.Retry) &&
-  (R.isNil(R.path(['retry', 'limit'], taskDefinition)) ||
-    R.isNil(R.path(['retry', 'delaySecond'], taskDefinition)));
+  (!isNumber(R.path(['retry', 'limit'], taskDefinition)) ||
+    !isNumber(R.path(['retry', 'delaySecond'], taskDefinition)));
 
 export class TaskDefinition implements TaskC.TaskDefinition {
   name: string;

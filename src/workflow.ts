@@ -1,20 +1,23 @@
 import * as R from 'ramda';
 import * as WorkflowC from './constants/workflow';
 
+const isNumber = R.is(Number);
+const isString = R.is(String);
+
 const isRecoveryWorkflowConfigValid = (
   workflowDefinition: WorkflowC.WorkflowDefinition,
 ): boolean =>
   workflowDefinition.failureStrategy ===
     WorkflowC.FailureStrategies.RecoveryWorkflow &&
-  (R.isNil(R.path(['recoveryWorkflow', 'name'], workflowDefinition)) ||
-    R.isNil(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
+  (!isString(R.path(['recoveryWorkflow', 'name'], workflowDefinition)) ||
+    !isNumber(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
 
 const isFailureStrategiesConfigValid = (
   workflowDefinition: WorkflowC.WorkflowDefinition,
 ): boolean =>
   workflowDefinition.failureStrategy === WorkflowC.FailureStrategies.Retry &&
-  (R.isNil(R.path(['retry', 'limit'], workflowDefinition)) ||
-    R.isNil(R.path(['retry', 'delaySecond'], workflowDefinition)));
+  (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
+    !isNumber(R.path(['retry', 'delaySecond'], workflowDefinition)));
 
 const isEmptyTasks = R.compose(
   R.isEmpty,
