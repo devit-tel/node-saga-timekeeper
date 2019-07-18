@@ -36,9 +36,8 @@ export const WorkflowPausedNextStates = [
 ];
 export const WorkflowCancelledNextStates = [WorkflowStates.Running];
 
-export interface Task {
+export interface BaseTask {
   name: string;
-  type: TaskTypes;
   taskReferenceName: string;
   overideOptions?: TaskDefinition;
   inputParameters: {
@@ -46,17 +45,24 @@ export interface Task {
   };
 }
 
-export interface ParallelTask extends Task {
+export interface Task extends BaseTask {
+  type: TaskTypes.Task;
+}
+
+export interface ParallelTask extends BaseTask {
+  type: TaskTypes.Parallel;
   parallelTasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[][];
 }
-export interface SubWorkflowTask extends Task {
+export interface SubWorkflowTask extends BaseTask {
+  type: TaskTypes.SubWorkflow;
   workflow: {
     name: string;
-    ref: number;
+    rev: number;
   };
 }
 
-export interface DecisionTask extends Task {
+export interface DecisionTask extends BaseTask {
+  type: TaskTypes.Decision;
   decisions: {
     [decision: string]: Task | ParallelTask | SubWorkflowTask;
   };

@@ -83,6 +83,40 @@ describe('Task', () => {
       ).toThrow('Need a recoveryWorkflow');
     });
 
+    test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
+      expect(
+        new Task.TaskDefinition({
+          name: 'hello-world',
+          failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
+          topicConfigurations: {
+            'cleanup.policy': 'delete',
+          },
+          recoveryWorkflow: {
+            name: 'huhu',
+            rev: 3,
+          },
+        }),
+      ).toEqual({
+        description: 'No description',
+        failureStrategy: 'RECOVERY_WORKFLOW',
+        name: 'hello-world',
+        partitionsCount: 10,
+        recoveryWorkflow: {
+          name: 'huhu',
+          rev: 3,
+        },
+        responseTimeoutSecond: 5,
+        timeoutSecond: 30,
+        timeoutStrategy: 'FAILED',
+        topicConfigurations: {
+          'cleanup.policy': 'delete',
+          'compression.type': 'snappy',
+          'delete.retention.ms': 86400000,
+          'file.delete.delay.ms': 60000,
+        },
+      });
+    });
+
     test('failureStrategy to "RETRY" without retry param', () => {
       expect(
         () =>
@@ -94,6 +128,40 @@ describe('Task', () => {
             },
           }),
       ).toThrow('Need a retry config');
+    });
+
+    test('failureStrategy to "RETRY" with retry param', () => {
+      expect(
+        new Task.TaskDefinition({
+          name: 'hello-world',
+          failureStrategy: TaskC.FailureStrategies.Retry,
+          topicConfigurations: {
+            'cleanup.policy': 'delete',
+          },
+          retry: {
+            delaySecond: 1,
+            limit: 3,
+          },
+        }),
+      ).toEqual({
+        description: 'No description',
+        failureStrategy: 'RETRY',
+        name: 'hello-world',
+        partitionsCount: 10,
+        responseTimeoutSecond: 5,
+        retry: {
+          delaySecond: 1,
+          limit: 3,
+        },
+        timeoutSecond: 30,
+        timeoutStrategy: 'FAILED',
+        topicConfigurations: {
+          'cleanup.policy': 'delete',
+          'compression.type': 'snappy',
+          'delete.retention.ms': 86400000,
+          'file.delete.delay.ms': 60000,
+        },
+      });
     });
   });
 });

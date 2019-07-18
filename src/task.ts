@@ -16,7 +16,7 @@ const isRecoveryWorkflowConfigValid = (
     taskDefinition.failureStrategy ===
       TaskC.FailureStrategies.RecoveryWorkflow) &&
   (R.isNil(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
-    R.isNil(R.path(['recoveryWorkflow', 'ref'], taskDefinition)));
+    R.isNil(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
 
 const isFailureStrategiesConfigValid = (
   taskDefinition: TaskC.TaskDefinition,
