@@ -17,8 +17,8 @@ export enum FailureStrategies {
 }
 
 export const WorkflowCompletedNextStates = [];
-export const WorkflowFailedNextStates = [];
-export const WorkflowTimeoutNextStates = [];
+export const WorkflowFailedNextStates = [WorkflowStates.Running];
+export const WorkflowTimeoutNextStates = [WorkflowStates.Running];
 export const WorkflowRunningNextStates = [
   WorkflowStates.Completed,
   WorkflowStates.Failed,
@@ -32,10 +32,9 @@ export const WorkflowPausedNextStates = [
   WorkflowStates.Failed,
   WorkflowStates.Running,
   WorkflowStates.Timeout,
-  WorkflowStates.Paused,
   WorkflowStates.Cancelled,
 ];
-export const WorkflowCancelledNextStates = [];
+export const WorkflowCancelledNextStates = [WorkflowStates.Running];
 
 export interface Task {
   name: string;
