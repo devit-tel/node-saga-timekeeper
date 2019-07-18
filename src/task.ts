@@ -1,4 +1,4 @@
-import ramda from 'ramda';
+import * as R from 'ramda';
 import * as TaskC from './constants/task';
 
 const defaultTopicConfigurations = {
@@ -7,6 +7,24 @@ const defaultTopicConfigurations = {
   'delete.retention.ms': 86400000,
   'file.delete.delay.ms': 60000,
 };
+
+const isRecoveryWorkflowConfigValid = (
+  taskDefinition: TaskC.TaskDefinition,
+): boolean =>
+  (taskDefinition.timeoutStrategy ===
+    TaskC.FailureStrategies.RecoveryWorkflow ||
+    taskDefinition.failureStrategy ===
+      TaskC.FailureStrategies.RecoveryWorkflow) &&
+  (R.isNil(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
+    R.isNil(R.path(['recoveryWorkflow', 'ref'], taskDefinition)));
+
+const isFailureStrategiesConfigValid = (
+  taskDefinition: TaskC.TaskDefinition,
+): boolean =>
+  (taskDefinition.timeoutStrategy === TaskC.FailureStrategies.Retry ||
+    taskDefinition.failureStrategy === TaskC.FailureStrategies.Retry) &&
+  (R.isNil(R.path(['retry', 'limit'], taskDefinition)) ||
+    R.isNil(R.path(['retry', 'delaySecond'], taskDefinition)));
 
 export class TaskDefinition implements TaskC.TaskDefinition {
   name: string;
@@ -19,33 +37,19 @@ export class TaskDefinition implements TaskC.TaskDefinition {
   failureStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
 
   constructor(taskDefinition: TaskC.TaskDefinition) {
-    if (
-      (taskDefinition.timeoutStrategy ===
-        TaskC.FailureStrategies.RecoveryWorkflow ||
-        taskDefinition.failureStrategy ===
-          TaskC.FailureStrategies.RecoveryWorkflow) &&
-      ramda.isEmpty(ramda.path(['recoveryWorkflow', 'name'], taskDefinition)) &&
-      ramda.isEmpty(ramda.path(['recoveryWorkflow', 'ref'], taskDefinition))
-    ) {
+    if (isRecoveryWorkflowConfigValid(taskDefinition)) {
       throw new Error('Need a recoveryWorkflow');
     }
 
-    if (
-      (taskDefinition.timeoutStrategy === TaskC.FailureStrategies.Retry ||
-        taskDefinition.failureStrategy === TaskC.FailureStrategies.Retry) &&
-      ramda.isEmpty(ramda.path(['retry', 'limit'], taskDefinition)) &&
-      ramda.isEmpty(ramda.path(['retry', 'delaySecond'], taskDefinition))
-    ) {
+    if (isFailureStrategiesConfigValid(taskDefinition)) {
       throw new Error('Need a retry config');
     }
 
     Object.assign(this, taskDefinition);
-    Object.assign(
-      this.topicConfigurations,
+    this.topicConfigurations = Object.assign(
+      // this.topicConfigurations,
       defaultTopicConfigurations,
       taskDefinition.topicConfigurations,
     );
-
-    return this;
   }
 }
