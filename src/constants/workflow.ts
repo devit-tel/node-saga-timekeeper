@@ -1,3 +1,5 @@
+import { TaskTypes, TaskDefinition } from './task';
+
 export enum WorkflowStates {
   Completed = 'COMPLETED',
   Failed = 'FAILED',
@@ -35,7 +37,35 @@ export const WorkflowPausedNextStates = [
 ];
 export const WorkflowCancelledNextStates = [];
 
-export interface WorkflowDefinition = {
+export interface Task {
+  name: string;
+  type: TaskTypes;
+  taskReferenceName: string;
+  overideOptions: TaskDefinition;
+  inputParameters: {
+    [key: string]: string | number;
+  };
+}
+
+export interface ParallelTask extends Task {
+  parallelTasks:
+    | Task[][]
+    | ParallelTask[][]
+    | SubWorkflowTask[][]
+    | DecisionTask[][];
+}
+export interface SubWorkflowTask extends Task {
+  workflow: {
+    name: string;
+    ref: number;
+  };
+}
+
+export interface DecisionTask extends Task {
+  [decision: string]: Task | ParallelTask | SubWorkflowTask;
+}
+
+export interface WorkflowDefinition {
   name: string;
   rev: number;
   description: string;
@@ -45,4 +75,4 @@ export interface WorkflowDefinition = {
   retryDelaySecond: number;
   recoveryWorkflowName: string;
   recoveryWorkflowRev: number;
-};
+}

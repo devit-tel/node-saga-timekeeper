@@ -43,7 +43,7 @@ export const TaskPausedNextStates = [
   TaskStates.Paused,
 ];
 
-export interface TaskDefinition = {
+export interface TaskDefinition {
   name: string;
   description: string;
   partitionsCount: number;
@@ -56,4 +56,4 @@ export interface TaskDefinition = {
   retryDelaySecond: number;
   recoveryWorkflowName: string;
   recoveryWorkflowRev: number;
-};
+}
