@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import * as TaskC from './constants/task';
+import * as CommonUtils from './utils/common';
 
 const defaultTopicConfigurations = {
   'cleanup.policy': 'compact',
@@ -40,6 +41,10 @@ export class TaskDefinition implements TaskC.TaskDefinition {
   failureStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
 
   constructor(taskDefinition: TaskC.TaskDefinition) {
+    if (!CommonUtils.isValidName(taskDefinition.name)) {
+      throw new Error('Name not valid');
+    }
+
     if (isRecoveryWorkflowConfigValid(taskDefinition)) {
       throw new Error('Need a recoveryWorkflow');
     }

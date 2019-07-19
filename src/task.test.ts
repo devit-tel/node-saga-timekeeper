@@ -74,6 +74,19 @@ describe('Task', () => {
       expect(
         () =>
           new Task.TaskDefinition({
+            name: '',
+            failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
+            topicConfigurations: {
+              'cleanup.policy': 'delete',
+            },
+          }),
+      ).toThrow('Name not valid');
+    });
+
+    test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
+      expect(
+        () =>
+          new Task.TaskDefinition({
             name: 'hello-world',
             failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
             topicConfigurations: {
