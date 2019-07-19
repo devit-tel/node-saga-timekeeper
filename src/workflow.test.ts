@@ -247,5 +247,52 @@ describe('Workflow', () => {
           }),
       ).toThrow('Task cannot be empty');
     });
+
+    test('Default value', () => {
+      expect(
+        new Workflow.WorkflowDefinition(
+          JSON.parse(
+            JSON.stringify({
+              name: 'hello-world',
+              rev: 1,
+              tasks: [
+                {
+                  name: 'eiei',
+                  type: TaskC.TaskTypes.SubWorkflow,
+                  inputParameters: {},
+                  workflow: {
+                    name: 'a',
+                    rev: 1,
+                  },
+                },
+                {
+                  taskReferenceName: 'lol',
+                  type: TaskC.TaskTypes.Decision,
+                  inputParameters: {},
+                  defaultDecision: [],
+                  decisions: {
+                    case1: [
+                      {
+                        name: 'huhu',
+                        taskReferenceName: 'lol',
+                        type: TaskC.TaskTypes.Decision,
+                        inputParameters: {},
+                        defaultDecision: [
+                          {
+                            name: 'eiei',
+                            type: TaskC.TaskTypes.Task,
+                            inputParameters: {},
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          ),
+        ),
+      ).toEqual({});
+    });
   });
 });

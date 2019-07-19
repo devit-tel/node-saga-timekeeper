@@ -51,7 +51,7 @@ export interface Task extends BaseTask {
 
 export interface ParallelTask extends BaseTask {
   type: TaskTypes.Parallel;
-  parallelTasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[][];
+  parallelTasks: AllTaskType[][];
 }
 export interface SubWorkflowTask extends BaseTask {
   type: TaskTypes.SubWorkflow;
@@ -64,16 +64,18 @@ export interface SubWorkflowTask extends BaseTask {
 export interface DecisionTask extends BaseTask {
   type: TaskTypes.Decision;
   decisions: {
-    [decision: string]: Task | ParallelTask | SubWorkflowTask;
+    [decision: string]: AllTaskType[];
   };
-  defaultDecision: Task | ParallelTask | SubWorkflowTask;
+  defaultDecision: AllTaskType[];
 }
+
+export type AllTaskType = Task | ParallelTask | SubWorkflowTask | DecisionTask;
 
 export interface WorkflowDefinition {
   name: string;
   rev: number;
   description?: string;
-  tasks: (Task | ParallelTask | SubWorkflowTask | DecisionTask)[];
+  tasks: AllTaskType[];
   failureStrategy?: FailureStrategies;
   retry?: {
     limit: number;
