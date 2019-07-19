@@ -45,6 +45,46 @@ describe('Workflow', () => {
       });
     });
 
+    test('Invalid name', () => {
+      expect(
+        () =>
+          new Workflow.WorkflowDefinition({
+            name: '',
+            rev: 1,
+            tasks: [
+              {
+                name: 'huhu',
+                taskReferenceName: 'HUHU',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {
+                  a: 'b',
+                },
+              },
+            ],
+          }),
+      ).toThrow('Name not valid');
+    });
+
+    test('Invalid rev', () => {
+      expect(
+        () =>
+          new Workflow.WorkflowDefinition({
+            name: 'hello-world',
+            rev: undefined,
+            tasks: [
+              {
+                name: 'huhu',
+                taskReferenceName: 'HUHU',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {
+                  a: 'b',
+                },
+              },
+            ],
+          }),
+      ).toThrow('Rev not valid');
+    });
+
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>

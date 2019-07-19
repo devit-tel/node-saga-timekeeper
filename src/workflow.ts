@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import * as WorkflowC from './constants/workflow';
+import * as CommonUtils from './utils/common';
 
 const isNumber = R.is(Number);
 const isString = R.is(String);
@@ -43,6 +44,14 @@ export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
   };
 
   constructor(workflowDefinition: WorkflowC.WorkflowDefinition) {
+    if (!CommonUtils.isValidName(workflowDefinition.name)) {
+      throw new Error('Name not valid');
+    }
+
+    if (!CommonUtils.isValidRev(workflowDefinition.rev)) {
+      throw new Error('Rev not valid');
+    }
+
     if (isRecoveryWorkflowConfigValid(workflowDefinition)) {
       throw new Error('Need a recoveryWorkflow');
     }
@@ -56,5 +65,6 @@ export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
     }
 
     Object.assign(this, workflowDefinition);
+    this.tasks = workflowDefinition.tasks;
   }
 }
