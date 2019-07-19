@@ -1,9 +1,13 @@
+import * as CommonUtils from '../utils/common';
+
 export enum TaskTypes {
   Task = 'TASK',
   Parallel = 'PARALLEL',
   SubWorkflow = 'SUB_WORKFLOW',
   Decision = 'DECISION',
 }
+
+export const TaskTypesList = CommonUtils.enumToList(TaskTypes);
 
 export enum FailureStrategies {
   Failed = 'FAILED',
@@ -12,6 +16,8 @@ export enum FailureStrategies {
   Ignore = 'IGNORE',
 }
 
+export const FailureStrategiesList = CommonUtils.enumToList(FailureStrategies);
+
 export enum TaskStates {
   Scheduled = 'SCHEDULED',
   Completed = 'COMPLETED',
@@ -19,6 +25,8 @@ export enum TaskStates {
   Timeout = 'TIMEOUT',
   Inprogress = 'INPROGRESS',
 }
+
+export const TaskStatesList = CommonUtils.enumToList(FailureStrategies);
 
 export const TaskScheduledNextStates = [
   TaskStates.Inprogress,

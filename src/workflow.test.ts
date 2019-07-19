@@ -258,7 +258,7 @@ describe('Workflow', () => {
               tasks: [
                 {
                   name: 'eiei',
-                  type: TaskC.TaskTypes.SubWorkflow,
+                  type: 'SOME_RAMDON_TYPE',
                   inputParameters: {},
                   workflow: {
                     name: 'a',

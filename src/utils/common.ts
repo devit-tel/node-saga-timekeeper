@@ -9,3 +9,8 @@ export const isValidName = (name: string): boolean =>
 
 export const isValidRev = (rev: number): boolean =>
   Number.isInteger(rev) && rev > 0;
+
+export const enumToList = R.compose(
+  R.map(R.prop('1')),
+  R.toPairs,
+);

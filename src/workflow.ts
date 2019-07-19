@@ -70,6 +70,10 @@ const validateTasks = (
 
       // TODO Validate inputParameters
 
+      if (!TaskC.TaskTypesList.includes(task.type)) {
+        result.errors.push(`${currentRoot}.type is invalid`);
+      }
+
       if (task.type === TaskC.TaskTypes.Decision) {
         const defaultDecision: WorkflowC.AllTaskType[] = R.propOr(
           [],
