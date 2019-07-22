@@ -80,7 +80,7 @@ describe('Task', () => {
               'cleanup.policy': 'delete',
             },
           }),
-      ).toThrow('Name not valid');
+      ).toThrow('taskDefinition.name is invalid');
     });
 
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
@@ -93,7 +93,7 @@ describe('Task', () => {
               'cleanup.policy': 'delete',
             },
           }),
-      ).toThrow('Need a recoveryWorkflow');
+      ).toThrow('taskDefinition.recoveryWorkflow is invalid');
     });
 
     test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
@@ -140,7 +140,7 @@ describe('Task', () => {
               'cleanup.policy': 'delete',
             },
           }),
-      ).toThrow('Need a retry config');
+      ).toThrow('taskDefinition.retry is invalid');
     });
 
     test('failureStrategy to "RETRY" with retry param', () => {

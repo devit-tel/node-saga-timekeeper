@@ -30,6 +30,23 @@ const isFailureStrategiesConfigValid = (
   (!isNumber(R.path(['retry', 'limit'], taskDefinition)) ||
     !isNumber(R.path(['retry', 'delaySecond'], taskDefinition)));
 
+const taskValidation = (taskDefinition: TaskC.TaskDefinition): string[] => {
+  const errors = [];
+  if (!CommonUtils.isValidName(taskDefinition.name)) {
+    errors.push('taskDefinition.name is invalid');
+  }
+
+  if (isRecoveryWorkflowConfigValid(taskDefinition)) {
+    errors.push('taskDefinition.recoveryWorkflow is invalid');
+  }
+
+  if (isFailureStrategiesConfigValid(taskDefinition)) {
+    errors.push('taskDefinition.retry is invalid');
+  }
+
+  return errors;
+};
+
 export class TaskDefinition implements TaskC.TaskDefinition {
   name: string;
   description: string = 'No description';
@@ -41,16 +58,10 @@ export class TaskDefinition implements TaskC.TaskDefinition {
   failureStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
 
   constructor(taskDefinition: TaskC.TaskDefinition) {
-    if (!CommonUtils.isValidName(taskDefinition.name)) {
-      throw new Error('Name not valid');
-    }
+    const taskValidationErrors = taskValidation(taskDefinition);
 
-    if (isRecoveryWorkflowConfigValid(taskDefinition)) {
-      throw new Error('Need a recoveryWorkflow');
-    }
-
-    if (isFailureStrategiesConfigValid(taskDefinition)) {
-      throw new Error('Need a retry config');
+    if (taskValidationErrors.length) {
+      throw new Error(taskValidationErrors.join('\n'));
     }
 
     Object.assign(this, taskDefinition);

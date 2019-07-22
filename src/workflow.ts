@@ -168,7 +168,7 @@ const workflowValidation = (
   }
 
   if (isFailureStrategiesConfigValid(workflowDefinition)) {
-    errors.push('workflowDefinition.config is invalid');
+    errors.push('workflowDefinition.retry is invalid');
   }
 
   if (isEmptyTasks(workflowDefinition)) {

@@ -183,7 +183,7 @@ describe('Workflow', () => {
             ],
             failureStrategy: WorkflowC.FailureStrategies.Retry,
           }),
-      ).toThrow('workflowDefinition.config is invalid');
+      ).toThrow('workflowDefinition.retry is invalid');
     });
 
     test('failureStrategy to "RETRY" with retry param', () => {
