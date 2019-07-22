@@ -31,6 +31,16 @@ const getTaskDecisions = R.compose(
   R.propOr({}, 'decisions'),
 );
 
+const isValidWorkflowName = R.compose(
+  CommonUtils.isValidName,
+  R.pathOr('', ['workflow', 'name']),
+);
+
+const isValidWorkflowRev = R.compose(
+  CommonUtils.isValidRev,
+  R.path(['workflow', 'rev']),
+);
+
 interface TasksValidateOutput {
   errors: string[];
   taskReferenceNames: {
@@ -92,7 +102,7 @@ const validateTasks = (
         return getTaskDecisions(task).reduce(
           (
             decisionResult: TasksValidateOutput,
-            [decision, decisionTasks]: [string, WorkflowC.DecisionTask[]],
+            [decision, decisionTasks]: [string, WorkflowC.AllTaskType[]],
           ): TasksValidateOutput => {
             return validateTasks(
               decisionTasks,
@@ -102,6 +112,41 @@ const validateTasks = (
           },
           defaultDecisionResult,
         );
+      }
+
+      if (task.type === TaskC.TaskTypes.Parallel) {
+        const parallelTasks: WorkflowC.AllTaskType[][] = R.propOr(
+          [],
+          'parallelTasks',
+          task,
+        );
+
+        return parallelTasks.reduce(
+          (
+            parallelResult: TasksValidateOutput,
+            parallelTasks: WorkflowC.AllTaskType[],
+            index: number,
+          ): TasksValidateOutput => {
+            return validateTasks(
+              parallelTasks,
+              `${currentRoot}.parallelTasks[${index}]`,
+              parallelResult,
+            );
+          },
+          result,
+        );
+      }
+
+      if (task.type === TaskC.TaskTypes.SubWorkflow) {
+        if (!isValidWorkflowName(task)) {
+          result.errors.push(`${currentRoot}.workflow.name is invalid`);
+        }
+
+        if (!isValidWorkflowRev(task)) {
+          result.errors.push(`${currentRoot}.workflow.rev is invalid`);
+        }
+
+        // TODO check if workflow/rev is exists
       }
 
       return result;

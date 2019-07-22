@@ -258,28 +258,36 @@ describe('Workflow', () => {
               tasks: [
                 {
                   name: 'eiei',
+                  taskReferenceName: 'eiei',
+                  // type: TaskC.TaskTypes.Task,
                   type: 'SOME_RAMDON_TYPE',
                   inputParameters: {},
-                  workflow: {
-                    name: 'a',
-                    rev: 1,
-                  },
                 },
                 {
+                  name: 'task002',
                   taskReferenceName: 'lol',
                   type: TaskC.TaskTypes.Decision,
                   inputParameters: {},
-                  defaultDecision: [],
+                  defaultDecision: [
+                    // {
+                    //   name: 'default_one',
+                    //   taskReferenceName: 'default_one',
+                    //   type: TaskC.TaskTypes.Task,
+                    //   inputParameters: {},
+                    // },
+                  ],
                   decisions: {
                     case1: [
                       {
                         name: 'huhu',
+                        // taskReferenceName: 'lol_2',
                         taskReferenceName: 'lol',
                         type: TaskC.TaskTypes.Decision,
                         inputParameters: {},
                         defaultDecision: [
                           {
                             name: 'eiei',
+                            // taskReferenceName: 'case1_eiei',
                             type: TaskC.TaskTypes.Task,
                             inputParameters: {},
                           },
@@ -287,6 +295,40 @@ describe('Workflow', () => {
                       },
                     ],
                   },
+                },
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'PARALLEL_TASK',
+                  type: TaskC.TaskTypes.Parallel,
+                  inputParameters: {},
+                  parallelTasks: [
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel_child1',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel_child2',
+                        type: TaskC.TaskTypes.SubWorkflow,
+                        inputParameters: {},
+                        // workflow: {
+                        //   name: 'haha',
+                        //   rev: 3,
+                        // },
+                      },
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel_child3',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                  ],
                 },
               ],
             }),
