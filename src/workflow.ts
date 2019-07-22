@@ -51,10 +51,7 @@ interface TasksValidateOutput {
 const validateTasks = (
   tasks: WorkflowC.AllTaskType[],
   root: string,
-  defaultResult: TasksValidateOutput = {
-    errors: [],
-    taskReferenceNames: {},
-  },
+  defaultResult: TasksValidateOutput,
 ) =>
   tasks.reduce(
     (
@@ -154,6 +151,32 @@ const validateTasks = (
     defaultResult,
   );
 
+const workflowValidation = (
+  workflowDefinition: WorkflowC.WorkflowDefinition,
+): string[] => {
+  const errors = [];
+  if (!CommonUtils.isValidName(workflowDefinition.name)) {
+    errors.push('workflowDefinition.name is invalid');
+  }
+
+  if (!CommonUtils.isValidRev(workflowDefinition.rev)) {
+    errors.push('workflowDefinition.rev is invalid');
+  }
+
+  if (isRecoveryWorkflowConfigValid(workflowDefinition)) {
+    errors.push('workflowDefinition.recoveryWorkflow is invalid');
+  }
+
+  if (isFailureStrategiesConfigValid(workflowDefinition)) {
+    errors.push('workflowDefinition.config is invalid');
+  }
+
+  if (isEmptyTasks(workflowDefinition)) {
+    errors.push('workflowDefinition.tasks cannot be empty');
+  }
+  return errors;
+};
+
 export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
   name: string;
   rev: number;
@@ -170,29 +193,15 @@ export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
   };
 
   constructor(workflowDefinition: WorkflowC.WorkflowDefinition) {
-    if (!CommonUtils.isValidName(workflowDefinition.name)) {
-      throw new Error('Name not valid');
-    }
-
-    if (!CommonUtils.isValidRev(workflowDefinition.rev)) {
-      throw new Error('Rev not valid');
-    }
-
-    if (isRecoveryWorkflowConfigValid(workflowDefinition)) {
-      throw new Error('Need a recoveryWorkflow');
-    }
-
-    if (isFailureStrategiesConfigValid(workflowDefinition)) {
-      throw new Error('Need a retry config');
-    }
-
-    if (isEmptyTasks(workflowDefinition)) {
-      throw new Error('Task cannot be empty');
-    }
+    const workflowValidationErrors = workflowValidation(workflowDefinition);
 
     const validateTasksResult = validateTasks(
       R.propOr([], 'tasks', workflowDefinition),
       'workflowDefinition',
+      {
+        errors: workflowValidationErrors,
+        taskReferenceNames: {},
+      },
     );
     if (validateTasksResult.errors.length) {
       throw new Error(validateTasksResult.errors.join('\n'));

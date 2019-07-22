@@ -62,7 +62,7 @@ describe('Workflow', () => {
               },
             ],
           }),
-      ).toThrow('Name not valid');
+      ).toThrow('workflowDefinition.name is invalid');
     });
 
     test('Invalid rev', () => {
@@ -82,7 +82,7 @@ describe('Workflow', () => {
               },
             ],
           }),
-      ).toThrow('Rev not valid');
+      ).toThrow('workflowDefinition.rev is invalid');
     });
 
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
@@ -107,7 +107,7 @@ describe('Workflow', () => {
             ],
             failureStrategy: WorkflowC.FailureStrategies.RecoveryWorkflow,
           }),
-      ).toThrow('Need a recoveryWorkflow');
+      ).toThrow('workflowDefinition.recoveryWorkflow is invalid');
     });
 
     test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
@@ -183,7 +183,7 @@ describe('Workflow', () => {
             ],
             failureStrategy: WorkflowC.FailureStrategies.Retry,
           }),
-      ).toThrow('Need a retry config');
+      ).toThrow('workflowDefinition.config is invalid');
     });
 
     test('failureStrategy to "RETRY" with retry param', () => {
@@ -245,7 +245,7 @@ describe('Workflow', () => {
             rev: 1,
             tasks: [],
           }),
-      ).toThrow('Task cannot be empty');
+      ).toThrow('workflowDefinition.tasks cannot be empty');
     });
 
     test('Default value', () => {
