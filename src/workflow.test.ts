@@ -250,91 +250,102 @@ describe('Workflow', () => {
 
     test('Default value', () => {
       expect(
-        new Workflow.WorkflowDefinition(
-          JSON.parse(
-            JSON.stringify({
-              name: 'hello-world',
-              rev: 1,
-              tasks: [
-                {
-                  name: 'eiei',
-                  taskReferenceName: 'eiei',
-                  // type: TaskC.TaskTypes.Task,
-                  type: 'SOME_RAMDON_TYPE',
-                  inputParameters: {},
-                },
-                {
-                  name: 'task002',
-                  taskReferenceName: 'lol',
-                  type: TaskC.TaskTypes.Decision,
-                  inputParameters: {},
-                  defaultDecision: [
-                    // {
-                    //   name: 'default_one',
-                    //   taskReferenceName: 'default_one',
-                    //   type: TaskC.TaskTypes.Task,
-                    //   inputParameters: {},
-                    // },
-                  ],
-                  decisions: {
-                    case1: [
-                      {
-                        name: 'huhu',
-                        // taskReferenceName: 'lol_2',
-                        taskReferenceName: 'lol',
-                        type: TaskC.TaskTypes.Decision,
-                        inputParameters: {},
-                        defaultDecision: [
-                          {
-                            name: 'eiei',
-                            // taskReferenceName: 'case1_eiei',
-                            type: TaskC.TaskTypes.Task,
-                            inputParameters: {},
-                          },
-                        ],
-                      },
+        () =>
+          new Workflow.WorkflowDefinition(
+            JSON.parse(
+              JSON.stringify({
+                name: 'hello-world',
+                rev: 1,
+                tasks: [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'eiei',
+                    // type: TaskC.TaskTypes.Task,
+                    type: 'SOME_RAMDON_TYPE',
+                    inputParameters: {},
+                  },
+                  {
+                    // name: 'task002',
+                    taskReferenceName: 'lol',
+                    type: TaskC.TaskTypes.Decision,
+                    inputParameters: {},
+                    defaultDecision: [
+                      // {
+                      //   name: 'default_one',
+                      //   taskReferenceName: 'default_one',
+                      //   type: TaskC.TaskTypes.Task,
+                      //   inputParameters: {},
+                      // },
+                    ],
+                    decisions: {
+                      case1: [
+                        {
+                          name: 'huhu',
+                          // taskReferenceName: 'lol_2',
+                          taskReferenceName: 'lol',
+                          type: TaskC.TaskTypes.Decision,
+                          inputParameters: {},
+                          defaultDecision: [
+                            {
+                              name: 'eiei',
+                              // taskReferenceName: 'case1_eiei',
+                              type: TaskC.TaskTypes.Task,
+                              inputParameters: {},
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'PARALLEL_TASK',
+                    type: TaskC.TaskTypes.Parallel,
+                    inputParameters: {},
+                    parallelTasks: [
+                      [
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel_child1',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                      ],
+                      [
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel_child2',
+                          type: TaskC.TaskTypes.SubWorkflow,
+                          inputParameters: {},
+                          // workflow: {
+                          //   name: 'haha',
+                          //   rev: 3,
+                          // },
+                        },
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel_child3',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                      ],
                     ],
                   },
-                },
-                {
-                  name: 'eiei',
-                  taskReferenceName: 'PARALLEL_TASK',
-                  type: TaskC.TaskTypes.Parallel,
-                  inputParameters: {},
-                  parallelTasks: [
-                    [
-                      {
-                        name: 'eiei',
-                        taskReferenceName: 'parallel_child1',
-                        type: TaskC.TaskTypes.Task,
-                        inputParameters: {},
-                      },
-                    ],
-                    [
-                      {
-                        name: 'eiei',
-                        taskReferenceName: 'parallel_child2',
-                        type: TaskC.TaskTypes.SubWorkflow,
-                        inputParameters: {},
-                        // workflow: {
-                        //   name: 'haha',
-                        //   rev: 3,
-                        // },
-                      },
-                      {
-                        name: 'eiei',
-                        taskReferenceName: 'parallel_child3',
-                        type: TaskC.TaskTypes.Task,
-                        inputParameters: {},
-                      },
-                    ],
-                  ],
-                },
-              ],
-            }),
+                ],
+              }),
+            ),
           ),
-        ),
-      ).toEqual({});
+      ).toThrow(
+        [
+          'workflowDefinition.tasks[0].type is invalid',
+          'workflowDefinition.tasks[1].name is invalid',
+          'workflowDefinition.tasks[1].defaultDecision cannot be empty',
+          'workflowDefinition.tasks[1].decisions["case1"].tasks[0].taskReferenceName is duplicated',
+          'workflowDefinition.tasks[1].decisions["case1"].tasks[0].defaultDecision.tasks[0].taskReferenceName is invalid',
+          'workflowDefinition.tasks[2].parallelTasks[1].tasks[0].workflow.name is invalid',
+          'workflowDefinition.tasks[2].parallelTasks[1].tasks[0].workflow.rev is invalid',
+        ].join('\n'),
+      );
     });
   });
 });
