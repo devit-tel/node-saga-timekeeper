@@ -56,6 +56,9 @@ export class TaskDefinition implements TaskC.TaskDefinition {
   timeoutSecond: number = 30;
   timeoutStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
   failureStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
+  inputParameters: {
+    [key: string]: any;
+  } = {};
 
   constructor(taskDefinition: TaskC.TaskDefinition) {
     const taskValidationErrors = taskValidation(taskDefinition);
@@ -66,7 +69,6 @@ export class TaskDefinition implements TaskC.TaskDefinition {
 
     Object.assign(this, taskDefinition);
     this.topicConfigurations = Object.assign(
-      // this.topicConfigurations,
       defaultTopicConfigurations,
       taskDefinition.topicConfigurations,
     );

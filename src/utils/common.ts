@@ -14,3 +14,9 @@ export const enumToList = R.compose(
   R.map(R.prop('1')),
   R.toPairs,
 );
+
+export const concatArray = (target: any[] = [], items: any[] | any): any[] => {
+  if (R.isNil(items)) return target;
+  if (R.is(Array, items)) return target.concat(items);
+  return [...target, items];
+};

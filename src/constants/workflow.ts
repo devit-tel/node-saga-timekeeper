@@ -14,6 +14,7 @@ export enum FailureStrategies {
   RecoveryWorkflow = 'RECOVERY_WORKFLOW',
   Retry = 'RETRY',
   Rewide = 'REWIDE',
+  RewideThenRetry = 'REWIDE_THEN_RETRY',
 }
 
 export const WorkflowCompletedNextStates = [];
@@ -85,4 +86,19 @@ export interface WorkflowDefinition {
     name: string;
     rev: number;
   };
+}
+
+export interface Workflow {
+  workflowName: string;
+  workflowRev: number;
+  workflowId: string;
+  status: WorkflowStates;
+  retryCount: number;
+  input: {
+    [key: string]: any;
+  };
+  output: any;
+  createTime: number;
+  startTime: number;
+  endTime: number;
 }

@@ -20,27 +20,26 @@ export const FailureStrategiesList = CommonUtils.enumToList(FailureStrategies);
 
 export enum TaskStates {
   Scheduled = 'SCHEDULED',
+  Inprogress = 'INPROGRESS',
   Completed = 'COMPLETED',
   Failed = 'FAILED',
   Timeout = 'TIMEOUT',
-  Inprogress = 'INPROGRESS',
 }
 
 export const TaskStatesList = CommonUtils.enumToList(FailureStrategies);
 
-export const TaskScheduledNextStates = [
-  TaskStates.Inprogress,
-  TaskStates.Timeout,
-];
-export const TaskCompletedNextStates = [];
-export const TaskFailedNextStates = [TaskStates.Scheduled];
-export const TaskTimeoutNextStates = [TaskStates.Scheduled];
-export const TaskInprogressNextStates = [
-  TaskStates.Completed,
-  TaskStates.Failed,
-  TaskStates.Timeout,
-  TaskStates.Inprogress,
-];
+export const TaskNextStates = {
+  [TaskStates.Scheduled]: [TaskStates.Inprogress, TaskStates.Timeout],
+  [TaskStates.Inprogress]: [
+    TaskStates.Completed,
+    TaskStates.Failed,
+    TaskStates.Timeout,
+    TaskStates.Inprogress,
+  ],
+  [TaskStates.Completed]: [],
+  [TaskStates.Failed]: [TaskStates.Scheduled],
+  [TaskStates.Timeout]: [TaskStates.Scheduled],
+};
 
 // https://docs.confluent.io/current/installation/configuration/topic-configs.html
 export interface TopicConfigurations {
@@ -94,4 +93,28 @@ export interface TaskDefinition {
     name: string;
     rev: number;
   };
+}
+
+export interface Task {
+  taskName: string;
+  taskReferenceNames: string;
+  taskId: string;
+  workflowId: string;
+  status: TaskStates;
+  retryCount: number;
+  input: {
+    [key: string]: any;
+  };
+  output: any;
+  createTime: number; // time that push into Kafka
+  startTime: number; // time that worker ack
+  endTime: number; // time that task finish/failed/cancel
+  logs?: any[];
+}
+
+export interface TaskUpdate {
+  taskId: string;
+  status: TaskStates;
+  output?: any;
+  logs?: any[] | any;
 }

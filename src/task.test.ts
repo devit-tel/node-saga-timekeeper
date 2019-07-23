@@ -8,6 +8,7 @@ describe('Task', () => {
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'FAILED',
+        inputParameters: {},
         partitionsCount: 10,
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
@@ -31,6 +32,7 @@ describe('Task', () => {
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'IGNORE',
+        inputParameters: {},
         partitionsCount: 10,
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
@@ -57,6 +59,7 @@ describe('Task', () => {
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'IGNORE',
+        inputParameters: {},
         partitionsCount: 10,
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
@@ -112,6 +115,7 @@ describe('Task', () => {
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RECOVERY_WORKFLOW',
+        inputParameters: {},
         name: 'hello-world',
         partitionsCount: 10,
         recoveryWorkflow: {
@@ -159,6 +163,7 @@ describe('Task', () => {
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RETRY',
+        inputParameters: {},
         name: 'hello-world',
         partitionsCount: 10,
         responseTimeoutSecond: 5,
