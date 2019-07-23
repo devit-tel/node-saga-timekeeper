@@ -32,17 +32,14 @@ const isFailureStrategiesConfigValid = (
 
 const taskValidation = (taskDefinition: TaskC.TaskDefinition): string[] => {
   const errors = [];
-  if (!CommonUtils.isValidName(taskDefinition.name)) {
+  if (!CommonUtils.isValidName(taskDefinition.name))
     errors.push('taskDefinition.name is invalid');
-  }
 
-  if (isRecoveryWorkflowConfigValid(taskDefinition)) {
+  if (isRecoveryWorkflowConfigValid(taskDefinition))
     errors.push('taskDefinition.recoveryWorkflow is invalid');
-  }
 
-  if (isFailureStrategiesConfigValid(taskDefinition)) {
+  if (isFailureStrategiesConfigValid(taskDefinition))
     errors.push('taskDefinition.retry is invalid');
-  }
 
   return errors;
 };
@@ -63,9 +60,8 @@ export class TaskDefinition implements TaskC.TaskDefinition {
   constructor(taskDefinition: TaskC.TaskDefinition) {
     const taskValidationErrors = taskValidation(taskDefinition);
 
-    if (taskValidationErrors.length) {
+    if (taskValidationErrors.length)
       throw new Error(taskValidationErrors.join('\n'));
-    }
 
     Object.assign(this, taskDefinition);
     this.topicConfigurations = Object.assign(

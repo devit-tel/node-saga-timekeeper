@@ -60,26 +60,22 @@ const validateTasks = (
       index: number,
     ): TasksValidateOutput => {
       const currentRoot = `${root}.tasks[${index}]`;
-      if (!CommonUtils.isValidName(task.name)) {
+      if (!CommonUtils.isValidName(task.name))
         result.errors.push(`${currentRoot}.name is invalid`);
-      }
 
-      if (!CommonUtils.isValidName(task.taskReferenceName)) {
+      if (!CommonUtils.isValidName(task.taskReferenceName))
         result.errors.push(`${currentRoot}.taskReferenceName is invalid`);
-      }
 
-      if (result.taskReferenceNames[task.taskReferenceName]) {
+      if (result.taskReferenceNames[task.taskReferenceName])
         result.errors.push(`${currentRoot}.taskReferenceName is duplicated`);
-      } else {
+      else
         result.taskReferenceNames[task.taskReferenceName] =
           task.taskReferenceName;
-      }
 
       // TODO Validate inputParameters
 
-      if (!TaskC.TaskTypesList.includes(task.type)) {
+      if (!TaskC.TaskTypesList.includes(task.type))
         result.errors.push(`${currentRoot}.type is invalid`);
-      }
 
       if (task.type === TaskC.TaskTypes.Decision) {
         const defaultDecision: WorkflowC.AllTaskType[] = R.propOr(
@@ -87,9 +83,9 @@ const validateTasks = (
           'defaultDecision',
           task,
         );
-        if (R.isEmpty(defaultDecision)) {
+        if (R.isEmpty(defaultDecision))
           result.errors.push(`${currentRoot}.defaultDecision cannot be empty`);
-        }
+
         const defaultDecisionResult = validateTasks(
           defaultDecision,
           `${currentRoot}.defaultDecision`,
@@ -135,13 +131,11 @@ const validateTasks = (
       }
 
       if (task.type === TaskC.TaskTypes.SubWorkflow) {
-        if (!isValidWorkflowName(task)) {
+        if (!isValidWorkflowName(task))
           result.errors.push(`${currentRoot}.workflow.name is invalid`);
-        }
 
-        if (!isValidWorkflowRev(task)) {
+        if (!isValidWorkflowRev(task))
           result.errors.push(`${currentRoot}.workflow.rev is invalid`);
-        }
 
         // TODO check if workflow/rev is exists
       }
@@ -155,25 +149,21 @@ const workflowValidation = (
   workflowDefinition: WorkflowC.WorkflowDefinition,
 ): string[] => {
   const errors = [];
-  if (!CommonUtils.isValidName(workflowDefinition.name)) {
+  if (!CommonUtils.isValidName(workflowDefinition.name))
     errors.push('workflowDefinition.name is invalid');
-  }
 
-  if (!CommonUtils.isValidRev(workflowDefinition.rev)) {
+  if (!CommonUtils.isValidRev(workflowDefinition.rev))
     errors.push('workflowDefinition.rev is invalid');
-  }
 
-  if (isRecoveryWorkflowConfigValid(workflowDefinition)) {
+  if (isRecoveryWorkflowConfigValid(workflowDefinition))
     errors.push('workflowDefinition.recoveryWorkflow is invalid');
-  }
 
-  if (isFailureStrategiesConfigValid(workflowDefinition)) {
+  if (isFailureStrategiesConfigValid(workflowDefinition))
     errors.push('workflowDefinition.retry is invalid');
-  }
 
-  if (isEmptyTasks(workflowDefinition)) {
+  if (isEmptyTasks(workflowDefinition))
     errors.push('workflowDefinition.tasks cannot be empty');
-  }
+
   return errors;
 };
 
@@ -203,9 +193,8 @@ export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
         taskReferenceNames: {},
       },
     );
-    if (validateTasksResult.errors.length) {
+    if (validateTasksResult.errors.length)
       throw new Error(validateTasksResult.errors.join('\n'));
-    }
 
     Object.assign(this, workflowDefinition);
     this.tasks = workflowDefinition.tasks;

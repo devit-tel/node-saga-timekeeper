@@ -7,9 +7,7 @@ export const isAbleToTranslateTaskStatus = (
   status: TaskC.TaskStates,
 ): boolean => {
   if (TaskC.TaskNextStates[currentStatus]) {
-    if (TaskC.TaskNextStates[currentStatus].includes(status)) {
-      return true;
-    }
+    if (TaskC.TaskNextStates[currentStatus].includes(status)) return true;
     return false;
   }
   throw new Error(`Current status: "${currentStatus}" is invalid`);
@@ -19,11 +17,11 @@ export const updateTask = (
   task: TaskC.Task,
   taskUpdate: TaskC.TaskUpdate,
 ): TaskC.Task => {
-  if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status)) {
+  if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status))
     throw new Error(
       `Cannot change status from ${task.status} to ${taskUpdate.status}`,
     );
-  }
+
   return {
     ...task,
     status: taskUpdate.status,
