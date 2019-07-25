@@ -308,6 +308,7 @@ describe('State', () => {
       ).toEqual([1, 'parallelTasks', 0, 1]);
     });
 
+    // tslint:disable-next-line: max-func-body-length
     test('With Decisions tasks', () => {
       const tasks: WorkflowC.AllTaskType[] = [
         {
@@ -349,6 +350,12 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei5',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei55',
                       type: TaskC.TaskTypes.Task,
                       inputParameters: {},
                     },
@@ -394,6 +401,16 @@ describe('State', () => {
         0,
       ]);
 
+      expect(State.findTaskPath('eiei55', tasks)).toEqual([
+        1,
+        'decisions',
+        'case1',
+        0,
+        'decisions',
+        'caseA',
+        1,
+      ]);
+
       expect(State.findTaskPath('eiei6', tasks)).toEqual([
         1,
         'decisions',
@@ -403,6 +420,177 @@ describe('State', () => {
         'caseB',
         0,
       ]);
+    });
+
+    // tslint:disable-next-line: max-func-body-length
+    test('With Complex tasks', () => {
+      const tasks: WorkflowC.AllTaskType[] = [
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+        {
+          name: 'task002',
+          taskReferenceName: 'decision_task_1',
+          type: TaskC.TaskTypes.Decision,
+          inputParameters: {},
+          defaultDecision: [
+            {
+              name: 'decision_task_1_default',
+              taskReferenceName: 'default_one',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+          ],
+          decisions: {
+            case1: [
+              {
+                name: 'eiei',
+                taskReferenceName: 'decision_task_1_case1',
+                type: TaskC.TaskTypes.Parallel,
+                inputParameters: {},
+                parallelTasks: [
+                  [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case1_parallel1_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case1_parallel1_2',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case1_parallel2_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                ],
+              },
+            ],
+            case2: [
+              {
+                name: 'eiei',
+                taskReferenceName: 'decision_task_1_case2_1',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {},
+              },
+              {
+                name: 'eiei',
+                taskReferenceName: 'decision_task_1_case2_2',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {},
+              },
+            ],
+            case3: [
+              {
+                name: 'huhu',
+                taskReferenceName: 'decision_task_1_case3',
+                type: TaskC.TaskTypes.Decision,
+                inputParameters: {},
+                defaultDecision: [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'decision_task_1_case3_default',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+                decisions: {
+                  caseA: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_caseA_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_caseA_2',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  caseB: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_caseB_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                },
+              },
+              {
+                name: 'huhu',
+                taskReferenceName: 'decision_task_1_case3_2',
+                type: TaskC.TaskTypes.Decision,
+                inputParameters: {},
+                defaultDecision: [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'decision_task_1_case3_2_default',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+                decisions: {
+                  caseA: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_2_caseA_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_2_caseA_2',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  caseB: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'decision_task_1_case3_2_caseB_1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          name: 'eiei',
+          taskReferenceName: 'some_SubWorkflow',
+          type: TaskC.TaskTypes.SubWorkflow,
+          inputParameters: {},
+          workflow: {
+            name: 'lol',
+            rev: 5,
+          },
+        },
+      ];
+      expect(
+        State.findTaskPath('decision_task_1_case3_caseB_1', tasks),
+      ).toEqual([1, 'decisions', 'case3', 0, 'decisions', 'caseB', 0]);
+
+      expect(
+        State.findTaskPath('decision_task_1_case3_2_caseB_1', tasks),
+      ).toEqual([1, 'decisions', 'case3', 1, 'decisions', 'caseB', 0]);
+
+      expect(State.findTaskPath('some_SubWorkflow', tasks)).toEqual([2]);
     });
   });
 });
