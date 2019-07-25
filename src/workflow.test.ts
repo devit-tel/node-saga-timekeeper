@@ -248,7 +248,7 @@ describe('Workflow', () => {
       ).toThrow('workflowDefinition.tasks cannot be empty');
     });
 
-    test('Default value', () => {
+    test('Invalid WorkflowDefinition', () => {
       expect(
         () =>
           new Workflow.WorkflowDefinition(
@@ -346,6 +346,140 @@ describe('Workflow', () => {
           'workflowDefinition.tasks[2].parallelTasks[1].tasks[0].workflow.rev is invalid',
         ].join('\n'),
       );
+    });
+
+    // tslint:disable-next-line: max-func-body-length
+    test('Nested WorkflowDefinition', () => {
+      expect(
+        new Workflow.WorkflowDefinition({
+          name: 'hello-world',
+          rev: 1,
+          tasks: [
+            {
+              name: 'eiei',
+              taskReferenceName: 'eiei',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+            {
+              name: 'eiei',
+              taskReferenceName: 'PARALLEL_TASK',
+              type: TaskC.TaskTypes.Parallel,
+              inputParameters: {},
+              parallelTasks: [
+                [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'parallel1_child2',
+                    type: TaskC.TaskTypes.Parallel,
+                    inputParameters: {},
+                    parallelTasks: [
+                      [
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel12_child1',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel12_child2',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                      ],
+                    ],
+                  },
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'parallel1_child1',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+                [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'parallel2_child1',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'parallel2_child2',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+              ],
+            },
+          ],
+        }),
+      ).toEqual({
+        description: 'No description',
+        name: 'hello-world',
+        rev: 1,
+        tasks: [
+          {
+            inputParameters: {},
+            name: 'eiei',
+            taskReferenceName: 'eiei',
+            type: 'TASK',
+          },
+          {
+            inputParameters: {},
+            name: 'eiei',
+            parallelTasks: [
+              [
+                {
+                  inputParameters: {},
+                  name: 'eiei',
+                  parallelTasks: [
+                    [
+                      {
+                        inputParameters: {},
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child1',
+                        type: 'TASK',
+                      },
+                      {
+                        inputParameters: {},
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child2',
+                        type: 'TASK',
+                      },
+                    ],
+                  ],
+                  taskReferenceName: 'parallel1_child2',
+                  type: 'PARALLEL',
+                },
+                {
+                  inputParameters: {},
+                  name: 'eiei',
+                  taskReferenceName: 'parallel1_child1',
+                  type: 'TASK',
+                },
+              ],
+              [
+                {
+                  inputParameters: {},
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child1',
+                  type: 'TASK',
+                },
+                {
+                  inputParameters: {},
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child2',
+                  type: 'TASK',
+                },
+              ],
+            ],
+            taskReferenceName: 'PARALLEL_TASK',
+            type: 'PARALLEL',
+          },
+        ],
+      });
     });
   });
 });

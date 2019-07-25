@@ -29,6 +29,18 @@ export enum TaskStates {
 export const TaskStatesList = CommonUtils.enumToList(FailureStrategies);
 
 export const TaskNextStates = {
+  [TaskStates.Scheduled]: [TaskStates.Inprogress],
+  [TaskStates.Inprogress]: [
+    TaskStates.Completed,
+    TaskStates.Failed,
+    TaskStates.Inprogress,
+  ],
+  [TaskStates.Completed]: [],
+  [TaskStates.Failed]: [],
+  [TaskStates.Timeout]: [],
+};
+
+export const TaskNextStatesSystem = {
   [TaskStates.Scheduled]: [TaskStates.Inprogress, TaskStates.Timeout],
   [TaskStates.Inprogress]: [
     TaskStates.Completed,

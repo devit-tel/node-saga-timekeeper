@@ -1,5 +1,6 @@
 import * as State from './state';
 import * as TaskC from './constants/task';
+import * as WorkflowC from './constants/workflow';
 
 describe('State', () => {
   describe('Update task', () => {
@@ -19,7 +20,7 @@ describe('State', () => {
         retryCount: 0,
       };
       expect(
-        State.updateTask(scheduledTask, {
+        State.processTask(scheduledTask, {
           status: TaskC.TaskStates.Inprogress,
           taskId: 'MOCK_TASK_001',
         }),
@@ -42,7 +43,7 @@ describe('State', () => {
         retryCount: 0,
       };
       expect(
-        State.updateTask(scheduledTask, {
+        State.processTask(scheduledTask, {
           status: TaskC.TaskStates.Completed,
           taskId: 'MOCK_TASK_001',
           logs: 'Done!',
@@ -62,7 +63,7 @@ describe('State', () => {
 
     test('Invalid stored task', () => {
       expect(() =>
-        State.updateTask(
+        State.processTask(
           JSON.parse(
             JSON.stringify({
               taskName: 'MOCK_TASK',
@@ -90,7 +91,7 @@ describe('State', () => {
 
     test('Invalid state changing', () => {
       expect(() =>
-        State.updateTask(
+        State.processTask(
           JSON.parse(
             JSON.stringify({
               taskName: 'MOCK_TASK',
@@ -114,6 +115,294 @@ describe('State', () => {
           },
         ),
       ).toThrow('Cannot change status from FAILED to COMPLETED');
+    });
+  });
+
+  describe('findTaskPath', () => {
+    test('Simple one', () => {
+      expect(
+        State.findTaskPath('eiei3', [
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei2',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei3',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei4',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+        ]),
+      ).toEqual([2]);
+    });
+
+    test('With Parallel tasks', () => {
+      expect(
+        State.findTaskPath('parallel12_child1', [
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'PARALLEL_TASK',
+            type: TaskC.TaskTypes.Parallel,
+            inputParameters: {},
+            parallelTasks: [
+              [
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel1_child2',
+                  type: TaskC.TaskTypes.Parallel,
+                  inputParameters: {},
+                  parallelTasks: [
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child1',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child2',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel11_child1',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                  ],
+                },
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel1_child1',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+              ],
+              [
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child1',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child2',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+              ],
+            ],
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei4',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+        ]),
+      ).toEqual([1, 'parallelTasks', 0, 0, 'parallelTasks', 0, 0]);
+    });
+
+    test('With Parallel tasks 2', () => {
+      expect(
+        State.findTaskPath('parallel1_child1', [
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'PARALLEL_TASK',
+            type: TaskC.TaskTypes.Parallel,
+            inputParameters: {},
+            parallelTasks: [
+              [
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel1_child2',
+                  type: TaskC.TaskTypes.Parallel,
+                  inputParameters: {},
+                  parallelTasks: [
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child1',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel12_child2',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                    [
+                      {
+                        name: 'eiei',
+                        taskReferenceName: 'parallel11_child1',
+                        type: TaskC.TaskTypes.Task,
+                        inputParameters: {},
+                      },
+                    ],
+                  ],
+                },
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel1_child1',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+              ],
+              [
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child1',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+                {
+                  name: 'eiei',
+                  taskReferenceName: 'parallel2_child2',
+                  type: TaskC.TaskTypes.Task,
+                  inputParameters: {},
+                },
+              ],
+            ],
+          },
+          {
+            name: 'eiei',
+            taskReferenceName: 'eiei4',
+            type: TaskC.TaskTypes.Task,
+            inputParameters: {},
+          },
+        ]),
+      ).toEqual([1, 'parallelTasks', 0, 1]);
+    });
+
+    test('With Decisions tasks', () => {
+      const tasks: WorkflowC.AllTaskType[] = [
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+        {
+          name: 'task002',
+          taskReferenceName: 'decision_task_1',
+          type: TaskC.TaskTypes.Decision,
+          inputParameters: {},
+          defaultDecision: [
+            {
+              name: 'decision_task_1_default',
+              taskReferenceName: 'default_one',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+          ],
+          decisions: {
+            case1: [
+              {
+                name: 'huhu',
+                taskReferenceName: 'decision_task_1_case1',
+                type: TaskC.TaskTypes.Decision,
+                inputParameters: {},
+                defaultDecision: [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'decision_task_1_case1_default',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+                decisions: {
+                  caseA: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei5',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  caseB: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei6',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei4',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ];
+      expect(State.findTaskPath('decision_task_1_case1', tasks)).toEqual([
+        1,
+        'decisions',
+        'case1',
+        0,
+      ]);
+
+      expect(
+        State.findTaskPath('decision_task_1_case1_default', tasks),
+      ).toEqual([1, 'decisions', 'case1', 0, 'defaultDecision', 0]);
+
+      expect(State.findTaskPath('eiei5', tasks)).toEqual([
+        1,
+        'decisions',
+        'case1',
+        0,
+        'decisions',
+        'caseA',
+        0,
+      ]);
+
+      expect(State.findTaskPath('eiei6', tasks)).toEqual([
+        1,
+        'decisions',
+        'case1',
+        0,
+        'decisions',
+        'caseB',
+        0,
+      ]);
     });
   });
 });
