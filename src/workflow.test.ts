@@ -388,6 +388,20 @@ describe('Workflow', () => {
                           inputParameters: {},
                         },
                       ],
+                      [
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel22_child1',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                        {
+                          name: 'eiei',
+                          taskReferenceName: 'parallel22_child2',
+                          type: TaskC.TaskTypes.Task,
+                          inputParameters: {},
+                        },
+                      ],
                     ],
                   },
                   {
@@ -446,6 +460,20 @@ describe('Workflow', () => {
                         inputParameters: {},
                         name: 'eiei',
                         taskReferenceName: 'parallel12_child2',
+                        type: 'TASK',
+                      },
+                    ],
+                    [
+                      {
+                        inputParameters: {},
+                        name: 'eiei',
+                        taskReferenceName: 'parallel22_child1',
+                        type: 'TASK',
+                      },
+                      {
+                        inputParameters: {},
+                        name: 'eiei',
+                        taskReferenceName: 'parallel22_child2',
                         type: 'TASK',
                       },
                     ],

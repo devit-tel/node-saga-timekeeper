@@ -1,9 +1,10 @@
 import * as State from './state';
 import * as TaskC from './constants/task';
 import * as WorkflowC from './constants/workflow';
+// import MemoryStore from './stores/MemoryStore';
 
 describe('State', () => {
-  describe('Update task', () => {
+  describe('Process task', () => {
     test('Ack task', () => {
       const scheduledTask = {
         taskName: 'MOCK_TASK',
@@ -591,6 +592,143 @@ describe('State', () => {
       ).toEqual([1, 'decisions', 'case3', 1, 'decisions', 'caseB', 0]);
 
       expect(State.findTaskPath('some_SubWorkflow', tasks)).toEqual([2]);
+    });
+  });
+
+  describe('walkFornextTask', () => {
+    // tslint:disable-next-line: max-func-body-length
+    test('test1', () => {
+      const tasks: WorkflowC.AllTaskType[] = [
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+        {
+          name: 'task002',
+          taskReferenceName: 'decision_task_1',
+          type: TaskC.TaskTypes.Decision,
+          inputParameters: {},
+          defaultDecision: [
+            {
+              name: 'decision_task_1_default',
+              taskReferenceName: 'default_one',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+          ],
+          decisions: {
+            case1: [
+              {
+                name: 'huhu',
+                taskReferenceName: 'decision_task_1_case1',
+                type: TaskC.TaskTypes.Decision,
+                inputParameters: {},
+                defaultDecision: [
+                  {
+                    name: 'eiei',
+                    taskReferenceName: 'decision_task_1_case1_default',
+                    type: TaskC.TaskTypes.Task,
+                    inputParameters: {},
+                  },
+                ],
+                decisions: {
+                  caseA: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei5',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei55',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  caseB: [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'eiei6',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei4',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ];
+
+      expect(State.walkForNextTasks(tasks, [1])).toEqual([
+        {
+          name: 'decision_task_1_default',
+          taskReferenceName: 'default_one',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ]);
+
+      // Completed workflow
+      expect(State.walkForNextTasks(tasks, [2])).toEqual(null);
+
+      expect(
+        State.walkForNextTasks(tasks, [1, 'decisions', 'case1', 0]),
+      ).toEqual([
+        {
+          name: 'eiei',
+          taskReferenceName: 'decision_task_1_case1_default',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ]);
+
+      expect(
+        State.walkForNextTasks(tasks, [
+          1,
+          'decisions',
+          'case1',
+          0,
+          'decisions',
+          'caseA',
+          0,
+        ]),
+      ).toEqual([
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei55',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ]);
+
+      expect(
+        State.walkForNextTasks(tasks, [
+          1,
+          'decisions',
+          'case1',
+          0,
+          'decisions',
+          'caseA',
+          1,
+        ]),
+      ).toEqual([
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei4',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+      ]);
     });
   });
 });

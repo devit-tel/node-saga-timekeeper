@@ -1,5 +1,7 @@
 import * as R from 'ramda';
+import * as uuid from 'uuid/v4';
 import * as TaskC from './constants/task';
+import * as WorkflowC from './constants/workflow';
 import * as CommonUtils from './utils/common';
 
 const defaultTopicConfigurations = {
@@ -68,5 +70,46 @@ export class TaskDefinition implements TaskC.TaskDefinition {
       defaultTopicConfigurations,
       taskDefinition.topicConfigurations,
     );
+  }
+}
+
+export class Task implements TaskC.Task {
+  taskName: string;
+  taskReferenceNames: string;
+  taskId: string;
+  workflowId: string;
+  status: TaskC.TaskStates;
+  retryCount: number;
+  input: {
+    [key: string]: any;
+  };
+  output: any;
+  createTime: number; // time that push into Kafka
+  startTime: number; // time that worker ack
+  endTime: number; // time that task finish/failed/cancel
+  logs?: any[];
+
+  constructor(
+    workflowId: string,
+    task: WorkflowC.AllTaskType,
+    tasksData: { [taskReferenceName: string]: TaskC.Task },
+  ) {
+    this.taskName = task.name;
+    this.taskReferenceNames = task.taskReferenceName;
+    this.taskId = uuid();
+    this.workflowId = workflowId;
+    this.status = TaskC.TaskStates.Scheduled;
+    this.retryCount = 0;
+    // TODO inject input later
+    this.input = tasksData;
+    this.output = {};
+    this.createTime = Date.now();
+    this.startTime = null;
+    this.endTime = null;
+    this.logs = [];
+  }
+
+  dispatch() {
+    // Dispatch command to worker
   }
 }

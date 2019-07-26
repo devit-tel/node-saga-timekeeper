@@ -2,6 +2,9 @@ import * as R from 'ramda';
 import * as TaskC from './constants/task';
 import * as WorkflowC from './constants/workflow';
 import * as CommonUtils from './utils/common';
+// import * as Store from './stores';
+import * as Workflow from './workflow';
+// import * as Task from './task';
 
 export const isAbleToTranslateTaskStatus = (
   currentStatus: TaskC.TaskStates,
@@ -35,51 +38,85 @@ export const processTask = (
 //   taskUpdate: TaskC.TaskUpdate,
 // ): Promise<TaskC.Task> => {
 //   // TODO Imprement mutex for store
-//   const task: TaskC.Task = {}; // await getTaskFromStore(taskUpdate.taskId);
+//   const task: TaskC.Task = await Store.getTaskFromStore(taskUpdate.taskId);
 //   const updatedTask = processTask(task, taskUpdate);
 
 //   if (updatedTask.status === TaskC.TaskStates.Completed) {
 //     // TODO start next task
 //   }
-//   // await saveTaskToStore(taskUpdate.taskId, updatedTask);
-//   return updatedTask;
+//   return Store.saveTaskToStore(taskUpdate.taskId, updatedTask);
 // };
 
-// export const walkForNextTasks = (
-//   taskReferenceNames: string,
-//   tasks: WorkflowC.AllTaskType[],
-//   currentPath: (string | number)[] = [0],
-// ): WorkflowC.AllTaskType[] => {
-//   const currentTask: WorkflowC.AllTaskType = R.path(currentPath, tasks);
-//   if (currentTask)
-//     if (currentTask.taskReferenceName === taskReferenceNames)
-//       switch (currentTask.type) {
-//         case TaskC.TaskTypes.Task:
-//           break;
+export const walkForNextTasks = (
+  tasks: WorkflowC.AllTaskType[],
+  currentPath: (string | number)[] = [0],
+): WorkflowC.AllTaskType[] => {
+  // When finish all tasks
+  if (R.equals([tasks.length - 1], currentPath)) return null;
+  const currentTask: WorkflowC.AllTaskType = R.path(currentPath, tasks);
+  console.log(currentTask.type);
+  switch (currentTask.type) {
+    case TaskC.TaskTypes.Decision:
+      // TODO Map output to new task
+      return [R.path([...currentPath, 'defaultDecision', 0], tasks)];
+    case TaskC.TaskTypes.Parallel:
+      return R.pathOr([], [...currentPath, 'parallelTasks'], tasks).map(
+        R.path([0]),
+      );
+    case TaskC.TaskTypes.Task:
+    case TaskC.TaskTypes.SubWorkflow:
+      return [R.path(getNextWalkPath(tasks, currentPath), tasks)];
+  }
+};
 
-//         default:
-//           break;
-//       }
-//     else return;
-//   else
-//     switch (key) {
-//       case value:
-//         break;
+const getNextPath = (currentPath: (string | number)[]): (string | number)[] => [
+  ...R.init(currentPath),
+  +R.last(currentPath) + 1,
+];
 
-//       default:
-//         break;
-//     }
-// };
-
-const findNextTaskPath = (
-  taskReferenceNames: string,
+const isChildOfDecisionDefault = (
   tasks: WorkflowC.AllTaskType[],
   currentPath: (string | number)[],
-): (string | number)[] =>
-  findTaskPath(taskReferenceNames, tasks, [
-    ...R.init(currentPath),
-    +R.last(currentPath) + 1,
-  ]);
+): boolean =>
+  R.pathEq(
+    [...R.dropLast(2, currentPath), 'type'],
+    TaskC.TaskTypes.Decision,
+    tasks,
+  ) && R.nth(-2, currentPath) === 'defaultDecision';
+
+const isChildOfDecisionCase = (
+  tasks: WorkflowC.AllTaskType[],
+  currentPath: (string | number)[],
+): boolean =>
+  R.pathEq(
+    [...R.dropLast(3, currentPath), 'type'],
+    TaskC.TaskTypes.Decision,
+    tasks,
+  ) && R.nth(-3, currentPath) === 'decisions';
+
+const getNextWalkPath = (
+  tasks: WorkflowC.AllTaskType[],
+  currentPath: (string | number)[],
+): (string | number)[] => {
+  if (R.path(getNextPath(currentPath), tasks)) return getNextPath(currentPath);
+  // When have no serial task)
+  switch (true) {
+    case R.pathEq(
+      [...R.dropLast(2, currentPath), 'type'],
+      TaskC.TaskTypes.Parallel,
+      tasks,
+    ):
+      // TODO Check if all child are completed
+      return getNextPath(R.init(currentPath));
+    case isChildOfDecisionDefault(tasks, currentPath):
+      return getNextWalkPath(tasks, R.dropLast(2, currentPath));
+    case isChildOfDecisionCase(tasks, currentPath):
+      return getNextWalkPath(tasks, R.dropLast(3, currentPath));
+    // Case Task and Subworkflow
+    default:
+      return getNextPath(R.init(currentPath));
+  }
+};
 
 export const findNextParallelTaskPath = (
   taskReferenceNames: string,
@@ -100,7 +137,7 @@ export const findNextParallelTaskPath = (
     ]);
     if (taskPath) return taskPath;
   }
-  return findNextTaskPath(taskReferenceNames, tasks, currentPath);
+  return findTaskPath(taskReferenceNames, tasks, getNextPath(currentPath));
 };
 
 export const findNextDecisionTaskPath = (
@@ -124,7 +161,17 @@ export const findNextDecisionTaskPath = (
     ]);
     if (taskPath) return taskPath;
   }
-  return findNextTaskPath(taskReferenceNames, tasks, currentPath);
+  return findTaskPath(taskReferenceNames, tasks, getNextPath(currentPath));
+};
+
+export const getWorkflowTask = (
+  taskReferenceNames: string,
+  workflowDefinition: Workflow.WorkflowDefinition,
+): WorkflowC.AllTaskType => {
+  const taskPath = findTaskPath(taskReferenceNames, workflowDefinition.tasks);
+  if (!taskPath)
+    throw new Error(`taskReferenceNames: "taskReferenceNames" not found`);
+  return R.path(taskPath, workflowDefinition.tasks);
 };
 
 export const findTaskPath = (
@@ -155,7 +202,11 @@ export const findTaskPath = (
         case TaskC.TaskTypes.SubWorkflow:
         case TaskC.TaskTypes.Task:
         default:
-          return findNextTaskPath(taskReferenceNames, tasks, currentPath);
+          return findTaskPath(
+            taskReferenceNames,
+            tasks,
+            getNextPath(currentPath),
+          );
       }
   else return null;
 };
