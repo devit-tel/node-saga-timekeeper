@@ -78,16 +78,16 @@ export class Task implements TaskC.Task {
   taskReferenceNames: string;
   taskId: string;
   workflowId: string;
-  status: TaskC.TaskStates;
-  retryCount: number;
+  status: TaskC.TaskStates = TaskC.TaskStates.Scheduled;
+  retryCount: number = 0;
   input: {
     [key: string]: any;
   };
-  output: any;
+  output: any = {};
   createTime: number; // time that push into Kafka
-  startTime: number; // time that worker ack
-  endTime: number; // time that task finish/failed/cancel
-  logs?: any[];
+  startTime: number = null; // time that worker ack
+  endTime: number = null; // time that task finish/failed/cancel
+  logs?: any[] = [];
 
   constructor(
     workflowId: string,
@@ -98,15 +98,9 @@ export class Task implements TaskC.Task {
     this.taskReferenceNames = task.taskReferenceName;
     this.taskId = uuid();
     this.workflowId = workflowId;
-    this.status = TaskC.TaskStates.Scheduled;
-    this.retryCount = 0;
     // TODO inject input later
     this.input = tasksData;
-    this.output = {};
     this.createTime = Date.now();
-    this.startTime = null;
-    this.endTime = null;
-    this.logs = [];
   }
 
   dispatch() {
