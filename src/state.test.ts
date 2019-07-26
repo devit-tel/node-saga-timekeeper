@@ -595,9 +595,154 @@ describe('State', () => {
     });
   });
 
-  describe('walkFornextTask', () => {
+  describe('findWorkflowTask', () => {
+    const workflow: WorkflowC.WorkflowDefinition = {
+      name: 'hello-world',
+      rev: 1,
+      tasks: [
+        {
+          name: 'eiei',
+          taskReferenceName: 'eiei',
+          type: TaskC.TaskTypes.Task,
+          inputParameters: {},
+        },
+        {
+          name: 'eiei',
+          taskReferenceName: 'PARALLEL_TASK',
+          type: TaskC.TaskTypes.Parallel,
+          inputParameters: {},
+          parallelTasks: [
+            [
+              {
+                name: 'eiei',
+                taskReferenceName: 'parallel1_child2',
+                type: TaskC.TaskTypes.Parallel,
+                inputParameters: {},
+                parallelTasks: [
+                  [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'parallel12_child1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'parallel12_child2',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                  [
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'parallel22_child1',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                    {
+                      name: 'eiei',
+                      taskReferenceName: 'parallel22_child2',
+                      type: TaskC.TaskTypes.Task,
+                      inputParameters: {},
+                    },
+                  ],
+                ],
+              },
+              {
+                name: 'eiei',
+                taskReferenceName: 'parallel1_child1',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {},
+              },
+            ],
+            [
+              {
+                name: 'eiei',
+                taskReferenceName: 'parallel2_child1',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {},
+              },
+              {
+                name: 'eiei',
+                taskReferenceName: 'parallel2_child2',
+                type: TaskC.TaskTypes.Task,
+                inputParameters: {},
+              },
+            ],
+          ],
+        },
+      ],
+    };
+
+    test('Sample 1', () => {
+      expect(() => State.getWorkflowTask('Random_string', workflow)).toThrow(
+        'taskReferenceNames: "Random_string" not found',
+      );
+
+      expect(State.getWorkflowTask('eiei', workflow)).toEqual({
+        name: 'eiei',
+        taskReferenceName: 'eiei',
+        type: TaskC.TaskTypes.Task,
+        inputParameters: {},
+      });
+
+      expect(State.getWorkflowTask('parallel22_child1', workflow)).toEqual({
+        name: 'eiei',
+        taskReferenceName: 'parallel22_child1',
+        type: TaskC.TaskTypes.Task,
+        inputParameters: {},
+      });
+
+      expect(State.getWorkflowTask('parallel1_child2', workflow)).toEqual({
+        name: 'eiei',
+        taskReferenceName: 'parallel1_child2',
+        type: TaskC.TaskTypes.Parallel,
+        inputParameters: {},
+        parallelTasks: [
+          [
+            {
+              name: 'eiei',
+              taskReferenceName: 'parallel12_child1',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+            {
+              name: 'eiei',
+              taskReferenceName: 'parallel12_child2',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+          ],
+          [
+            {
+              name: 'eiei',
+              taskReferenceName: 'parallel22_child1',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+            {
+              name: 'eiei',
+              taskReferenceName: 'parallel22_child2',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+          ],
+        ],
+      });
+
+      expect(State.getWorkflowTask('parallel2_child1', workflow)).toEqual({
+        name: 'eiei',
+        taskReferenceName: 'parallel2_child1',
+        type: TaskC.TaskTypes.Task,
+        inputParameters: {},
+      });
+    });
+  });
+
+  describe('getNextTaskPath', () => {
     // tslint:disable-next-line: max-func-body-length
-    test('test1', () => {
+    test('Decision', () => {
       const tasks: WorkflowC.AllTaskType[] = [
         {
           name: 'eiei',
@@ -613,6 +758,12 @@ describe('State', () => {
           defaultDecision: [
             {
               name: 'decision_task_1_default',
+              taskReferenceName: 'default_one',
+              type: TaskC.TaskTypes.Task,
+              inputParameters: {},
+            },
+            {
+              name: 'decision_task_1_default2',
               taskReferenceName: 'default_one',
               type: TaskC.TaskTypes.Task,
               inputParameters: {},
@@ -669,31 +820,13 @@ describe('State', () => {
         },
       ];
 
-      expect(State.walkForNextTasks(tasks, [1])).toEqual([
-        {
-          name: 'decision_task_1_default',
-          taskReferenceName: 'default_one',
-          type: TaskC.TaskTypes.Task,
-          inputParameters: {},
-        },
-      ]);
+      expect(State.getNextTaskPath(tasks, [0])).toEqual([1]);
 
       // Completed workflow
-      expect(State.walkForNextTasks(tasks, [2])).toEqual(null);
+      expect(State.getNextTaskPath(tasks, [2])).toEqual(null);
 
       expect(
-        State.walkForNextTasks(tasks, [1, 'decisions', 'case1', 0]),
-      ).toEqual([
-        {
-          name: 'eiei',
-          taskReferenceName: 'decision_task_1_case1_default',
-          type: TaskC.TaskTypes.Task,
-          inputParameters: {},
-        },
-      ]);
-
-      expect(
-        State.walkForNextTasks(tasks, [
+        State.getNextTaskPath(tasks, [
           1,
           'decisions',
           'case1',
@@ -702,17 +835,20 @@ describe('State', () => {
           'caseA',
           0,
         ]),
-      ).toEqual([
-        {
-          name: 'eiei',
-          taskReferenceName: 'eiei55',
-          type: TaskC.TaskTypes.Task,
-          inputParameters: {},
-        },
+      ).toEqual([1, 'decisions', 'case1', 0, 'decisions', 'caseA', 1]);
+
+      expect(State.getNextTaskPath(tasks, [1, 'defaultDecision', 0])).toEqual([
+        1,
+        'defaultDecision',
+        1,
+      ]);
+
+      expect(State.getNextTaskPath(tasks, [1, 'defaultDecision', 1])).toEqual([
+        2,
       ]);
 
       expect(
-        State.walkForNextTasks(tasks, [
+        State.getNextTaskPath(tasks, [
           1,
           'decisions',
           'case1',
@@ -721,14 +857,7 @@ describe('State', () => {
           'caseA',
           1,
         ]),
-      ).toEqual([
-        {
-          name: 'eiei',
-          taskReferenceName: 'eiei4',
-          type: TaskC.TaskTypes.Task,
-          inputParameters: {},
-        },
-      ]);
+      ).toEqual([2]);
     });
   });
 });
