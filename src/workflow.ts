@@ -242,12 +242,15 @@ export class Workflow implements WorkflowC.Workflow {
     this.endTime = null;
   }
 
-  async startNextTask(taskReferenceNames: string) {
+  async startNextTask(taskReferenceNames?: string) {
     const workflowTask = State.getWorkflowTask(
-      taskReferenceNames,
+      taskReferenceNames ||
+        R.pathOr('', ['tasks', 0, 'name'], this.workflowDefinition),
       this.workflowDefinition,
     );
-    const task = new Task.Task(this.workflowId, workflowTask, this.taskData);
-    await task.dispatch();
+    if (workflowTask) {
+      const task = new Task.Task(this.workflowId, workflowTask, this.taskData);
+      await task.dispatch();
+    }
   }
 }

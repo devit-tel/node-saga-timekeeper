@@ -95,6 +95,7 @@ const isChildOfDecisionCase = (
     tasks,
   ) && R.nth(-3, currentPath) === 'decisions';
 
+// Check if it's system task
 export const getNextTaskPath = (
   tasks: WorkflowC.AllTaskType[],
   currentPath: (string | number)[],
