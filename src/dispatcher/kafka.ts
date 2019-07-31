@@ -26,8 +26,8 @@ const DEFAULT_PRODUCER_TOPIC_CONFIG = {
 export class KafkaDispatcher implements IDispatcher {
   private client: KafkaClient.Producer;
   constructor(
-    overidePruducerConf: { [key: string]: any },
-    overidePruducerTopicConf: { [key: string]: any },
+    overidePruducerConf?: { [key: string]: any },
+    overidePruducerTopicConf?: { [key: string]: any },
   ) {
     this.client = new KafkaClient.Producer(
       { ...overidePruducerConf, ...DEFAULT_PRODUCER_CONF },
