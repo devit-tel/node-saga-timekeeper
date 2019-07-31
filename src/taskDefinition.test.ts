@@ -1,4 +1,4 @@
-import * as Task from './task';
+import * as TaskDefinition from './taskDefinition';
 import * as TaskC from './constants/task';
 
 jest.mock('uuid/v4');
@@ -7,7 +7,9 @@ Date.now = jest.fn();
 describe('Task', () => {
   describe('Create TaskDefinition', () => {
     test('Default value', () => {
-      expect(new Task.TaskDefinition({ name: 'hello-world' })).toEqual({
+      expect(
+        new TaskDefinition.TaskDefinition({ name: 'hello-world' }),
+      ).toEqual({
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'FAILED',
@@ -27,7 +29,7 @@ describe('Task', () => {
 
     test('Overided default value', () => {
       expect(
-        new Task.TaskDefinition({
+        new TaskDefinition.TaskDefinition({
           name: 'hello-world',
           failureStrategy: TaskC.FailureStrategies.Ignore,
         }),
@@ -51,7 +53,7 @@ describe('Task', () => {
 
     test('set topicConfigurations', () => {
       expect(
-        new Task.TaskDefinition({
+        new TaskDefinition.TaskDefinition({
           name: 'hello-world',
           failureStrategy: TaskC.FailureStrategies.Ignore,
           topicConfigurations: {
@@ -79,7 +81,7 @@ describe('Task', () => {
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>
-          new Task.TaskDefinition({
+          new TaskDefinition.TaskDefinition({
             name: '',
             failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
             topicConfigurations: {
@@ -92,7 +94,7 @@ describe('Task', () => {
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>
-          new Task.TaskDefinition({
+          new TaskDefinition.TaskDefinition({
             name: 'hello-world',
             failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
             topicConfigurations: {
@@ -104,7 +106,7 @@ describe('Task', () => {
 
     test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
       expect(
-        new Task.TaskDefinition({
+        new TaskDefinition.TaskDefinition({
           name: 'hello-world',
           failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
           topicConfigurations: {
@@ -140,7 +142,7 @@ describe('Task', () => {
     test('failureStrategy to "RETRY" without retry param', () => {
       expect(
         () =>
-          new Task.TaskDefinition({
+          new TaskDefinition.TaskDefinition({
             name: 'hello-world',
             failureStrategy: TaskC.FailureStrategies.Retry,
             topicConfigurations: {
@@ -152,7 +154,7 @@ describe('Task', () => {
 
     test('failureStrategy to "RETRY" with retry param', () => {
       expect(
-        new Task.TaskDefinition({
+        new TaskDefinition.TaskDefinition({
           name: 'hello-world',
           failureStrategy: TaskC.FailureStrategies.Retry,
           topicConfigurations: {
@@ -186,4 +188,3 @@ describe('Task', () => {
     });
   });
 });
-``;
