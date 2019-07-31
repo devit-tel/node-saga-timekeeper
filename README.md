@@ -10,4 +10,8 @@ This is prototype of saga implementation, written in Node.
 - [ ] Task Instance
 - [ ] State Translation
 - [ ] Store
-- [ ] Refacetor code, move to their's domain
+- [x] Refacetor code, move to their's domain
+- [ ] Dispatcher
+- [ ] Consumer
+- [ ] Config
+- [ ] Logger

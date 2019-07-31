@@ -3,7 +3,7 @@ import * as TaskC from './constants/task';
 import * as WorkflowC from './constants/workflow';
 import * as CommonUtils from './utils/common';
 // import * as Store from './stores';
-import * as Workflow from './workflow';
+import * as WorkflowDefinition from './workflowDefinition';
 // import * as Task from './task';
 
 export const isAbleToTranslateTaskStatus = (
@@ -171,7 +171,7 @@ export const findNextDecisionTaskPath = (
 
 export const getWorkflowTask = (
   taskReferenceNames: string,
-  workflowDefinition: Workflow.WorkflowDefinition,
+  workflowDefinition: WorkflowDefinition.WorkflowDefinition,
 ): WorkflowC.AllTaskType => {
   const taskPath = findTaskPath(taskReferenceNames, workflowDefinition.tasks);
   if (!taskPath)
