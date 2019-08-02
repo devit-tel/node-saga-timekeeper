@@ -5,12 +5,18 @@ export interface IDispatcher {
 }
 
 export enum DispatcherType {
-  kafka = 'KAFKA',
+  Kafka = 'KAFKA',
 }
 
 export class Dispatcher implements IDispatcher {
+  name: string;
   client: IDispatcher;
-  constructor(client: IDispatcher) {
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  setClient(client: IDispatcher) {
+    if (client) throw new Error('Already set client');
     this.client = client;
   }
 
@@ -18,3 +24,5 @@ export class Dispatcher implements IDispatcher {
     this.client.dispatch(taskName, task);
   }
 }
+
+export const dispatcher = new Dispatcher('Main dispatcher');

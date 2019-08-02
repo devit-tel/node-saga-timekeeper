@@ -34,6 +34,9 @@ export class KafkaDispatcher implements IDispatcher {
       { ...overidePruducerTopicConf, ...DEFAULT_PRODUCER_TOPIC_CONFIG },
     );
     this.client.connect();
+
+    this.client.on('error', console.log);
+    this.client.on('ready', () => console.log('ready'));
   }
   dispatch(taskName: string, task: Task.Task) {
     this.client.produce(
