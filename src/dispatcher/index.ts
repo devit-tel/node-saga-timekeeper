@@ -16,7 +16,7 @@ export class Dispatcher implements IDispatcher {
   }
 
   setClient(client: IDispatcher) {
-    if (client) throw new Error('Already set client');
+    if (this.client) throw new Error('Already set client');
     this.client = client;
   }
 

@@ -17,9 +17,9 @@ const pickAndReplaceFromENV = (template: string) =>
 export const dispatcher = {
   type: DispatcherType.Kafka,
   kafkaOption: {
-    overideProducerConf: pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf'),
+    overideProducerConf: pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
     overideProducerTopicConf: pickAndReplaceFromENV(
-      '^dispatcher\\.kafka\\.topicconf',
+      '^dispatcher\\.kafka\\.topicconf\\.',
     ),
   },
 };

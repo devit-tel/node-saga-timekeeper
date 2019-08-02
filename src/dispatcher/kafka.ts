@@ -9,7 +9,7 @@ const DEFAULT_PRODUCER_CONF = {
   'compression.type': 'snappy',
   'retry.backoff.ms': 100,
   'enable.idempotence': true,
-  'message.send.max.retries': Number.MAX_SAFE_INTEGER,
+  'message.send.max.retries': 10000000,
   'socket.keepalive.enable': true,
   'queue.buffering.max.messages': 10000,
   'queue.buffering.max.ms': 100,
@@ -30,8 +30,8 @@ export class KafkaDispatcher implements IDispatcher {
     overidePruducerTopicConf?: { [key: string]: any },
   ) {
     this.client = new KafkaClient.Producer(
-      { ...overidePruducerConf, ...DEFAULT_PRODUCER_CONF },
-      { ...overidePruducerTopicConf, ...DEFAULT_PRODUCER_TOPIC_CONFIG },
+      { ...DEFAULT_PRODUCER_CONF, ...overidePruducerConf },
+      { ...DEFAULT_PRODUCER_TOPIC_CONFIG, ...overidePruducerTopicConf },
     );
     this.client.connect();
 
