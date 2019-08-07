@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { DispatcherType } from './dispatcher';
+import { StoreType } from './store';
 
 dotenv.config();
 
@@ -16,10 +17,36 @@ const pickAndReplaceFromENV = (template: string) =>
 
 export const dispatcher = {
   type: DispatcherType.Kafka,
-  kafkaOption: {
+  kafkaConfig: {
     overideProducerConf: pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
     overideProducerTopicConf: pickAndReplaceFromENV(
       '^dispatcher\\.kafka\\.topicconf\\.',
     ),
+  },
+};
+
+export const taskDefinitionStore = {
+  type: StoreType.ZooKeeper,
+  zookeeperConfig: {
+    root: '/saga-pm/task-definition',
+    connectionString: process.env['task-definition.connections'],
+    options: {
+      sessionTimeout: 30000,
+      spinDelay: 1000,
+      retries: 0,
+    },
+  },
+};
+
+export const workflowDefinitionStore = {
+  type: StoreType.ZooKeeper,
+  zookeeperConfig: {
+    root: '/saga-pm/workflow-definition',
+    connectionString: process.env['workflow-definition.connections'],
+    options: {
+      sessionTimeout: 30000,
+      spinDelay: 1000,
+      retries: 0,
+    },
   },
 };
