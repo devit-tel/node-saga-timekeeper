@@ -1,6 +1,6 @@
 // Serializer for 1 layer node (${root}/${taskName})
 import * as R from 'ramda';
-import * as zookeeper from '.';
+import * as zookeeper from '../zookeeper';
 
 export class TeskDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
   constructor(
@@ -10,7 +10,7 @@ export class TeskDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
   ) {
     super(root, connectionString, options);
 
-    super.client.mkdirp(super.root, null, null, null, (error: Error) => {
+    this.client.mkdirp(this.root, null, null, null, (error: Error) => {
       if (!error) {
         this.getAndWatchTasks();
       }

@@ -14,7 +14,6 @@ switch (config.dispatcher.type) {
       ),
     );
     break;
-
   default:
     throw new Error(`Dispatch: ${config.dispatcher.type} is invalid`);
 }
@@ -28,9 +27,7 @@ switch (config.workflowDefinitionStore.type) {
         config.workflowDefinitionStore.zookeeperConfig.options,
       ),
     );
-
     break;
-
   default:
     throw new Error(
       `WorkflowDefinition Store: ${config.workflowDefinitionStore.type} is invalid`,
@@ -46,9 +43,7 @@ switch (config.taskDefinitionStore.type) {
         config.taskDefinitionStore.zookeeperConfig.options,
       ),
     );
-
     break;
-
   default:
     throw new Error(
       `TaskDefinition Store: ${config.taskDefinitionStore.type} is invalid`,
