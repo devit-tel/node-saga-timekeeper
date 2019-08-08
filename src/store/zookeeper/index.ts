@@ -62,14 +62,11 @@ export class ZookeeperStore implements IStore {
     });
   }
 
-  getValue(key: string = ''): Promise<any> | any {
+  getValue(key: string = ''): any {
     return R.path(key.split('.'), this.localStore);
   }
 
-  list(
-    limit: number = Number.MAX_SAFE_INTEGER,
-    offset: number = 0,
-  ): Promise<any[]> | any {
-    R.slice(offset, limit, enumToList(this.localStore));
+  list(limit: number = Number.MAX_SAFE_INTEGER, offset: number = 0): any[] {
+    return R.slice(offset, limit, enumToList(this.localStore));
   }
 }

@@ -5,11 +5,11 @@ import {
   IZookeeperOptions,
   IZookeeperEvent,
   ZookeeperEvents,
-} from '../zookeeper';
+} from '.';
 import { TaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 
-export class TeskDefinitionZookeeperStore extends ZookeeperStore {
+export class TaskDefinitionZookeeperStore extends ZookeeperStore {
   constructor(
     root: string,
     connectionString: string,
@@ -42,21 +42,48 @@ export class TeskDefinitionZookeeperStore extends ZookeeperStore {
         if (!tasksError) {
           for (const task of tasks) {
             if (R.isNil(this.localStore.rav)) {
-              this.client.getData(
-                `${this.root}/${task}`,
-                null,
-                (dataError: Error, data: Buffer) => {
-                  if (!dataError) {
-                    this.localStore[task] = new TaskDefinition(
-                      jsonTryParse(data.toString()),
-                    );
-                  }
-                },
-              );
+              this.getAndWatchTask(task);
             }
           }
         }
       },
     );
   };
+
+  getAndWatchTask = (task: string) => {
+    this.client.getData(
+      `${this.root}/${task}`,
+      (event: IZookeeperEvent) => {
+        switch (event.name) {
+          case ZookeeperEvents.NODE_DATA_CHANGED:
+            // When task's data change
+            this.getAndWatchTask(task);
+            break;
+          default:
+            break;
+        }
+        return true;
+      },
+      (dataError: Error, data: Buffer) => {
+        if (!dataError) {
+          this.localStore[task] = new TaskDefinition(
+            jsonTryParse(data.toString()),
+          );
+        }
+      },
+    );
+  };
+
+  getValue(key: string = ''): TaskDefinition {
+    return super.getValue(key).toObject();
+  }
+
+  list(
+    limit: number = Number.MAX_SAFE_INTEGER,
+    offset: number = 0,
+  ): TaskDefinition[] {
+    return super
+      .list(limit, offset)
+      .map((taskDefinition: TaskDefinition) => taskDefinition.toObject());
+  }
 }

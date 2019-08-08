@@ -3,7 +3,7 @@ import { dispatcher, DispatcherType } from './dispatcher';
 import { KafkaDispatcher } from './dispatcher/kafka';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
-import { TeskDefinitionZookeeperStore } from './store/zookeeper/teskDefinition';
+import { TaskDefinitionZookeeperStore } from './store/zookeeper/taskDefinition';
 import { Server } from './server';
 
 switch (config.dispatcher.type) {
@@ -38,7 +38,7 @@ switch (config.workflowDefinitionStore.type) {
 switch (config.taskDefinitionStore.type) {
   case store.StoreType.ZooKeeper:
     store.taskDefinitionStore.setClient(
-      new TeskDefinitionZookeeperStore(
+      new TaskDefinitionZookeeperStore(
         config.taskDefinitionStore.zookeeperConfig.root,
         config.taskDefinitionStore.zookeeperConfig.connectionString,
         config.taskDefinitionStore.zookeeperConfig.options,

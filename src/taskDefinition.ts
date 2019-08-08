@@ -2,7 +2,7 @@ import * as R from 'ramda';
 import { TopicConfigurations, FailureStrategies } from './constants/task';
 import { isValidName } from './utils/common';
 
-export interface ITaskDefinition {
+export interface ITaskDefinitionData {
   name: string;
   description?: string;
   partitionsCount?: number;
@@ -21,6 +21,11 @@ export interface ITaskDefinition {
   };
 }
 
+export interface ITaskDefinition extends ITaskDefinitionData {
+  toObject(): any;
+  toJSON(): string;
+}
+
 const defaultTopicConfigurations = {
   'cleanup.policy': 'compact',
   'compression.type': 'snappy',
@@ -32,7 +37,7 @@ const isNumber = R.is(Number);
 const isString = R.is(String);
 
 const isRecoveryWorkflowConfigValid = (
-  taskDefinition: ITaskDefinition,
+  taskDefinition: ITaskDefinitionData,
 ): boolean =>
   (taskDefinition.timeoutStrategy === FailureStrategies.RecoveryWorkflow ||
     taskDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow) &&
@@ -40,14 +45,14 @@ const isRecoveryWorkflowConfigValid = (
     !isNumber(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
 
 const isFailureStrategiesConfigValid = (
-  taskDefinition: ITaskDefinition,
+  taskDefinition: ITaskDefinitionData,
 ): boolean =>
   (taskDefinition.timeoutStrategy === FailureStrategies.Retry ||
     taskDefinition.failureStrategy === FailureStrategies.Retry) &&
   (!isNumber(R.path(['retry', 'limit'], taskDefinition)) ||
     !isNumber(R.path(['retry', 'delaySecond'], taskDefinition)));
 
-const taskValidation = (taskDefinition: ITaskDefinition): string[] => {
+const taskValidation = (taskDefinition: ITaskDefinitionData): string[] => {
   const errors = [];
   if (!isValidName(taskDefinition.name))
     errors.push('taskDefinition.name is invalid');
@@ -74,7 +79,7 @@ export class TaskDefinition implements ITaskDefinition {
     [key: string]: any;
   } = {};
 
-  constructor(taskDefinition: ITaskDefinition) {
+  constructor(taskDefinition: ITaskDefinitionData) {
     const taskValidationErrors = taskValidation(taskDefinition);
 
     if (taskValidationErrors.length)
@@ -86,4 +91,25 @@ export class TaskDefinition implements ITaskDefinition {
       taskDefinition.topicConfigurations,
     );
   }
+
+  toObject = (): any => {
+    return R.pick(
+      [
+        'name',
+        'description',
+        'partitionsCount',
+        'topicConfigurations',
+        'responseTimeoutSecond',
+        'timeoutSecond',
+        'timeoutStrategy',
+        'failureStrategy',
+        'inputParameters',
+      ],
+      this,
+    );
+  };
+
+  toJSON = (): string => {
+    return JSON.stringify(this.toObject());
+  };
 }

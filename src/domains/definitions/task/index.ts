@@ -4,10 +4,9 @@ import { taskDefinitionStore } from '../../../store';
 export const createTaskDefinition = async (
   taskDefinition: TaskDefinition,
 ): Promise<any> => {
-  console.log(taskDefinition);
   await taskDefinitionStore.setValue(
     taskDefinition.name,
-    JSON.stringify(taskDefinition),
+    new TaskDefinition(taskDefinition).toJSON(),
   );
 };
 
