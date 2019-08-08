@@ -20,3 +20,11 @@ export const concatArray = (target: any[] = [], items: any[] | any): any[] => {
   if (R.is(Array, items)) return target.concat(items);
   return [...target, items];
 };
+
+export const jsonTryParse = (jsonString: string, defaultValue: any = {}) => {
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    return defaultValue;
+  }
+};

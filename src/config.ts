@@ -15,6 +15,12 @@ const pickAndReplaceFromENV = (template: string) =>
     return result;
   }, {});
 
+export const server = {
+  enabled: process.env['server.enabled'] === 'true',
+  port: +process.env['server.port'] || 8080,
+  hostname: process.env['server.hostname'] || '127.0.0.1',
+};
+
 export const dispatcher = {
   type: DispatcherType.Kafka,
   kafkaConfig: {

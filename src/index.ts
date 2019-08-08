@@ -4,6 +4,7 @@ import { KafkaDispatcher } from './dispatcher/kafka';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
 import { TeskDefinitionZookeeperStore } from './store/zookeeper/teskDefinition';
+import * as server from './server';
 
 switch (config.dispatcher.type) {
   case dispatcher.DispatcherType.Kafka:
@@ -48,4 +49,9 @@ switch (config.taskDefinitionStore.type) {
     throw new Error(
       `TaskDefinition Store: ${config.taskDefinitionStore.type} is invalid`,
     );
+}
+
+if (config.server.enabled) {
+  console.log('eiei');
+  new server.Server(config.server.port, config.server.hostname, true);
 }
