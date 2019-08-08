@@ -7,7 +7,7 @@ Date.now = jest.fn();
 describe('Task', () => {
   describe('Create TaskDefinition', () => {
     test('Default value', () => {
-      expect(new TaskDefinition({ name: 'hello-world' })).toEqual({
+      expect(new TaskDefinition({ name: 'hello-world' }).toObject()).toEqual({
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'FAILED',
@@ -30,7 +30,7 @@ describe('Task', () => {
         new TaskDefinition({
           name: 'hello-world',
           failureStrategy: FailureStrategies.Ignore,
-        }),
+        }).toObject(),
       ).toEqual({
         name: 'hello-world',
         description: 'No description',
@@ -57,7 +57,7 @@ describe('Task', () => {
           topicConfigurations: {
             'cleanup.policy': 'delete',
           },
-        }),
+        }).toObject(),
       ).toEqual({
         name: 'hello-world',
         description: 'No description',
@@ -114,7 +114,7 @@ describe('Task', () => {
             name: 'huhu',
             rev: '3',
           },
-        }),
+        }).toObject(),
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RECOVERY_WORKFLOW',
@@ -162,7 +162,7 @@ describe('Task', () => {
             delaySecond: 1,
             limit: 3,
           },
-        }),
+        }).toObject(),
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RETRY',

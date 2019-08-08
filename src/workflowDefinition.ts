@@ -79,7 +79,7 @@ const isFailureStrategiesConfigValid = (
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.Retry &&
   (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
-    !isString(R.path(['retry', 'delaySecond'], workflowDefinition)));
+    !isNumber(R.path(['retry', 'delaySecond'], workflowDefinition)));
 
 const isEmptyTasks = R.compose(
   R.isEmpty,

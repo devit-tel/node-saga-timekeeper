@@ -26,7 +26,7 @@ describe('Workflow Def', () => {
               },
             },
           ],
-        }),
+        }).toObject(),
       ).toEqual({
         name: 'hello-world',
         rev: '1',
@@ -137,7 +137,7 @@ describe('Workflow Def', () => {
             name: 'hihi',
             rev: '2',
           },
-        }),
+        }).toObject(),
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RECOVERY_WORKFLOW',
@@ -213,7 +213,7 @@ describe('Workflow Def', () => {
             delaySecond: 3,
             limit: 2,
           },
-        }),
+        }).toObject(),
       ).toEqual({
         description: 'No description',
         failureStrategy: 'RETRY',
@@ -431,7 +431,7 @@ describe('Workflow Def', () => {
               ],
             },
           ],
-        }),
+        }).toObject(),
       ).toEqual({
         description: 'No description',
         name: 'hello-world',

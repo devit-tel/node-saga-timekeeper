@@ -19,6 +19,9 @@ export interface ITaskDefinitionData {
     name: string;
     rev: string;
   };
+  inputParameters?: {
+    [key: string]: any;
+  };
 }
 
 export interface ITaskDefinition extends ITaskDefinitionData {
@@ -103,6 +106,8 @@ export class TaskDefinition implements ITaskDefinition {
         'timeoutSecond',
         'timeoutStrategy',
         'failureStrategy',
+        'retry',
+        'recoveryWorkflow',
         'inputParameters',
       ],
       this,

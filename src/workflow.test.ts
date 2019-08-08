@@ -7,28 +7,25 @@ Date.now = jest.fn();
 
 describe('Workflow', () => {
   describe('Workflow', () => {
-    const simpleWorkflow = new Workflow(
-      new WorkflowDefinition({
-        name: 'WORKFLOW_001',
-        rev: '1',
-        tasks: [
-          {
-            name: 'TASK_1',
-            taskReferenceName: 'TASK_1',
-            type: TaskTypes.Task,
-            inputParameters: {},
-          },
-          {
-            name: 'TASK_2',
-            taskReferenceName: 'TASK_2',
-            type: TaskTypes.Task,
-            inputParameters: {},
-          },
-        ],
-      }),
-      {},
-      {},
-    );
+    const workflowDefinition = new WorkflowDefinition({
+      name: 'WORKFLOW_001',
+      rev: '1',
+      tasks: [
+        {
+          name: 'TASK_1',
+          taskReferenceName: 'TASK_1',
+          type: TaskTypes.Task,
+          inputParameters: {},
+        },
+        {
+          name: 'TASK_2',
+          taskReferenceName: 'TASK_2',
+          type: TaskTypes.Task,
+          inputParameters: {},
+        },
+      ],
+    });
+    const simpleWorkflow = new Workflow(workflowDefinition, {}, {});
 
     test('Simple Workflow', () => {
       expect(simpleWorkflow).toEqual({
@@ -39,24 +36,7 @@ describe('Workflow', () => {
         startTime: undefined,
         status: 'RUNNING',
         taskData: {},
-        workflowDefinition: {
-          name: 'WORKFLOW_001',
-          rev: '1',
-          tasks: [
-            {
-              name: 'TASK_1',
-              taskReferenceName: 'TASK_1',
-              type: TaskTypes.Task,
-              inputParameters: {},
-            },
-            {
-              name: 'TASK_2',
-              taskReferenceName: 'TASK_2',
-              type: TaskTypes.Task,
-              inputParameters: {},
-            },
-          ],
-        },
+        workflowDefinition,
         workflowId: undefined,
         workflowName: 'WORKFLOW_001',
         workflowRev: '1',
