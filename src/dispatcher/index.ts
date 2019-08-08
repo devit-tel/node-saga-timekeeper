@@ -1,7 +1,7 @@
-import * as Task from '../task';
+import { Task } from '../task';
 
 export interface IDispatcher {
-  dispatch(taskName: string, task: Task.Task): void;
+  dispatch(taskName: string, task: Task): void;
 }
 
 export enum DispatcherType {
@@ -20,7 +20,7 @@ export class Dispatcher implements IDispatcher {
     this.client = client;
   }
 
-  dispatch(taskName: string, task: Task.Task) {
+  dispatch(taskName: string, task: Task) {
     this.client.dispatch(taskName, task);
   }
 }

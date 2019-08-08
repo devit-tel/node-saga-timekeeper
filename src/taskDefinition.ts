@@ -1,6 +1,25 @@
 import * as R from 'ramda';
-import * as TaskC from './constants/task';
-import * as CommonUtils from './utils/common';
+import { TopicConfigurations, FailureStrategies } from './constants/task';
+import { isValidName } from './utils/common';
+
+export interface ITaskDefinition {
+  name: string;
+  description?: string;
+  partitionsCount?: number;
+  topicConfigurations?: TopicConfigurations;
+  responseTimeoutSecond?: number;
+  timeoutSecond?: number;
+  timeoutStrategy?: FailureStrategies;
+  failureStrategy?: FailureStrategies;
+  retry?: {
+    limit: number;
+    delaySecond: number;
+  };
+  recoveryWorkflow?: {
+    name: string;
+    rev: number;
+  };
+}
 
 const defaultTopicConfigurations = {
   'cleanup.policy': 'compact',
@@ -13,26 +32,24 @@ const isNumber = R.is(Number);
 const isString = R.is(String);
 
 const isRecoveryWorkflowConfigValid = (
-  taskDefinition: TaskC.TaskDefinition,
+  taskDefinition: ITaskDefinition,
 ): boolean =>
-  (taskDefinition.timeoutStrategy ===
-    TaskC.FailureStrategies.RecoveryWorkflow ||
-    taskDefinition.failureStrategy ===
-      TaskC.FailureStrategies.RecoveryWorkflow) &&
+  (taskDefinition.timeoutStrategy === FailureStrategies.RecoveryWorkflow ||
+    taskDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow) &&
   (!isString(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
     !isNumber(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
 
 const isFailureStrategiesConfigValid = (
-  taskDefinition: TaskC.TaskDefinition,
+  taskDefinition: ITaskDefinition,
 ): boolean =>
-  (taskDefinition.timeoutStrategy === TaskC.FailureStrategies.Retry ||
-    taskDefinition.failureStrategy === TaskC.FailureStrategies.Retry) &&
+  (taskDefinition.timeoutStrategy === FailureStrategies.Retry ||
+    taskDefinition.failureStrategy === FailureStrategies.Retry) &&
   (!isNumber(R.path(['retry', 'limit'], taskDefinition)) ||
     !isNumber(R.path(['retry', 'delaySecond'], taskDefinition)));
 
-const taskValidation = (taskDefinition: TaskC.TaskDefinition): string[] => {
+const taskValidation = (taskDefinition: ITaskDefinition): string[] => {
   const errors = [];
-  if (!CommonUtils.isValidName(taskDefinition.name))
+  if (!isValidName(taskDefinition.name))
     errors.push('taskDefinition.name is invalid');
 
   if (isRecoveryWorkflowConfigValid(taskDefinition))
@@ -44,20 +61,20 @@ const taskValidation = (taskDefinition: TaskC.TaskDefinition): string[] => {
   return errors;
 };
 
-export class TaskDefinition implements TaskC.TaskDefinition {
+export class TaskDefinition implements ITaskDefinition {
   name: string;
   description: string = 'No description';
   partitionsCount: number = 10;
-  topicConfigurations: TaskC.TopicConfigurations = {};
+  topicConfigurations: TopicConfigurations = {};
   responseTimeoutSecond: number = 5;
   timeoutSecond: number = 30;
-  timeoutStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
-  failureStrategy: TaskC.FailureStrategies = TaskC.FailureStrategies.Failed;
+  timeoutStrategy: FailureStrategies = FailureStrategies.Failed;
+  failureStrategy: FailureStrategies = FailureStrategies.Failed;
   inputParameters: {
     [key: string]: any;
   } = {};
 
-  constructor(taskDefinition: TaskC.TaskDefinition) {
+  constructor(taskDefinition: ITaskDefinition) {
     const taskValidationErrors = taskValidation(taskDefinition);
 
     if (taskValidationErrors.length)

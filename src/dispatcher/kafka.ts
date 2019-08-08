@@ -1,6 +1,6 @@
-import * as KafkaClient from 'node-rdkafka';
-import { IDispatcher } from './';
-import * as Task from '../task';
+import { Producer } from 'node-rdkafka';
+import { IDispatcher } from '../dispatcher';
+import { Task } from '../task';
 
 // https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
 const DEFAULT_PRODUCER_CONF = {
@@ -24,12 +24,12 @@ const DEFAULT_PRODUCER_TOPIC_CONFIG = {
 };
 
 export class KafkaDispatcher implements IDispatcher {
-  private client: KafkaClient.Producer;
+  private client: Producer;
   constructor(
     overidePruducerConf?: { [key: string]: any },
     overidePruducerTopicConf?: { [key: string]: any },
   ) {
-    this.client = new KafkaClient.Producer(
+    this.client = new Producer(
       { ...DEFAULT_PRODUCER_CONF, ...overidePruducerConf },
       { ...DEFAULT_PRODUCER_TOPIC_CONFIG, ...overidePruducerTopicConf },
     );
@@ -38,7 +38,7 @@ export class KafkaDispatcher implements IDispatcher {
     this.client.on('error', console.log);
     this.client.on('ready', () => console.log('ready'));
   }
-  dispatch(taskName: string, task: Task.Task) {
+  dispatch(taskName: string, task: Task) {
     this.client.produce(
       `TASK_${taskName}`,
       null,

@@ -1,14 +1,30 @@
 import * as R from 'ramda';
 import * as uuid from 'uuid/v4';
-import * as WorkflowC from './constants/workflow';
-import * as TaskC from './constants/task';
-import * as State from './state';
-import * as Task from './task';
-export class Workflow implements WorkflowC.Workflow {
+import { IWorkflowDefinition } from './workflowDefinition';
+import { WorkflowStates } from './constants/workflow';
+import { getWorkflowTask } from './state';
+import { ITask, Task } from './task';
+
+export interface IWorkflow {
   workflowName: string;
   workflowRev: number;
   workflowId: string;
-  status: WorkflowC.WorkflowStates;
+  status: WorkflowStates;
+  retryCount: number;
+  input: {
+    [key: string]: any;
+  };
+  output: any;
+  createTime: number;
+  startTime: number;
+  endTime: number;
+}
+
+export class Workflow implements IWorkflow {
+  workflowName: string;
+  workflowRev: number;
+  workflowId: string;
+  status: WorkflowStates;
   retryCount: number;
   input: {
     [key: string]: any;
@@ -18,15 +34,15 @@ export class Workflow implements WorkflowC.Workflow {
   startTime: number;
   endTime: number;
 
-  workflowDefinition: WorkflowC.WorkflowDefinition;
-  taskData: { [taskReferenceName: string]: TaskC.Task };
+  workflowDefinition: IWorkflowDefinition;
+  taskData: { [taskReferenceName: string]: ITask };
 
   constructor(
-    workflowDefinition: WorkflowC.WorkflowDefinition,
+    workflowDefinition: IWorkflowDefinition,
     input: {
       [key: string]: any;
     },
-    taskData: { [taskReferenceName: string]: TaskC.Task },
+    taskData: { [taskReferenceName: string]: ITask },
   ) {
     this.workflowDefinition = workflowDefinition;
     this.taskData = taskData;
@@ -34,7 +50,7 @@ export class Workflow implements WorkflowC.Workflow {
     this.workflowName = workflowDefinition.name;
     this.workflowRev = workflowDefinition.rev;
     this.workflowId = uuid();
-    this.status = WorkflowC.WorkflowStates.Running;
+    this.status = WorkflowStates.Running;
     this.retryCount = 0;
     this.input = input;
     this.createTime = Date.now();
@@ -43,13 +59,13 @@ export class Workflow implements WorkflowC.Workflow {
   }
 
   async startNextTask(taskReferenceNames?: string) {
-    const workflowTask = State.getWorkflowTask(
+    const workflowTask = getWorkflowTask(
       taskReferenceNames ||
         R.pathOr('', ['tasks', 0, 'name'], this.workflowDefinition),
       this.workflowDefinition,
     );
     if (workflowTask) {
-      const task = new Task.Task(this.workflowId, workflowTask, this.taskData);
+      const task = new Task(this.workflowId, workflowTask, this.taskData);
       await task.dispatch();
     }
   }

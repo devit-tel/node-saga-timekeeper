@@ -1,6 +1,6 @@
-import * as WorkflowDefinition from './workflowDefinition';
-import * as TaskC from './constants/task';
-import * as WorkflowC from './constants/workflow';
+import { WorkflowDefinition } from './workflowDefinition';
+import { TaskTypes } from './constants/task';
+import { FailureStrategies } from './constants/workflow';
 
 jest.mock('uuid/v4');
 Date.now = jest.fn();
@@ -9,14 +9,14 @@ describe('Workflow Def', () => {
   describe('Create workflow', () => {
     test('Default value', () => {
       expect(
-        new WorkflowDefinition.WorkflowDefinition({
+        new WorkflowDefinition({
           name: 'hello-world',
           rev: 1,
           tasks: [
             {
               name: 'huhu',
               taskReferenceName: 'HUHU',
-              type: TaskC.TaskTypes.SubWorkflow,
+              type: TaskTypes.SubWorkflow,
               inputParameters: {
                 a: 'b',
               },
@@ -51,14 +51,14 @@ describe('Workflow Def', () => {
     test('Invalid name', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition({
+          new WorkflowDefinition({
             name: '',
             rev: 1,
             tasks: [
               {
                 name: 'huhu',
                 taskReferenceName: 'HUHU',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {
                   a: 'b',
                 },
@@ -71,14 +71,14 @@ describe('Workflow Def', () => {
     test('Invalid rev', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition({
+          new WorkflowDefinition({
             name: 'hello-world',
             rev: undefined,
             tasks: [
               {
                 name: 'huhu',
                 taskReferenceName: 'HUHU',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {
                   a: 'b',
                 },
@@ -91,14 +91,14 @@ describe('Workflow Def', () => {
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition({
+          new WorkflowDefinition({
             name: 'hello-world',
             rev: 1,
             tasks: [
               {
                 name: 'huhu',
                 taskReferenceName: 'HUHU',
-                type: TaskC.TaskTypes.SubWorkflow,
+                type: TaskTypes.SubWorkflow,
                 inputParameters: {
                   a: 'b',
                 },
@@ -108,21 +108,21 @@ describe('Workflow Def', () => {
                 },
               },
             ],
-            failureStrategy: WorkflowC.FailureStrategies.RecoveryWorkflow,
+            failureStrategy: FailureStrategies.RecoveryWorkflow,
           }),
       ).toThrow('workflowDefinition.recoveryWorkflow is invalid');
     });
 
     test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
       expect(
-        new WorkflowDefinition.WorkflowDefinition({
+        new WorkflowDefinition({
           name: 'hello-world',
           rev: 1,
           tasks: [
             {
               name: 'huhu',
               taskReferenceName: 'HUHU',
-              type: TaskC.TaskTypes.SubWorkflow,
+              type: TaskTypes.SubWorkflow,
               inputParameters: {
                 a: 'b',
               },
@@ -132,7 +132,7 @@ describe('Workflow Def', () => {
               },
             },
           ],
-          failureStrategy: WorkflowC.FailureStrategies.RecoveryWorkflow,
+          failureStrategy: FailureStrategies.RecoveryWorkflow,
           recoveryWorkflow: {
             name: 'hihi',
             rev: 2,
@@ -167,14 +167,14 @@ describe('Workflow Def', () => {
     test('failureStrategy to "RETRY" without retry param', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition({
+          new WorkflowDefinition({
             name: 'hello-world',
             rev: 1,
             tasks: [
               {
                 name: 'huhu',
                 taskReferenceName: 'HUHU',
-                type: TaskC.TaskTypes.SubWorkflow,
+                type: TaskTypes.SubWorkflow,
                 inputParameters: {
                   a: 'b',
                 },
@@ -184,21 +184,21 @@ describe('Workflow Def', () => {
                 },
               },
             ],
-            failureStrategy: WorkflowC.FailureStrategies.Retry,
+            failureStrategy: FailureStrategies.Retry,
           }),
       ).toThrow('workflowDefinition.retry is invalid');
     });
 
     test('failureStrategy to "RETRY" with retry param', () => {
       expect(
-        new WorkflowDefinition.WorkflowDefinition({
+        new WorkflowDefinition({
           name: 'hello-world',
           rev: 1,
           tasks: [
             {
               name: 'huhu',
               taskReferenceName: 'HUHU',
-              type: TaskC.TaskTypes.SubWorkflow,
+              type: TaskTypes.SubWorkflow,
               inputParameters: {
                 a: 'b',
               },
@@ -208,7 +208,7 @@ describe('Workflow Def', () => {
               },
             },
           ],
-          failureStrategy: WorkflowC.FailureStrategies.Retry,
+          failureStrategy: FailureStrategies.Retry,
           retry: {
             delaySecond: 3,
             limit: 2,
@@ -243,7 +243,7 @@ describe('Workflow Def', () => {
     test('Empty task', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition({
+          new WorkflowDefinition({
             name: 'hello-world',
             rev: 1,
             tasks: [],
@@ -254,7 +254,7 @@ describe('Workflow Def', () => {
     test('Invalid WorkflowDefinition', () => {
       expect(
         () =>
-          new WorkflowDefinition.WorkflowDefinition(
+          new WorkflowDefinition(
             JSON.parse(
               JSON.stringify({
                 name: 'hello-world',
@@ -263,20 +263,20 @@ describe('Workflow Def', () => {
                   {
                     name: 'eiei',
                     taskReferenceName: 'eiei',
-                    // type: TaskC.TaskTypes.Task,
+                    // type: TaskTypes.Task,
                     type: 'SOME_RAMDON_TYPE',
                     inputParameters: {},
                   },
                   {
                     // name: 'task002',
                     taskReferenceName: 'lol',
-                    type: TaskC.TaskTypes.Decision,
+                    type: TaskTypes.Decision,
                     inputParameters: {},
                     defaultDecision: [
                       // {
                       //   name: 'default_one',
                       //   taskReferenceName: 'default_one',
-                      //   type: TaskC.TaskTypes.Task,
+                      //   type: TaskTypes.Task,
                       //   inputParameters: {},
                       // },
                     ],
@@ -286,13 +286,13 @@ describe('Workflow Def', () => {
                           name: 'huhu',
                           // taskReferenceName: 'lol_2',
                           taskReferenceName: 'lol',
-                          type: TaskC.TaskTypes.Decision,
+                          type: TaskTypes.Decision,
                           inputParameters: {},
                           defaultDecision: [
                             {
                               name: 'eiei',
                               // taskReferenceName: 'case1_eiei',
-                              type: TaskC.TaskTypes.Task,
+                              type: TaskTypes.Task,
                               inputParameters: {},
                             },
                           ],
@@ -303,14 +303,14 @@ describe('Workflow Def', () => {
                   {
                     name: 'eiei',
                     taskReferenceName: 'PARALLEL_TASK',
-                    type: TaskC.TaskTypes.Parallel,
+                    type: TaskTypes.Parallel,
                     inputParameters: {},
                     parallelTasks: [
                       [
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel_child1',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                       ],
@@ -318,7 +318,7 @@ describe('Workflow Def', () => {
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel_child2',
-                          type: TaskC.TaskTypes.SubWorkflow,
+                          type: TaskTypes.SubWorkflow,
                           inputParameters: {},
                           // workflow: {
                           //   name: 'haha',
@@ -328,7 +328,7 @@ describe('Workflow Def', () => {
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel_child3',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                       ],
@@ -354,40 +354,40 @@ describe('Workflow Def', () => {
     // tslint:disable-next-line: max-func-body-length
     test('Nested WorkflowDefinition', () => {
       expect(
-        new WorkflowDefinition.WorkflowDefinition({
+        new WorkflowDefinition({
           name: 'hello-world',
           rev: 1,
           tasks: [
             {
               name: 'eiei',
               taskReferenceName: 'eiei',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
             {
               name: 'eiei',
               taskReferenceName: 'PARALLEL_TASK',
-              type: TaskC.TaskTypes.Parallel,
+              type: TaskTypes.Parallel,
               inputParameters: {},
               parallelTasks: [
                 [
                   {
                     name: 'eiei',
                     taskReferenceName: 'parallel1_child2',
-                    type: TaskC.TaskTypes.Parallel,
+                    type: TaskTypes.Parallel,
                     inputParameters: {},
                     parallelTasks: [
                       [
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel12_child1',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel12_child2',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                       ],
@@ -395,13 +395,13 @@ describe('Workflow Def', () => {
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel22_child1',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                         {
                           name: 'eiei',
                           taskReferenceName: 'parallel22_child2',
-                          type: TaskC.TaskTypes.Task,
+                          type: TaskTypes.Task,
                           inputParameters: {},
                         },
                       ],
@@ -410,7 +410,7 @@ describe('Workflow Def', () => {
                   {
                     name: 'eiei',
                     taskReferenceName: 'parallel1_child1',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],
@@ -418,13 +418,13 @@ describe('Workflow Def', () => {
                   {
                     name: 'eiei',
                     taskReferenceName: 'parallel2_child1',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                   {
                     name: 'eiei',
                     taskReferenceName: 'parallel2_child2',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],

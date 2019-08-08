@@ -1,4 +1,4 @@
-import * as CommonUtils from '../utils/common';
+import { enumToList } from '../utils/common';
 
 export enum TaskTypes {
   Task = 'TASK',
@@ -7,7 +7,7 @@ export enum TaskTypes {
   Decision = 'DECISION',
 }
 
-export const TaskTypesList = CommonUtils.enumToList(TaskTypes);
+export const TaskTypesList = enumToList(TaskTypes);
 
 export enum FailureStrategies {
   Failed = 'FAILED',
@@ -16,7 +16,7 @@ export enum FailureStrategies {
   Ignore = 'IGNORE',
 }
 
-export const FailureStrategiesList = CommonUtils.enumToList(FailureStrategies);
+export const FailureStrategiesList = enumToList(FailureStrategies);
 
 export enum TaskStates {
   Scheduled = 'SCHEDULED',
@@ -26,7 +26,7 @@ export enum TaskStates {
   Timeout = 'TIMEOUT',
 }
 
-export const TaskStatesList = CommonUtils.enumToList(FailureStrategies);
+export const TaskStatesList = enumToList(FailureStrategies);
 
 export const TaskNextStates = {
   [TaskStates.Scheduled]: [TaskStates.Inprogress],
@@ -86,47 +86,4 @@ export interface TopicConfigurations {
   'segment.ms'?: number;
   'unclean.leader.election.enable'?: boolean;
   'message.downconversion.enable'?: boolean;
-}
-
-export interface TaskDefinition {
-  name: string;
-  description?: string;
-  partitionsCount?: number;
-  topicConfigurations?: TopicConfigurations;
-  responseTimeoutSecond?: number;
-  timeoutSecond?: number;
-  timeoutStrategy?: FailureStrategies;
-  failureStrategy?: FailureStrategies;
-  retry?: {
-    limit: number;
-    delaySecond: number;
-  };
-  recoveryWorkflow?: {
-    name: string;
-    rev: number;
-  };
-}
-
-export interface Task {
-  taskName: string;
-  taskReferenceNames: string;
-  taskId: string;
-  workflowId: string;
-  status: TaskStates;
-  retryCount: number;
-  input: {
-    [key: string]: any;
-  };
-  output: any;
-  createTime: number; // time that push into Kafka
-  startTime: number; // time that worker ack
-  endTime: number; // time that task finish/failed/cancel
-  logs?: any[];
-}
-
-export interface TaskUpdate {
-  taskId: string;
-  status: TaskStates;
-  output?: any;
-  logs?: any[] | any;
 }

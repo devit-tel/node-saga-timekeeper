@@ -1,5 +1,5 @@
-import * as TaskDefinition from './taskDefinition';
-import * as TaskC from './constants/task';
+import { TaskDefinition } from './taskDefinition';
+import { FailureStrategies } from './constants/task';
 
 jest.mock('uuid/v4');
 Date.now = jest.fn();
@@ -7,9 +7,7 @@ Date.now = jest.fn();
 describe('Task', () => {
   describe('Create TaskDefinition', () => {
     test('Default value', () => {
-      expect(
-        new TaskDefinition.TaskDefinition({ name: 'hello-world' }),
-      ).toEqual({
+      expect(new TaskDefinition({ name: 'hello-world' })).toEqual({
         name: 'hello-world',
         description: 'No description',
         failureStrategy: 'FAILED',
@@ -29,9 +27,9 @@ describe('Task', () => {
 
     test('Overided default value', () => {
       expect(
-        new TaskDefinition.TaskDefinition({
+        new TaskDefinition({
           name: 'hello-world',
-          failureStrategy: TaskC.FailureStrategies.Ignore,
+          failureStrategy: FailureStrategies.Ignore,
         }),
       ).toEqual({
         name: 'hello-world',
@@ -53,9 +51,9 @@ describe('Task', () => {
 
     test('set topicConfigurations', () => {
       expect(
-        new TaskDefinition.TaskDefinition({
+        new TaskDefinition({
           name: 'hello-world',
-          failureStrategy: TaskC.FailureStrategies.Ignore,
+          failureStrategy: FailureStrategies.Ignore,
           topicConfigurations: {
             'cleanup.policy': 'delete',
           },
@@ -81,9 +79,9 @@ describe('Task', () => {
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>
-          new TaskDefinition.TaskDefinition({
+          new TaskDefinition({
             name: '',
-            failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
+            failureStrategy: FailureStrategies.RecoveryWorkflow,
             topicConfigurations: {
               'cleanup.policy': 'delete',
             },
@@ -94,9 +92,9 @@ describe('Task', () => {
     test('failureStrategy to "RECOVERY_WORKFLOW" without recoveryWorkflow param', () => {
       expect(
         () =>
-          new TaskDefinition.TaskDefinition({
+          new TaskDefinition({
             name: 'hello-world',
-            failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
+            failureStrategy: FailureStrategies.RecoveryWorkflow,
             topicConfigurations: {
               'cleanup.policy': 'delete',
             },
@@ -106,9 +104,9 @@ describe('Task', () => {
 
     test('failureStrategy to "RECOVERY_WORKFLOW" with recoveryWorkflow param', () => {
       expect(
-        new TaskDefinition.TaskDefinition({
+        new TaskDefinition({
           name: 'hello-world',
-          failureStrategy: TaskC.FailureStrategies.RecoveryWorkflow,
+          failureStrategy: FailureStrategies.RecoveryWorkflow,
           topicConfigurations: {
             'cleanup.policy': 'delete',
           },
@@ -142,9 +140,9 @@ describe('Task', () => {
     test('failureStrategy to "RETRY" without retry param', () => {
       expect(
         () =>
-          new TaskDefinition.TaskDefinition({
+          new TaskDefinition({
             name: 'hello-world',
-            failureStrategy: TaskC.FailureStrategies.Retry,
+            failureStrategy: FailureStrategies.Retry,
             topicConfigurations: {
               'cleanup.policy': 'delete',
             },
@@ -154,9 +152,9 @@ describe('Task', () => {
 
     test('failureStrategy to "RETRY" with retry param', () => {
       expect(
-        new TaskDefinition.TaskDefinition({
+        new TaskDefinition({
           name: 'hello-world',
-          failureStrategy: TaskC.FailureStrategies.Retry,
+          failureStrategy: FailureStrategies.Retry,
           topicConfigurations: {
             'cleanup.policy': 'delete',
           },

@@ -11,4 +11,5 @@ export const startWorkflow = async (
   if (!workflowData) {
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
+  return '';
 };

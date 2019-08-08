@@ -1,26 +1,34 @@
 import * as R from 'ramda';
-import * as TaskC from './constants/task';
-import * as WorkflowC from './constants/workflow';
-import * as CommonUtils from './utils/common';
+import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
+import { WorkflowDefinition } from './workflowDefinition';
+import { concatArray } from './utils/common';
 // import * as Store from './stores';
-import * as WorkflowDefinition from './workflowDefinition';
-// import * as Task from './task';
+import {
+  AllTaskType,
+  IParallelTask,
+  IDecisionTask,
+} from './workflowDefinition';
+import { ITask } from './task';
+
+export interface ITaskUpdate {
+  taskId: string;
+  status: TaskStates;
+  output?: any;
+  logs?: any[] | any;
+}
 
 export const isAbleToTranslateTaskStatus = (
-  currentStatus: TaskC.TaskStates,
-  status: TaskC.TaskStates,
+  currentStatus: TaskStates,
+  status: TaskStates,
 ): boolean => {
-  if (TaskC.TaskNextStates[currentStatus]) {
-    if (TaskC.TaskNextStates[currentStatus].includes(status)) return true;
+  if (TaskNextStates[currentStatus]) {
+    if (TaskNextStates[currentStatus].includes(status)) return true;
     return false;
   }
   throw new Error(`Current status: "${currentStatus}" is invalid`);
 };
 
-export const processTask = (
-  task: TaskC.Task,
-  taskUpdate: TaskC.TaskUpdate,
-): TaskC.Task => {
+export const processTask = (task: ITask, taskUpdate: ITaskUpdate): ITask => {
   if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status))
     throw new Error(
       `Cannot change status from ${task.status} to ${taskUpdate.status}`,
@@ -30,18 +38,18 @@ export const processTask = (
     ...task,
     status: taskUpdate.status,
     output: R.isNil(taskUpdate.output) ? task.output : taskUpdate.output,
-    logs: CommonUtils.concatArray(task.logs, taskUpdate.logs),
+    logs: concatArray(task.logs, taskUpdate.logs),
   };
 };
 
 // export const updateTask = async (
-//   taskUpdate: TaskC.TaskUpdate,
-// ): Promise<TaskC.Task> => {
+//   taskUpdate: ITaskUpdate,
+// ): Promise<ITask> => {
 //   // TODO Imprement mutex for store
-//   const task: TaskC.Task = await Store.getTaskFromStore(taskUpdate.taskId);
+//   const task: ITask = await Store.getTaskFromStore(taskUpdate.taskId);
 //   const updatedTask = processTask(task, taskUpdate);
 
-//   if (updatedTask.status === TaskC.TaskStates.Completed) {
+//   if (updatedTask.status === TaskStates.Completed) {
 //     // TODO start next task
 //   }
 //   return Store.saveTaskToStore(taskUpdate.taskId, updatedTask);
@@ -49,23 +57,23 @@ export const processTask = (
 
 // This job should handled by Task's class
 // export const walkForNextTasks = (
-//   tasks: WorkflowC.AllTaskType[],
+//   tasks: AllTaskType[],
 //   currentPath: (string | number)[] = [0],
-// ): WorkflowC.AllTaskType[] => {
+// ): AllTaskType[] => {
 //   // When finish all tasks
 //   if (R.equals([tasks.length - 1], currentPath)) return null;
-//   const currentTask: WorkflowC.AllTaskType = R.path(currentPath, tasks);
+//   const currentTask: AllTaskType = R.path(currentPath, tasks);
 //   console.log(currentTask.type);
 //   switch (currentTask.type) {
-//     case TaskC.TaskTypes.Decision:
+//     case TaskTypes.Decision:
 //       // TODO Map output to new task
 //       return [R.path([...currentPath, 'defaultDecision', 0], tasks)];
-//     case TaskC.TaskTypes.Parallel:
+//     case TaskTypes.Parallel:
 //       return R.pathOr([], [...currentPath, 'parallelTasks'], tasks).map(
 //         R.path([0]),
 //       );
-//     case TaskC.TaskTypes.Task:
-//     case TaskC.TaskTypes.SubWorkflow:
+//     case TaskTypes.Task:
+//     case TaskTypes.SubWorkflow:
 //       return [R.path(getNextWalkPath(tasks, currentPath), tasks)];
 //   }
 // };
@@ -76,28 +84,28 @@ const getNextPath = (currentPath: (string | number)[]): (string | number)[] => [
 ];
 
 const isChildOfDecisionDefault = (
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[],
 ): boolean =>
   R.pathEq(
     [...R.dropLast(2, currentPath), 'type'],
-    TaskC.TaskTypes.Decision,
+    TaskTypes.Decision,
     tasks,
   ) && R.nth(-2, currentPath) === 'defaultDecision';
 
 const isChildOfDecisionCase = (
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[],
 ): boolean =>
   R.pathEq(
     [...R.dropLast(3, currentPath), 'type'],
-    TaskC.TaskTypes.Decision,
+    TaskTypes.Decision,
     tasks,
   ) && R.nth(-3, currentPath) === 'decisions';
 
 // Check if it's system task
 export const getNextTaskPath = (
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[],
 ): (string | number)[] => {
   // Check if this's the final task
@@ -108,7 +116,7 @@ export const getNextTaskPath = (
       return getNextPath(currentPath);
     case R.pathEq(
       [...R.dropLast(2, currentPath), 'type'],
-      TaskC.TaskTypes.Parallel,
+      TaskTypes.Parallel,
       tasks,
     ):
       // TODO Check if all child are completed
@@ -125,9 +133,9 @@ export const getNextTaskPath = (
 
 export const findNextParallelTaskPath = (
   taskReferenceNames: string,
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[],
-  currentTask: WorkflowC.ParallelTask,
+  currentTask: IParallelTask,
 ) => {
   for (
     let pTasksIndex = 0;
@@ -147,9 +155,9 @@ export const findNextParallelTaskPath = (
 
 export const findNextDecisionTaskPath = (
   taskReferenceNames: string,
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[],
-  currentTask: WorkflowC.DecisionTask,
+  currentTask: IDecisionTask,
 ) => {
   const decisionsPath = [
     ...Object.keys(currentTask.decisions).map((decision: string) => [
@@ -171,8 +179,8 @@ export const findNextDecisionTaskPath = (
 
 export const getWorkflowTask = (
   taskReferenceNames: string,
-  workflowDefinition: WorkflowDefinition.WorkflowDefinition,
-): WorkflowC.AllTaskType => {
+  workflowDefinition: WorkflowDefinition,
+): AllTaskType => {
   const taskPath = findTaskPath(taskReferenceNames, workflowDefinition.tasks);
   if (!taskPath)
     throw new Error(`taskReferenceNames: "${taskReferenceNames}" not found`);
@@ -181,31 +189,31 @@ export const getWorkflowTask = (
 
 export const findTaskPath = (
   taskReferenceNames: string,
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   currentPath: (string | number)[] = [0],
 ): (string | number)[] => {
-  const currentTask: WorkflowC.AllTaskType = R.path(currentPath, tasks);
+  const currentTask: AllTaskType = R.path(currentPath, tasks);
   if (currentTask)
     if (currentTask.taskReferenceName === taskReferenceNames)
       return currentPath;
     else
       switch (currentTask.type) {
-        case TaskC.TaskTypes.Parallel:
+        case TaskTypes.Parallel:
           return findNextParallelTaskPath(
             taskReferenceNames,
             tasks,
             currentPath,
             currentTask,
           );
-        case TaskC.TaskTypes.Decision:
+        case TaskTypes.Decision:
           return findNextDecisionTaskPath(
             taskReferenceNames,
             tasks,
             currentPath,
             currentTask,
           );
-        case TaskC.TaskTypes.SubWorkflow:
-        case TaskC.TaskTypes.Task:
+        case TaskTypes.SubWorkflow:
+        case TaskTypes.Task:
         default:
           return findTaskPath(
             taskReferenceNames,

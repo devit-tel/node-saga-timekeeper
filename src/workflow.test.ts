@@ -1,12 +1,12 @@
-import * as Workflow from './workflow';
-import * as TaskC from './constants/task';
+import { Workflow } from './workflow';
+import { TaskTypes } from './constants/task';
 
 jest.mock('uuid/v4');
 Date.now = jest.fn();
 
 describe('Workflow', () => {
   describe('Workflow', () => {
-    const simpleWorkflow = new Workflow.Workflow(
+    const simpleWorkflow = new Workflow(
       {
         name: 'WORKFLOW_001',
         rev: 1,
@@ -14,13 +14,13 @@ describe('Workflow', () => {
           {
             name: 'TASK_1',
             taskReferenceName: 'TASK_1',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'TASK_2',
             taskReferenceName: 'TASK_2',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
         ],
@@ -45,13 +45,13 @@ describe('Workflow', () => {
             {
               name: 'TASK_1',
               taskReferenceName: 'TASK_1',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
             {
               name: 'TASK_2',
               taskReferenceName: 'TASK_2',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],

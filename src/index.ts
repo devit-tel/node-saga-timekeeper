@@ -1,14 +1,14 @@
 import * as config from './config';
-import * as dispatcher from './dispatcher';
+import { dispatcher, DispatcherType } from './dispatcher';
 import { KafkaDispatcher } from './dispatcher/kafka';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
 import { TeskDefinitionZookeeperStore } from './store/zookeeper/teskDefinition';
-import * as server from './server';
+import { Server } from './server';
 
 switch (config.dispatcher.type) {
-  case dispatcher.DispatcherType.Kafka:
-    dispatcher.dispatcher.setClient(
+  case DispatcherType.Kafka:
+    dispatcher.setClient(
       new KafkaDispatcher(
         config.dispatcher.kafkaConfig.overideProducerConf,
         config.dispatcher.kafkaConfig.overideProducerTopicConf,
@@ -52,6 +52,5 @@ switch (config.taskDefinitionStore.type) {
 }
 
 if (config.server.enabled) {
-  console.log('eiei');
-  new server.Server(config.server.port, config.server.hostname, true);
+  new Server(config.server.port, config.server.hostname, true);
 }

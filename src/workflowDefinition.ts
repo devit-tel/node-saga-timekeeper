@@ -1,23 +1,78 @@
 import * as R from 'ramda';
-import * as WorkflowC from './constants/workflow';
-import * as TaskC from './constants/task';
-import * as CommonUtils from './utils/common';
+import { FailureStrategies } from './constants/workflow';
+import { TaskTypes, TaskTypesList } from './constants/task';
+import { isValidName, isValidRev } from './utils/common';
+import { ITaskDefinition } from './taskDefinition';
+
+export interface IBaseTask {
+  name: string;
+  taskReferenceName: string;
+  overideOptions?: ITaskDefinition;
+  inputParameters: {
+    [key: string]: string | number;
+  };
+}
+
+export interface ITask extends IBaseTask {
+  type: TaskTypes.Task;
+}
+
+export interface IParallelTask extends IBaseTask {
+  type: TaskTypes.Parallel;
+  parallelTasks: AllTaskType[][];
+}
+export interface ISubWorkflowTask extends IBaseTask {
+  type: TaskTypes.SubWorkflow;
+  workflow: {
+    name: string;
+    rev: number;
+  };
+}
+
+export interface IDecisionTask extends IBaseTask {
+  type: TaskTypes.Decision;
+  decisions: {
+    [decision: string]: AllTaskType[];
+  };
+  defaultDecision: AllTaskType[];
+}
+
+export type AllTaskType =
+  | ITask
+  | IParallelTask
+  | ISubWorkflowTask
+  | IDecisionTask;
+
+export interface IWorkflowDefinition {
+  name: string;
+  rev: number;
+  description?: string;
+  tasks: AllTaskType[];
+  failureStrategy?: FailureStrategies;
+  retry?: {
+    limit: number;
+    delaySecond: number;
+  };
+  recoveryWorkflow?: {
+    name: string;
+    rev: number;
+  };
+}
 
 const isNumber = R.is(Number);
 const isString = R.is(String);
 
 const isRecoveryWorkflowConfigValid = (
-  workflowDefinition: WorkflowC.WorkflowDefinition,
+  workflowDefinition: IWorkflowDefinition,
 ): boolean =>
-  workflowDefinition.failureStrategy ===
-    WorkflowC.FailureStrategies.RecoveryWorkflow &&
+  workflowDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow &&
   (!isString(R.path(['recoveryWorkflow', 'name'], workflowDefinition)) ||
     !isNumber(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
 
 const isFailureStrategiesConfigValid = (
-  workflowDefinition: WorkflowC.WorkflowDefinition,
+  workflowDefinition: IWorkflowDefinition,
 ): boolean =>
-  workflowDefinition.failureStrategy === WorkflowC.FailureStrategies.Retry &&
+  workflowDefinition.failureStrategy === FailureStrategies.Retry &&
   (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
     !isNumber(R.path(['retry', 'delaySecond'], workflowDefinition)));
 
@@ -32,12 +87,12 @@ const getTaskDecisions = R.compose(
 );
 
 const isValidWorkflowName = R.compose(
-  CommonUtils.isValidName,
+  isValidName,
   R.pathOr('', ['workflow', 'name']),
 );
 
 const isValidWorkflowRev = R.compose(
-  CommonUtils.isValidRev,
+  isValidRev,
   R.path(['workflow', 'rev']),
 );
 
@@ -49,21 +104,21 @@ interface TasksValidateOutput {
 }
 
 const validateTasks = (
-  tasks: WorkflowC.AllTaskType[],
+  tasks: AllTaskType[],
   root: string,
   defaultResult: TasksValidateOutput,
 ) =>
   tasks.reduce(
     (
       result: TasksValidateOutput,
-      task: WorkflowC.AllTaskType,
+      task: AllTaskType,
       index: number,
     ): TasksValidateOutput => {
       const currentRoot = `${root}.tasks[${index}]`;
-      if (!CommonUtils.isValidName(task.name))
+      if (!isValidName(task.name))
         result.errors.push(`${currentRoot}.name is invalid`);
 
-      if (!CommonUtils.isValidName(task.taskReferenceName))
+      if (!isValidName(task.taskReferenceName))
         result.errors.push(`${currentRoot}.taskReferenceName is invalid`);
 
       if (result.taskReferenceNames[task.taskReferenceName])
@@ -74,11 +129,11 @@ const validateTasks = (
 
       // TODO Validate inputParameters
 
-      if (!TaskC.TaskTypesList.includes(task.type))
+      if (!TaskTypesList.includes(task.type))
         result.errors.push(`${currentRoot}.type is invalid`);
 
-      if (task.type === TaskC.TaskTypes.Decision) {
-        const defaultDecision: WorkflowC.AllTaskType[] = R.propOr(
+      if (task.type === TaskTypes.Decision) {
+        const defaultDecision: AllTaskType[] = R.propOr(
           [],
           'defaultDecision',
           task,
@@ -95,7 +150,7 @@ const validateTasks = (
         return getTaskDecisions(task).reduce(
           (
             decisionResult: TasksValidateOutput,
-            [decision, decisionTasks]: [string, WorkflowC.AllTaskType[]],
+            [decision, decisionTasks]: [string, AllTaskType[]],
           ): TasksValidateOutput => {
             return validateTasks(
               decisionTasks,
@@ -107,8 +162,8 @@ const validateTasks = (
         );
       }
 
-      if (task.type === TaskC.TaskTypes.Parallel) {
-        const parallelTasks: WorkflowC.AllTaskType[][] = R.propOr(
+      if (task.type === TaskTypes.Parallel) {
+        const parallelTasks: AllTaskType[][] = R.propOr(
           [],
           'parallelTasks',
           task,
@@ -117,7 +172,7 @@ const validateTasks = (
         return parallelTasks.reduce(
           (
             parallelResult: TasksValidateOutput,
-            parallelTasks: WorkflowC.AllTaskType[],
+            parallelTasks: AllTaskType[],
             index: number,
           ): TasksValidateOutput => {
             return validateTasks(
@@ -130,7 +185,7 @@ const validateTasks = (
         );
       }
 
-      if (task.type === TaskC.TaskTypes.SubWorkflow) {
+      if (task.type === TaskTypes.SubWorkflow) {
         if (!isValidWorkflowName(task))
           result.errors.push(`${currentRoot}.workflow.name is invalid`);
 
@@ -146,13 +201,13 @@ const validateTasks = (
   );
 
 const workflowValidation = (
-  workflowDefinition: WorkflowC.WorkflowDefinition,
+  workflowDefinition: IWorkflowDefinition,
 ): string[] => {
   const errors = [];
-  if (!CommonUtils.isValidName(workflowDefinition.name))
+  if (!isValidName(workflowDefinition.name))
     errors.push('workflowDefinition.name is invalid');
 
-  if (!CommonUtils.isValidRev(workflowDefinition.rev))
+  if (!isValidRev(workflowDefinition.rev))
     errors.push('workflowDefinition.rev is invalid');
 
   if (isRecoveryWorkflowConfigValid(workflowDefinition))
@@ -167,12 +222,12 @@ const workflowValidation = (
   return errors;
 };
 
-export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
+export class WorkflowDefinition implements IWorkflowDefinition {
   name: string;
   rev: number;
   description?: string = 'No description';
-  tasks: WorkflowC.AllTaskType[];
-  failureStrategy?: WorkflowC.FailureStrategies;
+  tasks: AllTaskType[];
+  failureStrategy?: FailureStrategies;
   retry?: {
     limit: number;
     delaySecond: number;
@@ -182,7 +237,7 @@ export class WorkflowDefinition implements WorkflowC.WorkflowDefinition {
     rev: number;
   };
 
-  constructor(workflowDefinition: WorkflowC.WorkflowDefinition) {
+  constructor(workflowDefinition: IWorkflowDefinition) {
     const workflowValidationErrors = workflowValidation(workflowDefinition);
 
     const validateTasksResult = validateTasks(

@@ -1,5 +1,5 @@
-import * as Task from './task';
-import * as TaskC from './constants/task';
+import { Task } from './task';
+import { TaskTypes } from './constants/task';
 
 jest.mock('uuid/v4');
 Date.now = jest.fn();
@@ -8,11 +8,11 @@ describe('Task', () => {
   describe('Create Task instance', () => {
     test('Task', () => {
       expect(
-        new Task.Task(
+        new Task(
           'some_id',
           {
             name: 'task_name',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             taskReferenceName: 'task_name_1',
             inputParameters: {},
           },
@@ -36,17 +36,17 @@ describe('Task', () => {
 
     test('Task', () => {
       expect(
-        new Task.Task(
+        new Task(
           'some_id',
           {
             name: 'task_name',
-            type: TaskC.TaskTypes.Decision,
+            type: TaskTypes.Decision,
             taskReferenceName: 'task_name_1',
             inputParameters: {},
             defaultDecision: [
               {
                 name: 'task_name',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 taskReferenceName: 'task_defaultDecision_0',
                 inputParameters: {},
               },
@@ -55,13 +55,13 @@ describe('Task', () => {
               case1: [
                 {
                   name: 'task_name',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   taskReferenceName: 'task_case1_0',
                   inputParameters: {},
                 },
                 {
                   name: 'task_name',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   taskReferenceName: 'task_case1_1',
                   inputParameters: {},
                 },

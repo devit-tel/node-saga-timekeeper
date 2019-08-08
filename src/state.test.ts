@@ -1,6 +1,6 @@
 import * as State from './state';
-import * as TaskC from './constants/task';
-import * as WorkflowC from './constants/workflow';
+import { TaskStates, TaskTypes } from './constants/task';
+import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 // import MemoryStore from './stores/MemoryStore';
 
 describe('State', () => {
@@ -11,7 +11,7 @@ describe('State', () => {
         taskReferenceNames: 'MOCK_TASK',
         taskId: 'MOCK_TASK_001',
         workflowId: 'MOCK_WORKFLOW_001',
-        status: TaskC.TaskStates.Scheduled,
+        status: TaskStates.Scheduled,
         createTime: 123,
         startTime: 0,
         endTime: 0,
@@ -22,10 +22,10 @@ describe('State', () => {
       };
       expect(
         State.processTask(scheduledTask, {
-          status: TaskC.TaskStates.Inprogress,
+          status: TaskStates.Inprogress,
           taskId: 'MOCK_TASK_001',
         }),
-      ).toEqual({ ...scheduledTask, status: TaskC.TaskStates.Inprogress });
+      ).toEqual({ ...scheduledTask, status: TaskStates.Inprogress });
     });
 
     test('Complete task', () => {
@@ -34,7 +34,7 @@ describe('State', () => {
         taskReferenceNames: 'MOCK_TASK',
         taskId: 'MOCK_TASK_001',
         workflowId: 'MOCK_WORKFLOW_001',
-        status: TaskC.TaskStates.Inprogress,
+        status: TaskStates.Inprogress,
         createTime: 123,
         startTime: 0,
         endTime: 0,
@@ -45,7 +45,7 @@ describe('State', () => {
       };
       expect(
         State.processTask(scheduledTask, {
-          status: TaskC.TaskStates.Completed,
+          status: TaskStates.Completed,
           taskId: 'MOCK_TASK_001',
           logs: 'Done!',
           output: {
@@ -54,7 +54,7 @@ describe('State', () => {
         }),
       ).toEqual({
         ...scheduledTask,
-        status: TaskC.TaskStates.Completed,
+        status: TaskStates.Completed,
         logs: ['Job accepted', 'Done!'],
         output: {
           foo: 'bar',
@@ -82,7 +82,7 @@ describe('State', () => {
             }),
           ),
           {
-            status: TaskC.TaskStates.Inprogress,
+            status: TaskStates.Inprogress,
             taskId: 'MOCK_TASK_001',
             logs: '',
           },
@@ -99,7 +99,7 @@ describe('State', () => {
               taskReferenceNames: 'MOCK_TASK',
               taskId: 'MOCK_TASK_001',
               workflowId: 'MOCK_WORKFLOW_001',
-              status: TaskC.TaskStates.Failed,
+              status: TaskStates.Failed,
               createTime: 123,
               startTime: 0,
               endTime: 0,
@@ -110,7 +110,7 @@ describe('State', () => {
             }),
           ),
           {
-            status: TaskC.TaskStates.Completed,
+            status: TaskStates.Completed,
             taskId: 'MOCK_TASK_001',
             logs: '',
           },
@@ -126,25 +126,25 @@ describe('State', () => {
           {
             name: 'eiei',
             taskReferenceName: 'eiei',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'eiei',
             taskReferenceName: 'eiei2',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'eiei',
             taskReferenceName: 'eiei3',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'eiei',
             taskReferenceName: 'eiei4',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
         ]),
@@ -157,33 +157,33 @@ describe('State', () => {
           {
             name: 'eiei',
             taskReferenceName: 'eiei',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'eiei',
             taskReferenceName: 'PARALLEL_TASK',
-            type: TaskC.TaskTypes.Parallel,
+            type: TaskTypes.Parallel,
             inputParameters: {},
             parallelTasks: [
               [
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel1_child2',
-                  type: TaskC.TaskTypes.Parallel,
+                  type: TaskTypes.Parallel,
                   inputParameters: {},
                   parallelTasks: [
                     [
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel12_child1',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel12_child2',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                     ],
@@ -191,7 +191,7 @@ describe('State', () => {
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel11_child1',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                     ],
@@ -200,7 +200,7 @@ describe('State', () => {
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel1_child1',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
               ],
@@ -208,13 +208,13 @@ describe('State', () => {
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel2_child1',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel2_child2',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
               ],
@@ -223,7 +223,7 @@ describe('State', () => {
           {
             name: 'eiei',
             taskReferenceName: 'eiei4',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
         ]),
@@ -236,33 +236,33 @@ describe('State', () => {
           {
             name: 'eiei',
             taskReferenceName: 'eiei',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
           {
             name: 'eiei',
             taskReferenceName: 'PARALLEL_TASK',
-            type: TaskC.TaskTypes.Parallel,
+            type: TaskTypes.Parallel,
             inputParameters: {},
             parallelTasks: [
               [
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel1_child2',
-                  type: TaskC.TaskTypes.Parallel,
+                  type: TaskTypes.Parallel,
                   inputParameters: {},
                   parallelTasks: [
                     [
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel12_child1',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel12_child2',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                     ],
@@ -270,7 +270,7 @@ describe('State', () => {
                       {
                         name: 'eiei',
                         taskReferenceName: 'parallel11_child1',
-                        type: TaskC.TaskTypes.Task,
+                        type: TaskTypes.Task,
                         inputParameters: {},
                       },
                     ],
@@ -279,7 +279,7 @@ describe('State', () => {
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel1_child1',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
               ],
@@ -287,13 +287,13 @@ describe('State', () => {
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel2_child1',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
                 {
                   name: 'eiei',
                   taskReferenceName: 'parallel2_child2',
-                  type: TaskC.TaskTypes.Task,
+                  type: TaskTypes.Task,
                   inputParameters: {},
                 },
               ],
@@ -302,7 +302,7 @@ describe('State', () => {
           {
             name: 'eiei',
             taskReferenceName: 'eiei4',
-            type: TaskC.TaskTypes.Task,
+            type: TaskTypes.Task,
             inputParameters: {},
           },
         ]),
@@ -311,23 +311,23 @@ describe('State', () => {
 
     // tslint:disable-next-line: max-func-body-length
     test('With Decisions tasks', () => {
-      const tasks: WorkflowC.AllTaskType[] = [
+      const tasks: AllTaskType[] = [
         {
           name: 'eiei',
           taskReferenceName: 'eiei',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
         {
           name: 'task002',
           taskReferenceName: 'decision_task_1',
-          type: TaskC.TaskTypes.Decision,
+          type: TaskTypes.Decision,
           inputParameters: {},
           defaultDecision: [
             {
               name: 'decision_task_1_default',
               taskReferenceName: 'default_one',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],
@@ -336,13 +336,13 @@ describe('State', () => {
               {
                 name: 'huhu',
                 taskReferenceName: 'decision_task_1_case1',
-                type: TaskC.TaskTypes.Decision,
+                type: TaskTypes.Decision,
                 inputParameters: {},
                 defaultDecision: [
                   {
                     name: 'eiei',
                     taskReferenceName: 'decision_task_1_case1_default',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],
@@ -351,13 +351,13 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei5',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei55',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -365,7 +365,7 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei6',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -377,7 +377,7 @@ describe('State', () => {
         {
           name: 'eiei',
           taskReferenceName: 'eiei4',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
       ];
@@ -425,23 +425,23 @@ describe('State', () => {
 
     // tslint:disable-next-line: max-func-body-length
     test('With Complex tasks', () => {
-      const tasks: WorkflowC.AllTaskType[] = [
+      const tasks: AllTaskType[] = [
         {
           name: 'eiei',
           taskReferenceName: 'eiei',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
         {
           name: 'task002',
           taskReferenceName: 'decision_task_1',
-          type: TaskC.TaskTypes.Decision,
+          type: TaskTypes.Decision,
           inputParameters: {},
           defaultDecision: [
             {
               name: 'decision_task_1_default',
               taskReferenceName: 'default_one',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],
@@ -450,20 +450,20 @@ describe('State', () => {
               {
                 name: 'eiei',
                 taskReferenceName: 'decision_task_1_case1',
-                type: TaskC.TaskTypes.Parallel,
+                type: TaskTypes.Parallel,
                 inputParameters: {},
                 parallelTasks: [
                   [
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case1_parallel1_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case1_parallel1_2',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -471,7 +471,7 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case1_parallel2_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -482,13 +482,13 @@ describe('State', () => {
               {
                 name: 'eiei',
                 taskReferenceName: 'decision_task_1_case2_1',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {},
               },
               {
                 name: 'eiei',
                 taskReferenceName: 'decision_task_1_case2_2',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {},
               },
             ],
@@ -496,13 +496,13 @@ describe('State', () => {
               {
                 name: 'huhu',
                 taskReferenceName: 'decision_task_1_case3',
-                type: TaskC.TaskTypes.Decision,
+                type: TaskTypes.Decision,
                 inputParameters: {},
                 defaultDecision: [
                   {
                     name: 'eiei',
                     taskReferenceName: 'decision_task_1_case3_default',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],
@@ -511,13 +511,13 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_caseA_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_caseA_2',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -525,7 +525,7 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_caseB_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -534,13 +534,13 @@ describe('State', () => {
               {
                 name: 'huhu',
                 taskReferenceName: 'decision_task_1_case3_2',
-                type: TaskC.TaskTypes.Decision,
+                type: TaskTypes.Decision,
                 inputParameters: {},
                 defaultDecision: [
                   {
                     name: 'eiei',
                     taskReferenceName: 'decision_task_1_case3_2_default',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],
@@ -549,13 +549,13 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_2_caseA_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_2_caseA_2',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -563,7 +563,7 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'decision_task_1_case3_2_caseB_1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -575,7 +575,7 @@ describe('State', () => {
         {
           name: 'eiei',
           taskReferenceName: 'some_SubWorkflow',
-          type: TaskC.TaskTypes.SubWorkflow,
+          type: TaskTypes.SubWorkflow,
           inputParameters: {},
           workflow: {
             name: 'lol',
@@ -596,40 +596,40 @@ describe('State', () => {
   });
 
   describe('findWorkflowTask', () => {
-    const workflow: WorkflowC.WorkflowDefinition = {
+    const workflow: IWorkflowDefinition = {
       name: 'hello-world',
       rev: 1,
       tasks: [
         {
           name: 'eiei',
           taskReferenceName: 'eiei',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
         {
           name: 'eiei',
           taskReferenceName: 'PARALLEL_TASK',
-          type: TaskC.TaskTypes.Parallel,
+          type: TaskTypes.Parallel,
           inputParameters: {},
           parallelTasks: [
             [
               {
                 name: 'eiei',
                 taskReferenceName: 'parallel1_child2',
-                type: TaskC.TaskTypes.Parallel,
+                type: TaskTypes.Parallel,
                 inputParameters: {},
                 parallelTasks: [
                   [
                     {
                       name: 'eiei',
                       taskReferenceName: 'parallel12_child1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'parallel12_child2',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -637,13 +637,13 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'parallel22_child1',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'parallel22_child2',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -652,7 +652,7 @@ describe('State', () => {
               {
                 name: 'eiei',
                 taskReferenceName: 'parallel1_child1',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {},
               },
             ],
@@ -660,13 +660,13 @@ describe('State', () => {
               {
                 name: 'eiei',
                 taskReferenceName: 'parallel2_child1',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {},
               },
               {
                 name: 'eiei',
                 taskReferenceName: 'parallel2_child2',
-                type: TaskC.TaskTypes.Task,
+                type: TaskTypes.Task,
                 inputParameters: {},
               },
             ],
@@ -683,34 +683,34 @@ describe('State', () => {
       expect(State.getWorkflowTask('eiei', workflow)).toEqual({
         name: 'eiei',
         taskReferenceName: 'eiei',
-        type: TaskC.TaskTypes.Task,
+        type: TaskTypes.Task,
         inputParameters: {},
       });
 
       expect(State.getWorkflowTask('parallel22_child1', workflow)).toEqual({
         name: 'eiei',
         taskReferenceName: 'parallel22_child1',
-        type: TaskC.TaskTypes.Task,
+        type: TaskTypes.Task,
         inputParameters: {},
       });
 
       expect(State.getWorkflowTask('parallel1_child2', workflow)).toEqual({
         name: 'eiei',
         taskReferenceName: 'parallel1_child2',
-        type: TaskC.TaskTypes.Parallel,
+        type: TaskTypes.Parallel,
         inputParameters: {},
         parallelTasks: [
           [
             {
               name: 'eiei',
               taskReferenceName: 'parallel12_child1',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
             {
               name: 'eiei',
               taskReferenceName: 'parallel12_child2',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],
@@ -718,13 +718,13 @@ describe('State', () => {
             {
               name: 'eiei',
               taskReferenceName: 'parallel22_child1',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
             {
               name: 'eiei',
               taskReferenceName: 'parallel22_child2',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],
@@ -734,7 +734,7 @@ describe('State', () => {
       expect(State.getWorkflowTask('parallel2_child1', workflow)).toEqual({
         name: 'eiei',
         taskReferenceName: 'parallel2_child1',
-        type: TaskC.TaskTypes.Task,
+        type: TaskTypes.Task,
         inputParameters: {},
       });
     });
@@ -743,29 +743,29 @@ describe('State', () => {
   describe('getNextTaskPath', () => {
     // tslint:disable-next-line: max-func-body-length
     test('Decision', () => {
-      const tasks: WorkflowC.AllTaskType[] = [
+      const tasks: AllTaskType[] = [
         {
           name: 'eiei',
           taskReferenceName: 'eiei',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
         {
           name: 'task002',
           taskReferenceName: 'decision_task_1',
-          type: TaskC.TaskTypes.Decision,
+          type: TaskTypes.Decision,
           inputParameters: {},
           defaultDecision: [
             {
               name: 'decision_task_1_default',
               taskReferenceName: 'default_one',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
             {
               name: 'decision_task_1_default2',
               taskReferenceName: 'default_one',
-              type: TaskC.TaskTypes.Task,
+              type: TaskTypes.Task,
               inputParameters: {},
             },
           ],
@@ -774,13 +774,13 @@ describe('State', () => {
               {
                 name: 'huhu',
                 taskReferenceName: 'decision_task_1_case1',
-                type: TaskC.TaskTypes.Decision,
+                type: TaskTypes.Decision,
                 inputParameters: {},
                 defaultDecision: [
                   {
                     name: 'eiei',
                     taskReferenceName: 'decision_task_1_case1_default',
-                    type: TaskC.TaskTypes.Task,
+                    type: TaskTypes.Task,
                     inputParameters: {},
                   },
                 ],
@@ -789,13 +789,13 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei5',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei55',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -803,7 +803,7 @@ describe('State', () => {
                     {
                       name: 'eiei',
                       taskReferenceName: 'eiei6',
-                      type: TaskC.TaskTypes.Task,
+                      type: TaskTypes.Task,
                       inputParameters: {},
                     },
                   ],
@@ -815,7 +815,7 @@ describe('State', () => {
         {
           name: 'eiei',
           taskReferenceName: 'eiei4',
-          type: TaskC.TaskTypes.Task,
+          type: TaskTypes.Task,
           inputParameters: {},
         },
       ];
