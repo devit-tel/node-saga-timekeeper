@@ -6,6 +6,7 @@ import {
   IZookeeperEvent,
   ZookeeperEvents,
 } from '../zookeeper';
+import { TaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 
 export class TeskDefinitionZookeeperStore extends ZookeeperStore {
@@ -46,7 +47,9 @@ export class TeskDefinitionZookeeperStore extends ZookeeperStore {
                 null,
                 (dataError: Error, data: Buffer) => {
                   if (!dataError) {
-                    this.localStore[task] = jsonTryParse(data.toString());
+                    this.localStore[task] = new TaskDefinition(
+                      jsonTryParse(data.toString()),
+                    );
                   }
                 },
               );

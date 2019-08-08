@@ -1,6 +1,7 @@
 import nodeZookeeperClient = require('node-zookeeper-client');
 import * as R from 'ramda';
-import { IStore } from '..';
+import { IStore } from '../../store';
+import { enumToList } from '../../utils/common';
 
 export interface IZookeeperOptions {
   sessionTimeout: number;
@@ -63,5 +64,12 @@ export class ZookeeperStore implements IStore {
 
   getValue(key: string = ''): Promise<any> | any {
     return R.path(key.split('.'), this.localStore);
+  }
+
+  list(
+    limit: number = Number.MAX_SAFE_INTEGER,
+    offset: number = 0,
+  ): Promise<any[]> | any {
+    R.slice(offset, limit, enumToList(this.localStore));
   }
 }

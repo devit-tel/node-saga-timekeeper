@@ -1,6 +1,7 @@
 export interface IStore {
   setValue(key: string, value: any): Promise<any> | any;
   getValue(key: string): Promise<any> | any;
+  list(limit: number, offset: number): Promise<any[]> | any[];
   isHealthy(): boolean;
 }
 
@@ -29,6 +30,13 @@ export class Store implements IStore {
 
   getValue(key: string): Promise<any> | any {
     return this.client.getValue(key);
+  }
+
+  list(
+    limit: number = Number.MAX_SAFE_INTEGER,
+    offset: number = 0,
+  ): Promise<any[]> | any {
+    return this.client.list(limit, offset);
   }
 
   isHealthy(): boolean {

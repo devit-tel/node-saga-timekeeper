@@ -6,6 +6,7 @@ import {
   IZookeeperEvent,
   ZookeeperEvents,
 } from '../zookeeper';
+import { WorkflowDefinition } from '../../workflowDefinition';
 import { jsonTryParse } from '../../utils/common';
 
 export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
@@ -68,7 +69,7 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
                   if (!dataError) {
                     this.localStore = R.set(
                       R.lensPath([workflow, ref]),
-                      jsonTryParse(data.toString()),
+                      new WorkflowDefinition(jsonTryParse(data.toString())),
                       this.localStore,
                     );
                   }
