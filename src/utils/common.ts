@@ -7,8 +7,8 @@ export const isNumber = R.is(Number);
 export const isValidName = (name: string): boolean =>
   isString(name) && /^[a-zA-Z0-9-_]{1,32}$/.test(name);
 
-export const isValidRev = (rev: number): boolean =>
-  Number.isInteger(rev) && rev > 0;
+export const isValidRev = (rev: string): boolean =>
+  isString(rev) && /^[a-zA-Z0-9-_]{1,32}$/.test(rev);
 
 export const enumToList = R.compose(
   R.map(R.prop('1')),

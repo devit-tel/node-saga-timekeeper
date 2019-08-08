@@ -112,7 +112,7 @@ describe('Task', () => {
           },
           recoveryWorkflow: {
             name: 'huhu',
-            rev: 3,
+            rev: '3',
           },
         }),
       ).toEqual({
@@ -123,7 +123,7 @@ describe('Task', () => {
         partitionsCount: 10,
         recoveryWorkflow: {
           name: 'huhu',
-          rev: 3,
+          rev: '3',
         },
         responseTimeoutSecond: 5,
         timeoutSecond: 30,

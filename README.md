@@ -9,9 +9,10 @@ This is prototype of saga implementation, written in Node.
 - [ ] Workflow Instance
 - [ ] Task Instance
 - [ ] State Translation
-- [ ] Store
+- [x] Store
 - [x] Refacetor code, move to their's domain
 - [ ] Dispatcher
 - [ ] Consumer
-- [ ] Config
+- [x] Config
 - [ ] Logger
+- [ ] Use custom error

@@ -11,7 +11,7 @@ describe('Workflow Def', () => {
       expect(
         new WorkflowDefinition({
           name: 'hello-world',
-          rev: 1,
+          rev: '1',
           tasks: [
             {
               name: 'huhu',
@@ -22,14 +22,14 @@ describe('Workflow Def', () => {
               },
               workflow: {
                 name: 'a',
-                rev: 1,
+                rev: '1',
               },
             },
           ],
         }),
       ).toEqual({
         name: 'hello-world',
-        rev: 1,
+        rev: '1',
         description: 'No description',
         tasks: [
           {
@@ -41,7 +41,7 @@ describe('Workflow Def', () => {
             type: 'SUB_WORKFLOW',
             workflow: {
               name: 'a',
-              rev: 1,
+              rev: '1',
             },
           },
         ],
@@ -53,7 +53,7 @@ describe('Workflow Def', () => {
         () =>
           new WorkflowDefinition({
             name: '',
-            rev: 1,
+            rev: '1',
             tasks: [
               {
                 name: 'huhu',
@@ -93,7 +93,7 @@ describe('Workflow Def', () => {
         () =>
           new WorkflowDefinition({
             name: 'hello-world',
-            rev: 1,
+            rev: '1',
             tasks: [
               {
                 name: 'huhu',
@@ -104,7 +104,7 @@ describe('Workflow Def', () => {
                 },
                 workflow: {
                   name: 'a',
-                  rev: 1,
+                  rev: '1',
                 },
               },
             ],
@@ -117,7 +117,7 @@ describe('Workflow Def', () => {
       expect(
         new WorkflowDefinition({
           name: 'hello-world',
-          rev: 1,
+          rev: '1',
           tasks: [
             {
               name: 'huhu',
@@ -128,14 +128,14 @@ describe('Workflow Def', () => {
               },
               workflow: {
                 name: 'a',
-                rev: 1,
+                rev: '1',
               },
             },
           ],
           failureStrategy: FailureStrategies.RecoveryWorkflow,
           recoveryWorkflow: {
             name: 'hihi',
-            rev: 2,
+            rev: '2',
           },
         }),
       ).toEqual({
@@ -144,9 +144,9 @@ describe('Workflow Def', () => {
         name: 'hello-world',
         recoveryWorkflow: {
           name: 'hihi',
-          rev: 2,
+          rev: '2',
         },
-        rev: 1,
+        rev: '1',
         tasks: [
           {
             inputParameters: {
@@ -157,7 +157,7 @@ describe('Workflow Def', () => {
             type: 'SUB_WORKFLOW',
             workflow: {
               name: 'a',
-              rev: 1,
+              rev: '1',
             },
           },
         ],
@@ -169,7 +169,7 @@ describe('Workflow Def', () => {
         () =>
           new WorkflowDefinition({
             name: 'hello-world',
-            rev: 1,
+            rev: '1',
             tasks: [
               {
                 name: 'huhu',
@@ -180,7 +180,7 @@ describe('Workflow Def', () => {
                 },
                 workflow: {
                   name: 'a',
-                  rev: 1,
+                  rev: '1',
                 },
               },
             ],
@@ -193,7 +193,7 @@ describe('Workflow Def', () => {
       expect(
         new WorkflowDefinition({
           name: 'hello-world',
-          rev: 1,
+          rev: '1',
           tasks: [
             {
               name: 'huhu',
@@ -204,7 +204,7 @@ describe('Workflow Def', () => {
               },
               workflow: {
                 name: 'a',
-                rev: 1,
+                rev: '1',
               },
             },
           ],
@@ -218,7 +218,7 @@ describe('Workflow Def', () => {
         description: 'No description',
         failureStrategy: 'RETRY',
         name: 'hello-world',
-        rev: 1,
+        rev: '1',
         tasks: [
           {
             type: 'SUB_WORKFLOW',
@@ -229,7 +229,7 @@ describe('Workflow Def', () => {
             taskReferenceName: 'HUHU',
             workflow: {
               name: 'a',
-              rev: 1,
+              rev: '1',
             },
           },
         ],
@@ -245,7 +245,7 @@ describe('Workflow Def', () => {
         () =>
           new WorkflowDefinition({
             name: 'hello-world',
-            rev: 1,
+            rev: '1',
             tasks: [],
           }),
       ).toThrow('workflowDefinition.tasks cannot be empty');
@@ -258,7 +258,7 @@ describe('Workflow Def', () => {
             JSON.parse(
               JSON.stringify({
                 name: 'hello-world',
-                rev: 1,
+                rev: '1',
                 tasks: [
                   {
                     name: 'eiei',
@@ -322,7 +322,7 @@ describe('Workflow Def', () => {
                           inputParameters: {},
                           // workflow: {
                           //   name: 'haha',
-                          //   rev: 3,
+                          //   rev: '3',
                           // },
                         },
                         {
@@ -356,7 +356,7 @@ describe('Workflow Def', () => {
       expect(
         new WorkflowDefinition({
           name: 'hello-world',
-          rev: 1,
+          rev: '1',
           tasks: [
             {
               name: 'eiei',
@@ -435,7 +435,7 @@ describe('Workflow Def', () => {
       ).toEqual({
         description: 'No description',
         name: 'hello-world',
-        rev: 1,
+        rev: '1',
         tasks: [
           {
             inputParameters: {},

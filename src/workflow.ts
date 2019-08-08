@@ -7,7 +7,7 @@ import { ITask, Task } from './task';
 
 export interface IWorkflow {
   workflowName: string;
-  workflowRev: number;
+  workflowRev: string;
   workflowId: string;
   status: WorkflowStates;
   retryCount: number;
@@ -22,7 +22,7 @@ export interface IWorkflow {
 
 export class Workflow implements IWorkflow {
   workflowName: string;
-  workflowRev: number;
+  workflowRev: string;
   workflowId: string;
   status: WorkflowStates;
   retryCount: number;

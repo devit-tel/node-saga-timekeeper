@@ -1,6 +1,6 @@
 import * as State from './state';
 import { TaskStates, TaskTypes } from './constants/task';
-import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
+import { WorkflowDefinition, AllTaskType } from './workflowDefinition';
 // import MemoryStore from './stores/MemoryStore';
 
 describe('State', () => {
@@ -579,7 +579,7 @@ describe('State', () => {
           inputParameters: {},
           workflow: {
             name: 'lol',
-            rev: 5,
+            rev: '5',
           },
         },
       ];
@@ -596,9 +596,9 @@ describe('State', () => {
   });
 
   describe('findWorkflowTask', () => {
-    const workflow: IWorkflowDefinition = {
+    const workflow = new WorkflowDefinition({
       name: 'hello-world',
-      rev: 1,
+      rev: '1',
       tasks: [
         {
           name: 'eiei',
@@ -673,7 +673,7 @@ describe('State', () => {
           ],
         },
       ],
-    };
+    });
 
     test('Sample 1', () => {
       expect(() => State.getWorkflowTask('Random_string', workflow)).toThrow(

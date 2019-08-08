@@ -1,4 +1,5 @@
 import { Workflow } from './workflow';
+import { WorkflowDefinition } from './workflowDefinition';
 import { TaskTypes } from './constants/task';
 
 jest.mock('uuid/v4');
@@ -7,9 +8,9 @@ Date.now = jest.fn();
 describe('Workflow', () => {
   describe('Workflow', () => {
     const simpleWorkflow = new Workflow(
-      {
+      new WorkflowDefinition({
         name: 'WORKFLOW_001',
-        rev: 1,
+        rev: '1',
         tasks: [
           {
             name: 'TASK_1',
@@ -24,7 +25,7 @@ describe('Workflow', () => {
             inputParameters: {},
           },
         ],
-      },
+      }),
       {},
       {},
     );
@@ -40,7 +41,7 @@ describe('Workflow', () => {
         taskData: {},
         workflowDefinition: {
           name: 'WORKFLOW_001',
-          rev: 1,
+          rev: '1',
           tasks: [
             {
               name: 'TASK_1',
@@ -58,7 +59,7 @@ describe('Workflow', () => {
         },
         workflowId: undefined,
         workflowName: 'WORKFLOW_001',
-        workflowRev: 1,
+        workflowRev: '1',
       });
     });
 

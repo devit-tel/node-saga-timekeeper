@@ -17,7 +17,7 @@ export interface ITaskDefinitionData {
   };
   recoveryWorkflow?: {
     name: string;
-    rev: number;
+    rev: string;
   };
 }
 
@@ -42,7 +42,7 @@ const isRecoveryWorkflowConfigValid = (
   (taskDefinition.timeoutStrategy === FailureStrategies.RecoveryWorkflow ||
     taskDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow) &&
   (!isString(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
-    !isNumber(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
+    !isString(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
 
 const isFailureStrategiesConfigValid = (
   taskDefinition: ITaskDefinitionData,

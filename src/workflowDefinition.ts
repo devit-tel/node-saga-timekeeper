@@ -25,7 +25,7 @@ export interface ISubWorkflowTask extends IBaseTask {
   type: TaskTypes.SubWorkflow;
   workflow: {
     name: string;
-    rev: number;
+    rev: string;
   };
 }
 
@@ -43,9 +43,9 @@ export type AllTaskType =
   | ISubWorkflowTask
   | IDecisionTask;
 
-export interface IWorkflowDefinition {
+export interface IWorkflowDefinitionData {
   name: string;
-  rev: number;
+  rev: string;
   description?: string;
   tasks: AllTaskType[];
   failureStrategy?: FailureStrategies;
@@ -55,26 +55,31 @@ export interface IWorkflowDefinition {
   };
   recoveryWorkflow?: {
     name: string;
-    rev: number;
+    rev: string;
   };
+}
+
+export interface IWorkflowDefinition extends IWorkflowDefinitionData {
+  toObject(): any;
+  toJSON(): string;
 }
 
 const isNumber = R.is(Number);
 const isString = R.is(String);
 
 const isRecoveryWorkflowConfigValid = (
-  workflowDefinition: IWorkflowDefinition,
+  workflowDefinition: IWorkflowDefinitionData,
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow &&
   (!isString(R.path(['recoveryWorkflow', 'name'], workflowDefinition)) ||
-    !isNumber(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
+    !isString(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
 
 const isFailureStrategiesConfigValid = (
-  workflowDefinition: IWorkflowDefinition,
+  workflowDefinition: IWorkflowDefinitionData,
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.Retry &&
   (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
-    !isNumber(R.path(['retry', 'delaySecond'], workflowDefinition)));
+    !isString(R.path(['retry', 'delaySecond'], workflowDefinition)));
 
 const isEmptyTasks = R.compose(
   R.isEmpty,
@@ -201,7 +206,7 @@ const validateTasks = (
   );
 
 const workflowValidation = (
-  workflowDefinition: IWorkflowDefinition,
+  workflowDefinition: IWorkflowDefinitionData,
 ): string[] => {
   const errors = [];
   if (!isValidName(workflowDefinition.name))
@@ -224,7 +229,7 @@ const workflowValidation = (
 
 export class WorkflowDefinition implements IWorkflowDefinition {
   name: string;
-  rev: number;
+  rev: string;
   description?: string = 'No description';
   tasks: AllTaskType[];
   failureStrategy?: FailureStrategies;
@@ -234,14 +239,14 @@ export class WorkflowDefinition implements IWorkflowDefinition {
   };
   recoveryWorkflow?: {
     name: string;
-    rev: number;
+    rev: string;
   };
 
-  constructor(workflowDefinition: IWorkflowDefinition) {
-    const workflowValidationErrors = workflowValidation(workflowDefinition);
+  constructor(workflowDefinitionData: IWorkflowDefinitionData) {
+    const workflowValidationErrors = workflowValidation(workflowDefinitionData);
 
     const validateTasksResult = validateTasks(
-      R.propOr([], 'tasks', workflowDefinition),
+      R.propOr([], 'tasks', workflowDefinitionData),
       'workflowDefinition',
       {
         errors: workflowValidationErrors,
@@ -251,7 +256,26 @@ export class WorkflowDefinition implements IWorkflowDefinition {
     if (validateTasksResult.errors.length)
       throw new Error(validateTasksResult.errors.join('\n'));
 
-    Object.assign(this, workflowDefinition);
-    this.tasks = workflowDefinition.tasks;
+    Object.assign(this, workflowDefinitionData);
+    this.tasks = workflowDefinitionData.tasks;
   }
+
+  toObject = (): any => {
+    return R.pick(
+      [
+        'name',
+        'rev',
+        'description',
+        'tasks',
+        'failureStrategy',
+        'retry',
+        'recoveryWorkflow',
+      ],
+      this,
+    );
+  };
+
+  toJSON = (): string => {
+    return JSON.stringify(this.toObject());
+  };
 }
