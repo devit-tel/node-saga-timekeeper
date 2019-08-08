@@ -26,7 +26,7 @@
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "start:watch": "tsc-watch --onSuccess \"node ./build/index.js\" -p ./tsconfig.release.json"
+    "start:watch": "npm run clean & tsc-watch --onSuccess \"node ./build/index.js\" -p ./tsconfig.release.json"
   },
   "author": "Jakub Synowiec <github@jakubsynowiec.info>",
   "license": "Apache-2.0",
