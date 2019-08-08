@@ -4,7 +4,11 @@ import { taskDefinitionStore } from '../../../store';
 export const createTaskDefinition = async (
   taskDefinition: TaskDefinition,
 ): Promise<any> => {
-  await taskDefinitionStore.setValue(taskDefinition.name, taskDefinition);
+  console.log(taskDefinition);
+  await taskDefinitionStore.setValue(
+    taskDefinition.name,
+    JSON.stringify(taskDefinition),
+  );
 };
 
 export const getTaskDefinition = (
@@ -14,8 +18,8 @@ export const getTaskDefinition = (
 };
 
 export const listTaskDefinition = (
-  limit: number,
-  offset: number,
+  limit: number = Number.MAX_SAFE_INTEGER,
+  offset: number = 0,
 ): Promise<TaskDefinition[]> => {
   return taskDefinitionStore.list(limit, offset);
 };
