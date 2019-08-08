@@ -1,12 +1,18 @@
 // Serializer for 1 layer node (${root}/${taskName})
 import * as R from 'ramda';
-import * as zookeeper from '../zookeeper';
+import {
+  ZookeeperStore,
+  IZookeeperOptions,
+  IZookeeperEvent,
+  ZookeeperEvents,
+} from '../zookeeper';
+import { jsonTryParse } from '../../utils/common';
 
-export class TeskDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
+export class TeskDefinitionZookeeperStore extends ZookeeperStore {
   constructor(
     root: string,
     connectionString: string,
-    options?: zookeeper.IZookeeperOptions,
+    options?: IZookeeperOptions,
   ) {
     super(root, connectionString, options);
 
@@ -20,9 +26,9 @@ export class TeskDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
   getAndWatchTasks = () => {
     this.client.getChildren(
       this.root,
-      (event: zookeeper.IZookeeperEvent) => {
+      (event: IZookeeperEvent) => {
         switch (event.name) {
-          case zookeeper.ZookeeperEvents.NODE_CHILDREN_CHANGED:
+          case ZookeeperEvents.NODE_CHILDREN_CHANGED:
             // When created new task, this is also fired when task are deleted, but did not handled at this time
             this.getAndWatchTasks();
             break;
@@ -40,8 +46,7 @@ export class TeskDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
                 null,
                 (dataError: Error, data: Buffer) => {
                   if (!dataError) {
-                    console.log(data.toString());
-                    this.localStore[task] = data.toString();
+                    this.localStore[task] = jsonTryParse(data.toString());
                   }
                 },
               );

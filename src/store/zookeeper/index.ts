@@ -1,4 +1,4 @@
-import * as zookeeper from 'node-zookeeper-client';
+import nodeZookeeperClient = require('node-zookeeper-client');
 import * as R from 'ramda';
 import { IStore } from '..';
 
@@ -32,7 +32,10 @@ export class ZookeeperStore implements IStore {
     options?: IZookeeperOptions,
   ) {
     this.root = root;
-    this.client = new zookeeper.createClient(connectionString, options);
+    this.client = new nodeZookeeperClient.createClient(
+      connectionString,
+      options,
+    );
     this.client.connect();
   }
 

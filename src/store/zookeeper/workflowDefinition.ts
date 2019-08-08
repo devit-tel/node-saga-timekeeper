@@ -1,12 +1,18 @@
 // Serializer for 2 layer node (${root}/${workflowName}/${workflowRev})
 import * as R from 'ramda';
-import * as zookeeper from '../zookeeper';
+import {
+  ZookeeperStore,
+  IZookeeperOptions,
+  IZookeeperEvent,
+  ZookeeperEvents,
+} from '../zookeeper';
+import { jsonTryParse } from '../../utils/common';
 
-export class WorkflowDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
+export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
   constructor(
     root: string,
     connectionString: string,
-    options?: zookeeper.IZookeeperOptions,
+    options?: IZookeeperOptions,
   ) {
     super(root, connectionString, options);
 
@@ -20,9 +26,9 @@ export class WorkflowDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
   getAndWatchWorkflows = () => {
     this.client.getChildren(
       this.root,
-      (event: zookeeper.IZookeeperEvent) => {
+      (event: IZookeeperEvent) => {
         switch (event.name) {
-          case zookeeper.ZookeeperEvents.NODE_CHILDREN_CHANGED:
+          case ZookeeperEvents.NODE_CHILDREN_CHANGED:
             this.getAndWatchWorkflows();
             break;
           default:
@@ -40,9 +46,9 @@ export class WorkflowDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
   getAndWatchRefs = (workflow: string) => {
     this.client.getChildren(
       `${this.root}/${workflow}`,
-      (event: zookeeper.IZookeeperEvent) => {
+      (event: IZookeeperEvent) => {
         switch (event.name) {
-          case zookeeper.ZookeeperEvents.NODE_CHILDREN_CHANGED:
+          case ZookeeperEvents.NODE_CHILDREN_CHANGED:
             // When add new ref, this is also fire when ref are deleted, but did not work at this time
             this.getAndWatchRefs(workflow);
             break;
@@ -60,10 +66,9 @@ export class WorkflowDefinitionZookeeperStore extends zookeeper.ZookeeperStore {
                 null,
                 (dataError: Error, data: Buffer) => {
                   if (!dataError) {
-                    console.log(data.toString());
                     this.localStore = R.set(
                       R.lensPath([workflow, ref]),
-                      data.toString(),
+                      jsonTryParse(data.toString()),
                       this.localStore,
                     );
                   }
