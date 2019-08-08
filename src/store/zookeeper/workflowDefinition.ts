@@ -92,6 +92,8 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
   ): WorkflowDefinition[] {
     return super
       .list(limit, offset)
-      .map((taskDefinition: WorkflowDefinition) => taskDefinition.toObject());
+      .map((workflow: { [rev: string]: WorkflowDefinition }) =>
+        R.map((rev: WorkflowDefinition) => rev.toObject(), workflow),
+      );
   }
 }
