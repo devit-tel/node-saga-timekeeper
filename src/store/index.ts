@@ -1,6 +1,7 @@
 export interface IStore {
   setValue(key: string, value: any): Promise<any> | any;
   getValue(key: string): Promise<any> | any;
+  isHealthy(): boolean;
 }
 
 export enum StoreType {
@@ -29,8 +30,13 @@ export class Store implements IStore {
   getValue(key: string): Promise<any> | any {
     return this.client.getValue(key);
   }
+
+  isHealthy(): boolean {
+    return this.client.isHealthy();
+  }
 }
 
+// This's global instance
 export const taskDefinitionStore = new Store('Task Definition Store');
 export const workflowDefinitionStore = new Store('Workflow Definition Store');
 export const taskInstanceStore = new Store('Task Instance Store');
