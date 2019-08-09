@@ -2,7 +2,7 @@ import * as uuid from 'uuid/v4';
 import * as R from 'ramda';
 import { TaskStates } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
-import { dispatcher } from './dispatcher';
+import { dispatch } from './kafka';
 
 export interface ITask {
   taskName: string;
@@ -52,8 +52,7 @@ export class Task implements ITask {
   }
 
   dispatch() {
-    dispatcher.dispatch(this.taskName, this);
-    // Dispatch command to worker
+    dispatch(this);
   }
 
   toObject = (): any => {

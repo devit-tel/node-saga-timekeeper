@@ -35,20 +35,17 @@ export const kafkaConsumer = {
 
 export const kafkaProducer = {
   'client.id': 'saga-pm',
-  ...pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
-};
-
-export const dispatcher = {
-  type: DispatcherType.Kafka,
-  kafkaConfig: {
-    overideProducerConf: {
-      'client.id': 'saga-pm',
-      ...pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
-    },
-    overideProducerTopicConf: pickAndReplaceFromENV(
-      '^dispatcher\\.kafka\\.topicconf\\.',
-    ),
-  },
+  'compression.type': 'snappy',
+  'retry.backoff.ms': '100',
+  'enable.idempotence': 'true',
+  'message.send.max.retries': '10000000',
+  'socket.keepalive.enable': 'true',
+  'queue.buffering.max.messages': '10000',
+  'queue.buffering.max.ms': '100',
+  'batch.num.messages': '100000',
+  'delivery.report.only.error': 'true',
+  dr_cb: 'true',
+  ...pickAndReplaceFromENV('^producer\\.kafka\\.conf\\.'),
 };
 
 export const taskDefinitionStore = {
