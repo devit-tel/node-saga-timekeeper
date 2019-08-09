@@ -1,5 +1,4 @@
 import * as dotenv from 'dotenv';
-import { DispatcherType } from './dispatcher';
 import { StoreType } from './store';
 
 dotenv.config();
