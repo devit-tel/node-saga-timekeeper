@@ -1,6 +1,7 @@
-import { AdminClient, KafkaConsumer } from 'node-rdkafka';
-import { kafkaAdmin, kafkaConsumer } from '../config';
+import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
+import { kafkaAdmin, kafkaConsumer, kafkaProducer } from '../config';
 import { jsonTryParse } from '../utils/common';
+import { Task } from '../task';
 
 export interface kafkaConsumerMessage {
   value: Buffer;
@@ -13,11 +14,17 @@ export interface kafkaConsumerMessage {
 
 export const adminClient = AdminClient.create(kafkaAdmin);
 export const consumerClient = new KafkaConsumer(kafkaConsumer, {});
+export const producerClient = new Producer(kafkaProducer, {});
 
 consumerClient.connect();
 consumerClient.on('ready', () => {
   console.log('consumerClient are ready');
   consumerClient.subscribe(['pm-event']);
+});
+
+producerClient.connect();
+producerClient.on('ready', () => {
+  console.log('producerClient are ready');
 });
 
 export const createTopic = (
@@ -53,3 +60,12 @@ export const poll = (messageNumber?: number) =>
       },
     );
   });
+
+export const dispatch = (task: Task) =>
+  producerClient.produce(
+    `TASK_${task.taskName}`,
+    null,
+    new Buffer(task.toJSON()),
+    task.workflowId,
+    Date.now(),
+  );

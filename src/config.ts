@@ -33,6 +33,11 @@ export const kafkaConsumer = {
   ...pickAndReplaceFromENV('^consumer\\.kafka\\.conf\\.'),
 };
 
+export const kafkaProducer = {
+  'client.id': 'saga-pm',
+  ...pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
+};
+
 export const dispatcher = {
   type: DispatcherType.Kafka,
   kafkaConfig: {
