@@ -1,23 +1,9 @@
 import * as config from './config';
-import { dispatcher, DispatcherType } from './dispatcher';
-import { KafkaDispatcher } from './dispatcher/kafka';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
 import { TaskDefinitionZookeeperStore } from './store/zookeeper/taskDefinition';
 import { Server } from './server';
-
-switch (config.dispatcher.type) {
-  case DispatcherType.Kafka:
-    dispatcher.setClient(
-      new KafkaDispatcher(
-        config.dispatcher.kafkaConfig.overideProducerConf,
-        config.dispatcher.kafkaConfig.overideProducerTopicConf,
-      ),
-    );
-    break;
-  default:
-    throw new Error(`Dispatch: ${config.dispatcher.type} is invalid`);
-}
+import './kafka';
 
 switch (config.workflowDefinitionStore.type) {
   case store.StoreType.ZooKeeper:

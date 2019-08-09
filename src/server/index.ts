@@ -47,7 +47,7 @@ export class Server {
 
   start = () => {
     this.server.listen(this.port, this.hostname, () =>
-      console.log('appstarted', this.port, this.hostname),
+      console.log(`Server listen at ${this.hostname}:${this.port}`),
     );
   };
 }

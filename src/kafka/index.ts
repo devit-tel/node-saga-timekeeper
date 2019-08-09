@@ -18,13 +18,13 @@ export const producerClient = new Producer(kafkaProducer, {});
 
 consumerClient.connect();
 consumerClient.on('ready', () => {
-  console.log('consumerClient are ready');
+  console.log('Consumer kafka are ready');
   consumerClient.subscribe(['pm-event']);
 });
 
 producerClient.connect();
 producerClient.on('ready', () => {
-  console.log('producerClient are ready');
+  console.log('Producer kafka are ready');
 });
 
 export const createTopic = (
