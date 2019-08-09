@@ -63,27 +63,27 @@ export interface TopicConfigurations {
     | 'snappy'
     | 'gzip'
     | 'producer';
-  'delete.retention.ms'?: number;
-  'file.delete.delay.ms'?: number;
-  'flush.messages'?: number;
-  'flush.ms'?: number;
+  'delete.retention.ms'?: string;
+  'file.delete.delay.ms'?: string;
+  'flush.messages'?: string;
+  'flush.ms'?: string;
   'follower.replication.throttled.replicas'?: string;
-  'index.interval.bytes'?: number;
+  'index.interval.bytes'?: string;
   'leader.replication.throttled.replicas'?: string;
-  'max.message.bytes'?: number;
+  'max.message.bytes'?: string;
   'message.format.version'?: string;
-  'message.timestamp.difference.max.ms'?: number;
+  'message.timestamp.difference.max.ms'?: string;
   'message.timestamp.type'?: string;
-  'min.cleanable.dirty.ratio'?: number;
-  'min.compaction.lag.ms'?: number;
-  'min.insync.replicas'?: number;
-  preallocate?: boolean;
-  'retention.bytes'?: number;
-  'retention.ms'?: number;
-  'segment.bytes'?: number;
-  'segment.index.bytes'?: number;
-  'segment.jitter.ms'?: number;
-  'segment.ms'?: number;
+  'min.cleanable.dirty.ratio'?: string;
+  'min.compaction.lag.ms'?: string;
+  'min.insync.replicas'?: string;
+  preallocate?: string;
+  'retention.bytes'?: string;
+  'retention.ms'?: string;
+  'segment.bytes'?: string;
+  'segment.index.bytes'?: string;
+  'segment.jitter.ms'?: string;
+  'segment.ms'?: string;
   'unclean.leader.election.enable'?: boolean;
   'message.downconversion.enable'?: boolean;
 }

@@ -21,10 +21,18 @@ export const server = {
   hostname: process.env['server.hostname'] || '127.0.0.1',
 };
 
+export const kafkaAdmin = {
+  'client.id': 'saga-pm-admin',
+  ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
+};
+
 export const dispatcher = {
   type: DispatcherType.Kafka,
   kafkaConfig: {
-    overideProducerConf: pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
+    overideProducerConf: {
+      'client.id': 'saga-pm-dispatcher',
+      ...pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
+    },
     overideProducerTopicConf: pickAndReplaceFromENV(
       '^dispatcher\\.kafka\\.topicconf\\.',
     ),

@@ -32,8 +32,8 @@ export interface ITaskDefinition extends ITaskDefinitionData {
 const defaultTopicConfigurations = {
   'cleanup.policy': 'compact',
   'compression.type': 'snappy',
-  'delete.retention.ms': 86400000,
-  'file.delete.delay.ms': 60000,
+  'delete.retention.ms': '86400000',
+  'file.delete.delay.ms': '60000',
 };
 
 const isNumber = R.is(Number);
@@ -89,6 +89,7 @@ export class TaskDefinition implements ITaskDefinition {
       throw new Error(taskValidationErrors.join('\n'));
 
     Object.assign(this, taskDefinition);
+
     this.topicConfigurations = Object.assign(
       defaultTopicConfigurations,
       taskDefinition.topicConfigurations,
