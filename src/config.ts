@@ -22,15 +22,22 @@ export const server = {
 };
 
 export const kafkaAdmin = {
-  'client.id': 'saga-pm-admin',
+  'client.id': 'saga-pm',
   ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
+};
+
+export const kafkaConsumer = {
+  'client.id': 'saga-pm',
+  'enable.auto.commit': 'false',
+  'group.id': 'saga-pm-consumer',
+  ...pickAndReplaceFromENV('^consumer\\.kafka\\.conf\\.'),
 };
 
 export const dispatcher = {
   type: DispatcherType.Kafka,
   kafkaConfig: {
     overideProducerConf: {
-      'client.id': 'saga-pm-dispatcher',
+      'client.id': 'saga-pm',
       ...pickAndReplaceFromENV('^dispatcher\\.kafka\\.conf\\.'),
     },
     overideProducerTopicConf: pickAndReplaceFromENV(
