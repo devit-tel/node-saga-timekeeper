@@ -42,7 +42,7 @@ export class KafkaDispatcher implements IDispatcher {
     this.client.produce(
       `TASK_${taskName}`,
       null,
-      JSON.stringify(task),
+      new Buffer(task.toJSON()),
       task.workflowId,
       Date.now(),
     );

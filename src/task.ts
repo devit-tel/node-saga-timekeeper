@@ -1,6 +1,8 @@
 import * as uuid from 'uuid/v4';
+import * as R from 'ramda';
 import { TaskStates } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
+import { dispatcher } from './dispatcher';
 
 export interface ITask {
   taskName: string;
@@ -50,6 +52,31 @@ export class Task implements ITask {
   }
 
   dispatch() {
+    dispatcher.dispatch(this.taskName, this);
     // Dispatch command to worker
   }
+
+  toObject = (): any => {
+    return R.pick(
+      [
+        'taskName',
+        'taskReferenceNames',
+        'taskId',
+        'workflowId',
+        'status',
+        'retryCount',
+        'input',
+        'output',
+        'createTime',
+        'startTime',
+        'endTime',
+        'logs',
+      ],
+      this,
+    );
+  };
+
+  toJSON = (): string => {
+    return JSON.stringify(this.toObject());
+  };
 }
