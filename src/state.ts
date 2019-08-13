@@ -48,42 +48,6 @@ export const processTask = (task: ITask, taskUpdate: ITaskUpdate): ITask => {
   };
 };
 
-// export const updateTask = async (
-//   taskUpdate: ITaskUpdate,
-// ): Promise<ITask> => {
-//   // TODO Imprement mutex for store
-//   const task: ITask = await Store.getTaskFromStore(taskUpdate.taskId);
-//   const updatedTask = processTask(task, taskUpdate);
-
-//   if (updatedTask.status === TaskStates.Completed) {
-//     // TODO start next task
-//   }
-//   return Store.saveTaskToStore(taskUpdate.taskId, updatedTask);
-// };
-
-// This job should handled by Task's class
-// export const walkForNextTasks = (
-//   tasks: AllTaskType[],
-//   currentPath: (string | number)[] = [0],
-// ): AllTaskType[] => {
-//   // When finish all tasks
-//   if (R.equals([tasks.length - 1], currentPath)) return null;
-//   const currentTask: AllTaskType = R.path(currentPath, tasks);
-//   console.log(currentTask.type);
-//   switch (currentTask.type) {
-//     case TaskTypes.Decision:
-//       // TODO Map output to new task
-//       return [R.path([...currentPath, 'defaultDecision', 0], tasks)];
-//     case TaskTypes.Parallel:
-//       return R.pathOr([], [...currentPath, 'parallelTasks'], tasks).map(
-//         R.path([0]),
-//       );
-//     case TaskTypes.Task:
-//     case TaskTypes.SubWorkflow:
-//       return [R.path(getNextWalkPath(tasks, currentPath), tasks)];
-//   }
-// };
-
 const getNextPath = (currentPath: (string | number)[]): (string | number)[] => [
   ...R.init(currentPath),
   +R.last(currentPath) + 1,
