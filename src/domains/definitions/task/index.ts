@@ -16,15 +16,17 @@ export const createTaskDefinition = async (
   );
 };
 
-export const getTaskDefinition = (
+export const getTaskDefinition = async (
   taskName: string,
 ): Promise<TaskDefinition> => {
-  return taskDefinitionStore.getValue(taskName);
+  return (await taskDefinitionStore.getValue(taskName)).toObject();
 };
 
-export const listTaskDefinition = (
+export const listTaskDefinition = async (
   limit: number = Number.MAX_SAFE_INTEGER,
   offset: number = 0,
 ): Promise<TaskDefinition[]> => {
-  return taskDefinitionStore.list(limit, offset);
+  return (await taskDefinitionStore.list(limit, offset)).map(
+    (taskDefinition: TaskDefinition) => taskDefinition.toObject(),
+  );
 };

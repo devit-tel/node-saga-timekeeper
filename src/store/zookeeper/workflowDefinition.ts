@@ -81,19 +81,4 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
       },
     );
   };
-
-  getValue(key: string = ''): WorkflowDefinition {
-    return super.getValue(key).toObject();
-  }
-
-  list(
-    limit: number = Number.MAX_SAFE_INTEGER,
-    offset: number = 0,
-  ): WorkflowDefinition[] {
-    return super
-      .list(limit, offset)
-      .map((workflow: { [rev: string]: WorkflowDefinition }) =>
-        R.map((rev: WorkflowDefinition) => rev.toObject(), workflow),
-      );
-  }
 }

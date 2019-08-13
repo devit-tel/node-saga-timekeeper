@@ -1,4 +1,8 @@
-import { WorkflowDefinition } from '../../../workflowDefinition';
+import * as R from 'ramda';
+import {
+  WorkflowDefinition,
+  IWorkflowDefinitionData,
+} from '../../../workflowDefinition';
 import { workflowDefinitionStore } from '../../../store';
 
 export const createWorkflowDefinition = async (
@@ -10,16 +14,21 @@ export const createWorkflowDefinition = async (
   );
 };
 
-export const getWorkflowDefinition = (
+export const getWorkflowDefinition = async (
   workflowName: string,
   workflowRev: string,
-): Promise<WorkflowDefinition> => {
-  return workflowDefinitionStore.getValue(`${workflowName}.${workflowRev}`);
+): Promise<IWorkflowDefinitionData> => {
+  return (await workflowDefinitionStore.getValue(
+    `${workflowName}.${workflowRev}`,
+  )).toObject();
 };
 
-export const listWorkflowDefinition = (
+export const listWorkflowDefinition = async (
   limit: number = Number.MAX_SAFE_INTEGER,
   offset: number = 0,
-): Promise<WorkflowDefinition[]> => {
-  return workflowDefinitionStore.list(limit, offset);
+): Promise<{ [rev: string]: IWorkflowDefinitionData }[]> => {
+  return (await workflowDefinitionStore.list(limit, offset)).map(
+    (workflow: { [rev: string]: WorkflowDefinition }) =>
+      R.map((rev: WorkflowDefinition) => rev.toObject(), workflow),
+  );
 };

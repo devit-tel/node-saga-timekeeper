@@ -73,17 +73,4 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore {
       },
     );
   };
-
-  getValue(key: string = ''): TaskDefinition {
-    return super.getValue(key).toObject();
-  }
-
-  list(
-    limit: number = Number.MAX_SAFE_INTEGER,
-    offset: number = 0,
-  ): TaskDefinition[] {
-    return super
-      .list(limit, offset)
-      .map((taskDefinition: TaskDefinition) => taskDefinition.toObject());
-  }
 }

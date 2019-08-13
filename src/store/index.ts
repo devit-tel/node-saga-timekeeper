@@ -35,7 +35,7 @@ export class Store implements IStore {
   list(
     limit: number = Number.MAX_SAFE_INTEGER,
     offset: number = 0,
-  ): Promise<any[]> | any {
+  ): Promise<any[]> | any[] {
     return this.client.list(limit, offset);
   }
 
