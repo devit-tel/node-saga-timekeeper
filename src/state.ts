@@ -1,14 +1,20 @@
 import * as R from 'ramda';
 import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
-import { WorkflowDefinition } from './workflowDefinition';
 import { concatArray } from './utils/common';
-// import * as Store from './stores';
+import { poll } from './kafka';
+import {
+  taskInstanceStore,
+  workflowInstanceStore,
+  workflowDefinitionStore,
+} from './store';
 import {
   AllTaskType,
   IParallelTask,
   IDecisionTask,
+  WorkflowDefinition,
 } from './workflowDefinition';
-import { ITask } from './task';
+import { Workflow } from './workflow';
+import { ITask, Task } from './task';
 
 export interface ITaskUpdate {
   taskId: string;
@@ -222,4 +228,34 @@ export const findTaskPath = (
           );
       }
   else return null;
+};
+
+export const executor = async () => {
+  const [tasksUpdate, commit]: [ITaskUpdate[], Function] = await poll();
+  for (const taskUpdate of tasksUpdate) {
+    const task: Task = taskInstanceStore.getValue(taskUpdate.taskId);
+    const workflow: Workflow = workflowInstanceStore.getValue(task.workflowId);
+    const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
+      workflow.workflowName,
+      workflow.workflowRev,
+    );
+    const updatedTask = processTask(task, taskUpdate);
+    await taskInstanceStore.setValue(task.taskId, updatedTask);
+
+    if (taskUpdate.status === TaskStates.Completed) {
+      const nextTaskPath = getNextTaskPath(
+        workflowDefinition.tasks,
+        findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
+      );
+      if (nextTaskPath) {
+        const nextTask = new Task(
+          workflow.workflowId,
+          R.path(nextTaskPath, workflowDefinition),
+          {},
+        );
+        await nextTask.dispatch();
+      }
+    }
+  }
+  commit();
 };

@@ -45,8 +45,24 @@ export class Store implements IStore {
   }
 }
 
+export class WorkflowDefinitionStore extends Store {
+  setWorkflowDefinition = (
+    name: string,
+    rev: string,
+    value: any,
+  ): Promise<any> | any => {
+    this.setValue(`${name}.${rev}`, value);
+  };
+
+  getWorkflowDefinition = (name: string, rev: string): Promise<any> | any => {
+    this.getValue(`${name}.${rev}`);
+  };
+}
+
 // This's global instance
 export const taskDefinitionStore = new Store('Task Definition Store');
-export const workflowDefinitionStore = new Store('Workflow Definition Store');
+export const workflowDefinitionStore = new WorkflowDefinitionStore(
+  'Workflow Definition Store',
+);
 export const taskInstanceStore = new Store('Task Instance Store');
 export const workflowInstanceStore = new Store('Workflow Instance Store');

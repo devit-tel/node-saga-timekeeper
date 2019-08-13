@@ -46,17 +46,18 @@ export const createTopic = (
     );
   });
 
-export const poll = (messageNumber?: number) =>
+export const poll = (messageNumber?: number): Promise<[any, Function]> =>
   new Promise((resolve: Function, reject: Function) => {
     consumerClient.consume(
       messageNumber,
       (error: Error, messages: kafkaConsumerMessage[]) => {
         if (error) return reject(error);
-        resolve(
+        resolve([
           messages.map((message: kafkaConsumerMessage) =>
             jsonTryParse(message.value.toString(), {}),
           ),
-        );
+          consumerClient.commit,
+        ]);
       },
     );
   });

@@ -8,8 +8,9 @@ import { workflowDefinitionStore } from '../../../store';
 export const createWorkflowDefinition = async (
   workflowDefinition: WorkflowDefinition,
 ): Promise<any> => {
-  await workflowDefinitionStore.setValue(
-    `${workflowDefinition.name}.${workflowDefinition.rev}`,
+  await workflowDefinitionStore.setWorkflowDefinition(
+    workflowDefinition.name,
+    workflowDefinition.rev,
     new WorkflowDefinition(workflowDefinition).toJSON(),
   );
 };
@@ -18,8 +19,9 @@ export const getWorkflowDefinition = async (
   workflowName: string,
   workflowRev: string,
 ): Promise<IWorkflowDefinitionData> => {
-  return (await workflowDefinitionStore.getValue(
-    `${workflowName}.${workflowRev}`,
+  return (await workflowDefinitionStore.getWorkflowDefinition(
+    workflowName,
+    workflowRev,
   )).toObject();
 };
 

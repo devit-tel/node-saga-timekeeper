@@ -9,6 +9,7 @@ import {
 import { TaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 
+// This is wrong
 export class TaskDefinitionZookeeperStore extends ZookeeperStore {
   constructor(
     root: string,

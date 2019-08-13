@@ -4,11 +4,12 @@ import { Workflow, IWorkflow } from '../../workflow';
 
 export const startWorkflow = async (
   workflowName: string,
-  workflowRef: number,
+  workflowRef: string,
   input: any,
 ): Promise<IWorkflow> => {
-  const workflowDefinition = await workflowDefinitionStore.getValue(
-    `${workflowName}.${workflowRef}`,
+  const workflowDefinition = await workflowDefinitionStore.getWorkflowDefinition(
+    workflowName,
+    workflowRef,
   );
   if (!workflowDefinition) {
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
