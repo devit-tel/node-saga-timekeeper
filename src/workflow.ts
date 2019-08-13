@@ -73,4 +73,26 @@ export class Workflow implements IWorkflow {
       console.log(`Workflow ${this.workflowId} completed`);
     }
   }
+
+  toObject = (): any => {
+    return R.pick(
+      [
+        'workflowName',
+        'workflowRev',
+        'workflowId',
+        'status',
+        'retryCount',
+        'input',
+        'output',
+        'createTime',
+        'startTime',
+        'endTime',
+      ],
+      this,
+    );
+  };
+
+  toJSON = (): string => {
+    return JSON.stringify(this.toObject());
+  };
 }
