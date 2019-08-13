@@ -2,6 +2,7 @@ import * as config from './config';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
 import { TaskDefinitionZookeeperStore } from './store/zookeeper/taskDefinition';
+import { MemoryStore } from './store/memory';
 import { Server } from './server';
 import './kafka';
 
@@ -34,6 +35,26 @@ switch (config.taskDefinitionStore.type) {
   default:
     throw new Error(
       `TaskDefinition Store: ${config.taskDefinitionStore.type} is invalid`,
+    );
+}
+
+switch (config.workflowInstanceStore.type) {
+  case store.StoreType.Memory:
+    store.workflowInstanceStore.setClient(new MemoryStore());
+    break;
+  default:
+    throw new Error(
+      `WorkflowInstance Store: ${config.workflowInstanceStore.type} is invalid`,
+    );
+}
+
+switch (config.taskInstanceStore.type) {
+  case store.StoreType.Memory:
+    store.taskInstanceStore.setClient(new MemoryStore());
+    break;
+  default:
+    throw new Error(
+      `WorkflowInstance Store: ${config.taskInstanceStore.type} is invalid`,
     );
 }
 

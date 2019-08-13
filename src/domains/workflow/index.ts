@@ -1,4 +1,4 @@
-import { workflowDefinitionStore } from '../../store';
+import { workflowDefinitionStore, workflowInstanceStore } from '../../store';
 import { NotFound } from '../../errors';
 import { Workflow } from '../../workflow';
 
@@ -14,6 +14,7 @@ export const startWorkflow = async (
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
   const workflow = new Workflow(workflowDefinition, input, {});
+  await workflowInstanceStore.setValue(workflow.workflowId, workflow);
   await workflow.startNextTask();
   return workflow;
 };

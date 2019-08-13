@@ -72,3 +72,11 @@ export const workflowDefinitionStore = {
     },
   },
 };
+
+export const taskInstanceStore = {
+  type: StoreType.Memory,
+};
+
+export const workflowInstanceStore = {
+  type: StoreType.Memory,
+};

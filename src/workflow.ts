@@ -2,6 +2,7 @@ import * as R from 'ramda';
 import * as uuid from 'uuid/v4';
 import { IWorkflowDefinition } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
+import { taskInstanceStore } from './store';
 import { getWorkflowTask } from './state';
 import { ITask, Task } from './task';
 
@@ -66,7 +67,10 @@ export class Workflow implements IWorkflow {
     );
     if (workflowTask) {
       const task = new Task(this.workflowId, workflowTask, this.taskData);
+      await taskInstanceStore.setValue(task.taskId, task);
       await task.dispatch();
+    } else {
+      console.log(`Workflow ${this.workflowId} completed`);
     }
   }
 }

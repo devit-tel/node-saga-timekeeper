@@ -10,6 +10,7 @@ export enum StoreType {
   MongoDB = 'MONGODB',
   DynamoDB = 'DYNAMODB',
   Redis = 'REDIS', // Greate for Instance
+  Memory = 'MEMORY', // For Dev/Test, don't use in production
 }
 
 export class Store implements IStore {
