@@ -1,6 +1,6 @@
 import * as uuid from 'uuid/v4';
 import * as R from 'ramda';
-import { TaskStates } from './constants/task';
+import { TaskStates, TaskTypes } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
 import { dispatch } from './kafka';
 
@@ -19,6 +19,16 @@ export interface ITask {
   startTime: number; // time that worker ack
   endTime: number; // time that task finish/failed/cancel
   logs?: any[];
+  type: TaskTypes;
+  parallelTasks?: AllTaskType[][];
+  workflow?: {
+    name: string;
+    rev: string;
+  };
+  decisions?: {
+    [decision: string]: AllTaskType[];
+  };
+  defaultDecision?: AllTaskType[];
 }
 
 export class Task implements ITask {
@@ -36,6 +46,16 @@ export class Task implements ITask {
   startTime: number = null; // time that worker ack
   endTime: number = null; // time that task finish/failed/cancel
   logs?: any[] = [];
+  type: TaskTypes;
+  parallelTasks?: AllTaskType[][];
+  workflow?: {
+    name: string;
+    rev: string;
+  };
+  decisions?: {
+    [decision: string]: AllTaskType[];
+  };
+  defaultDecision?: AllTaskType[];
 
   constructor(
     workflowId: string,
@@ -46,6 +66,15 @@ export class Task implements ITask {
     this.taskReferenceNames = task.taskReferenceName;
     this.taskId = uuid();
     this.workflowId = workflowId;
+    this.type = task.type;
+
+    if (task.type === TaskTypes.Parallel)
+      this.parallelTasks = task.parallelTasks;
+    if (task.type === TaskTypes.Decision) {
+      this.decisions = task.decisions;
+      this.defaultDecision = task.defaultDecision;
+    }
+    if (task.type === TaskTypes.SubWorkflow) this.workflow = task.workflow;
     // TODO inject input later
     this.input = tasksData;
     this.createTime = Date.now();
@@ -70,6 +99,11 @@ export class Task implements ITask {
         'startTime',
         'endTime',
         'logs',
+        'type',
+        'parallelTasks',
+        'workflow',
+        'decisions',
+        'defaultDecision',
       ],
       this,
     );

@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
 import { concatArray } from './utils/common';
-import { poll } from './kafka';
+import { poll, consumerClient } from './kafka';
 import {
   taskInstanceStore,
   workflowInstanceStore,
@@ -195,7 +195,7 @@ export const findTaskPath = (
 };
 
 export const executor = async () => {
-  const [tasksUpdate, commit]: [ITaskUpdate[], Function] = await poll();
+  const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
   for (const taskUpdate of tasksUpdate) {
     const task: Task = taskInstanceStore.getValue(taskUpdate.taskId);
     const workflow: Workflow = workflowInstanceStore.getValue(task.workflowId);
@@ -221,5 +221,5 @@ export const executor = async () => {
       }
     }
   }
-  commit();
+  consumerClient.commit();
 };

@@ -14,12 +14,19 @@ export interface kafkaConsumerMessage {
 
 export const adminClient = AdminClient.create(kafkaAdmin);
 export const consumerClient = new KafkaConsumer(kafkaConsumer, {});
+export const systemConsumerClient = new KafkaConsumer(kafkaConsumer, {});
 export const producerClient = new Producer(kafkaProducer, {});
 
 consumerClient.connect();
 consumerClient.on('ready', () => {
   console.log('Consumer kafka are ready');
-  consumerClient.subscribe(['pm-event']);
+  consumerClient.subscribe(['EVENT']);
+});
+
+systemConsumerClient.connect();
+systemConsumerClient.on('ready', () => {
+  console.log('System consumer kafka are ready');
+  systemConsumerClient.subscribe(['SYSTEM_TASK']);
 });
 
 producerClient.connect();
@@ -46,18 +53,20 @@ export const createTopic = (
     );
   });
 
-export const poll = (messageNumber?: number): Promise<[any, Function]> =>
+export const poll = (
+  consumer: KafkaConsumer,
+  messageNumber?: number,
+): Promise<any[]> =>
   new Promise((resolve: Function, reject: Function) => {
-    consumerClient.consume(
+    consumer.consume(
       messageNumber,
       (error: Error, messages: kafkaConsumerMessage[]) => {
         if (error) return reject(error);
-        resolve([
+        resolve(
           messages.map((message: kafkaConsumerMessage) =>
             jsonTryParse(message.value.toString(), {}),
           ),
-          consumerClient.commit,
-        ]);
+        );
       },
     );
   });

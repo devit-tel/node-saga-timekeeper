@@ -22,6 +22,7 @@ export const server = {
 
 export const kafkaAdmin = {
   'client.id': 'saga-pm',
+  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
   ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
 };
 
@@ -29,7 +30,16 @@ export const kafkaConsumer = {
   'client.id': 'saga-pm',
   'enable.auto.commit': 'false',
   'group.id': 'saga-pm-consumer',
+  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
   ...pickAndReplaceFromENV('^consumer\\.kafka\\.conf\\.'),
+};
+
+export const kafkaSystemConsumer = {
+  'client.id': 'saga-pm',
+  'enable.auto.commit': 'false',
+  'group.id': 'saga-pm-system-consumer',
+  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
+  ...pickAndReplaceFromENV('^system-consumer\\.kafka\\.conf\\.'),
 };
 
 export const kafkaProducer = {
@@ -44,6 +54,7 @@ export const kafkaProducer = {
   'batch.num.messages': '100000',
   'delivery.report.only.error': 'true',
   dr_cb: 'true',
+  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
   ...pickAndReplaceFromENV('^producer\\.kafka\\.conf\\.'),
 };
 

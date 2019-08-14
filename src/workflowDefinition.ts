@@ -13,7 +13,7 @@ export interface IBaseTask {
   };
 }
 
-export interface ITask extends IBaseTask {
+export interface ITaskTask extends IBaseTask {
   type: TaskTypes.Task;
 }
 
@@ -38,7 +38,7 @@ export interface IDecisionTask extends IBaseTask {
 }
 
 export type AllTaskType =
-  | ITask
+  | ITaskTask
   | IParallelTask
   | ISubWorkflowTask
   | IDecisionTask;
