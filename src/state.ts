@@ -195,31 +195,39 @@ export const findTaskPath = (
 };
 
 export const executor = async () => {
-  const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
-  for (const taskUpdate of tasksUpdate) {
-    const task: Task = taskInstanceStore.getValue(taskUpdate.taskId);
-    const workflow: Workflow = workflowInstanceStore.getValue(task.workflowId);
-    const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
-      workflow.workflowName,
-      workflow.workflowRev,
-    );
-    const updatedTask = processTask(task, taskUpdate);
-    await taskInstanceStore.setValue(task.taskId, updatedTask);
-
-    if (taskUpdate.status === TaskStates.Completed) {
-      const nextTaskPath = getNextTaskPath(
-        workflowDefinition.tasks,
-        findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
+  try {
+    const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
+    for (const taskUpdate of tasksUpdate) {
+      const task: Task = taskInstanceStore.getValue(taskUpdate.taskId);
+      const workflow: Workflow = workflowInstanceStore.getValue(
+        task.workflowId,
       );
-      if (nextTaskPath) {
-        const nextTask = new Task(
-          workflow.workflowId,
-          R.path(nextTaskPath, workflowDefinition),
-          {},
+      const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
+        workflow.workflowName,
+        workflow.workflowRev,
+      );
+      const updatedTask = processTask(task, taskUpdate);
+      await taskInstanceStore.setValue(task.taskId, updatedTask);
+
+      if (taskUpdate.status === TaskStates.Completed) {
+        const nextTaskPath = getNextTaskPath(
+          workflowDefinition.tasks,
+          findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
         );
-        await nextTask.dispatch();
+        if (nextTaskPath) {
+          const nextTask = new Task(
+            workflow.workflowId,
+            R.path(nextTaskPath, workflowDefinition),
+            {},
+          );
+          await nextTask.dispatch();
+        }
       }
     }
+    consumerClient.commit();
+  } catch (error) {
+    // Handle error here
+    console.log(error);
   }
-  consumerClient.commit();
+  setTimeout(executor, 100);
 };

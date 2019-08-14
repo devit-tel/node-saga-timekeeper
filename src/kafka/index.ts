@@ -55,7 +55,7 @@ export const createTopic = (
 
 export const poll = (
   consumer: KafkaConsumer,
-  messageNumber?: number,
+  messageNumber: number = 100,
 ): Promise<any[]> =>
   new Promise((resolve: Function, reject: Function) => {
     consumer.consume(

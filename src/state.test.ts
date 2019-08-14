@@ -19,6 +19,7 @@ describe('State', () => {
         output: null,
         logs: [],
         retryCount: 0,
+        type: TaskTypes.Task,
       };
       expect(
         State.processTask(scheduledTask, {
@@ -42,6 +43,7 @@ describe('State', () => {
         output: null,
         logs: ['Job accepted'],
         retryCount: 0,
+        type: TaskTypes.Task,
       };
       expect(
         State.processTask(scheduledTask, {

@@ -20,21 +20,27 @@ const processSubWorkflowTask = async (task: ITask) => {
 };
 
 export const executor = async () => {
-  const tasks: ITask[] = await poll(systemConsumerClient);
-  for (const task of tasks) {
-    switch (task.type) {
-      case TaskTypes.Decision:
-        await processDecisionTask(task);
-        break;
-      case TaskTypes.Parallel:
-        await processParallelTask(task);
-        break;
-      case TaskTypes.SubWorkflow:
-        await processSubWorkflowTask(task);
-        break;
-      default:
-        throw new Error(`Task: ${task.type} is not system task`);
+  try {
+    const tasks: ITask[] = await poll(systemConsumerClient);
+    for (const task of tasks) {
+      switch (task.type) {
+        case TaskTypes.Decision:
+          await processDecisionTask(task);
+          break;
+        case TaskTypes.Parallel:
+          await processParallelTask(task);
+          break;
+        case TaskTypes.SubWorkflow:
+          await processSubWorkflowTask(task);
+          break;
+        default:
+          throw new Error(`Task: ${task.type} is not system task`);
+      }
     }
+    systemConsumerClient.commit();
+  } catch (error) {
+    // Handle error here
+    console.log(error);
   }
-  systemConsumerClient.commit();
+  setTimeout(executor, 100);
 };

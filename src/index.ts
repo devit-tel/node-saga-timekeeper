@@ -4,6 +4,8 @@ import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefi
 import { TaskDefinitionZookeeperStore } from './store/zookeeper/taskDefinition';
 import { MemoryStore } from './store/memory';
 import { Server } from './server';
+import { executor as stateExecutor } from './state';
+import { executor as systemTaskExecutor } from './systemTask';
 import './kafka';
 
 switch (config.workflowDefinitionStore.type) {
@@ -61,3 +63,6 @@ switch (config.taskInstanceStore.type) {
 if (config.server.enabled) {
   new Server(config.server.port, config.server.hostname, true);
 }
+
+stateExecutor();
+systemTaskExecutor();

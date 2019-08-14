@@ -51,11 +51,11 @@ export class WorkflowDefinitionStore extends Store {
     rev: string,
     value: any,
   ): Promise<any> | any => {
-    this.setValue(`${name}.${rev}`, value);
+    return this.setValue(`${name}.${rev}`, value);
   };
 
   getWorkflowDefinition = (name: string, rev: string): Promise<any> | any => {
-    this.getValue(`${name}.${rev}`);
+    return this.getValue(`${name}.${rev}`);
   };
 }
 
