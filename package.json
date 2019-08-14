@@ -9,10 +9,11 @@
     "@types/jest": "^24.0.15",
     "@types/node": "^10.14.10",
     "jest": "~24.8.0",
+    "nodemon": "^1.19.1",
     "prettier": "1.18.2",
     "rimraf": "^2.6.3",
     "ts-jest": "^24.0.0",
-    "tsc-watch": "^2.2.1",
+    "ts-node": "^8.3.0",
     "tslint": "~5.18.0",
     "tslint-config-prettier": "1.18.0",
     "tslint-microsoft-contrib": "~6.2.0",
@@ -26,7 +27,7 @@
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "start:watch": "npm run clean & tsc-watch --onSuccess \"node ./build/index.js\" -p ./tsconfig.release.json"
+    "start:watch": "nodemon"
   },
   "author": "Jakub Synowiec <github@jakubsynowiec.info>",
   "license": "Apache-2.0",

@@ -47,7 +47,7 @@ export const kafkaProducer = {
   'compression.type': 'snappy',
   'retry.backoff.ms': '100',
   'enable.idempotence': 'true',
-  'message.send.max.retries': '10000000',
+  'message.send.max.retries': '100000',
   'socket.keepalive.enable': 'true',
   'queue.buffering.max.messages': '10000',
   'queue.buffering.max.ms': '100',

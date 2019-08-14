@@ -5,7 +5,7 @@ import { poll, consumerClient } from './kafka';
 import {
   taskInstanceStore,
   workflowInstanceStore,
-  workflowDefinitionStore,
+  // workflowDefinitionStore,
 } from './store';
 import {
   AllTaskType,
@@ -198,30 +198,31 @@ export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
     for (const taskUpdate of tasksUpdate) {
-      const task: Task = taskInstanceStore.getValue(taskUpdate.taskId);
-      const workflow: Workflow = workflowInstanceStore.getValue(
+      const task: Task = await taskInstanceStore.getValue(taskUpdate.taskId);
+      const workflow: Workflow = await workflowInstanceStore.getValue(
         task.workflowId,
       );
-      const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
-        workflow.workflowName,
-        workflow.workflowRev,
-      );
+      // const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
+      //   workflow.workflowName,
+      //   workflow.workflowRev,
+      // );
       const updatedTask = processTask(task, taskUpdate);
       await taskInstanceStore.setValue(task.taskId, updatedTask);
-
       if (taskUpdate.status === TaskStates.Completed) {
-        const nextTaskPath = getNextTaskPath(
-          workflowDefinition.tasks,
-          findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
-        );
-        if (nextTaskPath) {
-          const nextTask = new Task(
-            workflow.workflowId,
-            R.path(nextTaskPath, workflowDefinition),
-            {},
-          );
-          await nextTask.dispatch();
-        }
+        await workflow.startNextTask(task.taskReferenceNames);
+        // const nextTaskPath = getNextTaskPath(
+        //   workflowDefinition.tasks,
+        //   findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
+        // );
+        // if (nextTaskPath) {
+        //   const nextTask = new Task(
+        //     workflow.workflowId,
+        //     R.path(nextTaskPath, workflowDefinition.tasks),
+        //     {},
+        //   );
+        //   await taskInstanceStore.setValue(nextTask.taskId, nextTask);
+        //   await nextTask.dispatch();
+        // }
       }
     }
     consumerClient.commit();
@@ -229,5 +230,5 @@ export const executor = async () => {
     // Handle error here
     console.log(error);
   }
-  setTimeout(executor, 100);
+  setTimeout(executor, 1);
 };

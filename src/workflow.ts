@@ -62,7 +62,11 @@ export class Workflow implements IWorkflow {
   async startNextTask(taskReferenceNames?: string) {
     const workflowTask = getWorkflowTask(
       taskReferenceNames ||
-        R.pathOr('', ['tasks', 0, 'name'], this.workflowDefinition),
+        R.pathOr(
+          '',
+          ['tasks', 0, 'taskReferenceName'],
+          this.workflowDefinition,
+        ),
       this.workflowDefinition,
     );
     if (workflowTask) {
