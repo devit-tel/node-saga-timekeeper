@@ -14,7 +14,7 @@ export const startWorkflow = async (
   if (!workflowDefinition) {
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
-  const workflow = new Workflow(workflowDefinition, input, {});
+  const workflow = new Workflow(workflowDefinition, input);
   await workflowInstanceStore.setValue(workflow.workflowId, workflow);
   await workflow.startNextTask();
   return workflow.toObject();

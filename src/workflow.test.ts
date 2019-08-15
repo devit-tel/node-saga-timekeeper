@@ -25,7 +25,7 @@ describe('Workflow', () => {
         },
       ],
     });
-    const simpleWorkflow = new Workflow(workflowDefinition, {}, {});
+    const simpleWorkflow = new Workflow(workflowDefinition, {});
 
     test('Simple Workflow', () => {
       expect(simpleWorkflow.toObject()).toEqual({

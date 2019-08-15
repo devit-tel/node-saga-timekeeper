@@ -4,7 +4,7 @@ import { IWorkflowDefinition } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
 import { taskInstanceStore } from './store';
 import { getWorkflowTask } from './state';
-import { ITask, Task } from './task';
+import { Task } from './task';
 
 export interface IWorkflow {
   workflowName: string;
@@ -36,27 +36,35 @@ export class Workflow implements IWorkflow {
   endTime: number;
 
   workflowDefinition: IWorkflowDefinition;
-  taskData: { [taskReferenceName: string]: ITask };
 
   constructor(
     workflowDefinition: IWorkflowDefinition,
     input: {
       [key: string]: any;
     },
-    taskData: { [taskReferenceName: string]: ITask },
+    workflow?: IWorkflow,
   ) {
     this.workflowDefinition = workflowDefinition;
-    this.taskData = taskData;
-
     this.workflowName = workflowDefinition.name;
     this.workflowRev = workflowDefinition.rev;
-    this.workflowId = uuid();
-    this.status = WorkflowStates.Running;
-    this.retryCount = 0;
-    this.input = input;
-    this.createTime = Date.now();
-    this.startTime = Date.now();
-    this.endTime = null;
+
+    if (workflow) {
+      this.workflowId = workflow.workflowId;
+      this.status = workflow.status;
+      this.retryCount = workflow.retryCount;
+      this.input = workflow.input;
+      this.createTime = workflow.createTime;
+      this.startTime = workflow.startTime;
+      this.endTime = workflow.endTime;
+    } else {
+      this.workflowId = uuid();
+      this.status = WorkflowStates.Running;
+      this.retryCount = 0;
+      this.input = input;
+      this.createTime = Date.now();
+      this.startTime = Date.now();
+      this.endTime = null;
+    }
   }
 
   async startNextTask(taskReferenceNames?: string) {
@@ -70,7 +78,7 @@ export class Workflow implements IWorkflow {
       this.workflowDefinition,
     );
     if (workflowTask) {
-      const task = new Task(this.workflowId, workflowTask, this.taskData);
+      const task = new Task(this.workflowId, workflowTask, {});
       await taskInstanceStore.setValue(task.taskId, task);
       await task.dispatch();
     } else {

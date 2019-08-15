@@ -209,7 +209,7 @@ export const executor = async () => {
       const updatedTask = processTask(task, taskUpdate);
       await taskInstanceStore.setValue(task.taskId, updatedTask);
       if (taskUpdate.status === TaskStates.Completed) {
-        await workflow.startNextTask(task.taskReferenceNames);
+        // await workflow.startNextTask(task.taskReferenceNames);
         // const nextTaskPath = getNextTaskPath(
         //   workflowDefinition.tasks,
         //   findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
