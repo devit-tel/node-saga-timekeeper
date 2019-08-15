@@ -210,7 +210,6 @@ export const executor = async () => {
           workflow.workflowDefinition.tasks,
           currentTaskPath,
         );
-        console.log(nextTaskPath);
         if (nextTaskPath) {
           await workflow.startTask(nextTaskPath);
         }
