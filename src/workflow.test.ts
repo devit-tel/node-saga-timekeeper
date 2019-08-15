@@ -28,15 +28,13 @@ describe('Workflow', () => {
     const simpleWorkflow = new Workflow(workflowDefinition, {}, {});
 
     test('Simple Workflow', () => {
-      expect(simpleWorkflow).toEqual({
+      expect(simpleWorkflow.toObject()).toEqual({
         createTime: undefined,
         endTime: null,
         input: {},
         retryCount: 0,
         startTime: undefined,
         status: 'RUNNING',
-        taskData: {},
-        workflowDefinition,
         workflowId: undefined,
         workflowName: 'WORKFLOW_001',
         workflowRev: '1',

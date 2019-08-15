@@ -17,7 +17,7 @@ describe('Task', () => {
             inputParameters: {},
           },
           {},
-        ),
+        ).toObject(),
       ).toEqual({
         createTime: undefined,
         endTime: null,
@@ -30,6 +30,7 @@ describe('Task', () => {
         taskId: undefined,
         taskName: 'task_name',
         taskReferenceNames: 'task_name_1',
+        type: 'TASK',
         workflowId: 'some_id',
       });
     });
@@ -69,9 +70,33 @@ describe('Task', () => {
             },
           },
           {},
-        ),
+        ).toObject(),
       ).toEqual({
         createTime: undefined,
+        decisions: {
+          case1: [
+            {
+              inputParameters: {},
+              name: 'task_name',
+              taskReferenceName: 'task_case1_0',
+              type: 'TASK',
+            },
+            {
+              inputParameters: {},
+              name: 'task_name',
+              taskReferenceName: 'task_case1_1',
+              type: 'TASK',
+            },
+          ],
+        },
+        defaultDecision: [
+          {
+            inputParameters: {},
+            name: 'task_name',
+            taskReferenceName: 'task_defaultDecision_0',
+            type: 'TASK',
+          },
+        ],
         endTime: null,
         input: {},
         logs: [],
@@ -82,6 +107,7 @@ describe('Task', () => {
         taskId: undefined,
         taskName: 'task_name',
         taskReferenceNames: 'task_name_1',
+        type: 'DECISION',
         workflowId: 'some_id',
       });
     });

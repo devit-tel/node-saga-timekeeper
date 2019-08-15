@@ -19,8 +19,8 @@ describe('Task', () => {
         topicConfigurations: {
           'cleanup.policy': 'compact',
           'compression.type': 'snappy',
-          'delete.retention.ms': 86400000,
-          'file.delete.delay.ms': 60000,
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
         },
       });
     });
@@ -43,8 +43,8 @@ describe('Task', () => {
         topicConfigurations: {
           'cleanup.policy': 'compact',
           'compression.type': 'snappy',
-          'delete.retention.ms': 86400000,
-          'file.delete.delay.ms': 60000,
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
         },
       });
     });
@@ -70,8 +70,8 @@ describe('Task', () => {
         topicConfigurations: {
           'cleanup.policy': 'delete',
           'compression.type': 'snappy',
-          'delete.retention.ms': 86400000,
-          'file.delete.delay.ms': 60000,
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
         },
       });
     });
@@ -131,8 +131,8 @@ describe('Task', () => {
         topicConfigurations: {
           'cleanup.policy': 'delete',
           'compression.type': 'snappy',
-          'delete.retention.ms': 86400000,
-          'file.delete.delay.ms': 60000,
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
         },
       });
     });
@@ -179,8 +179,8 @@ describe('Task', () => {
         topicConfigurations: {
           'cleanup.policy': 'delete',
           'compression.type': 'snappy',
-          'delete.retention.ms': 86400000,
-          'file.delete.delay.ms': 60000,
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
         },
       });
     });
