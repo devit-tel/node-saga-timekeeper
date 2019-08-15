@@ -11,9 +11,7 @@ export interface ITask {
   workflowId: string;
   status: TaskStates;
   retryCount: number;
-  input: {
-    [key: string]: any;
-  };
+  input: any;
   output: any;
   createTime: number; // time that push into Kafka
   startTime: number; // time that worker ack
@@ -38,9 +36,7 @@ export class Task implements ITask {
   workflowId: string;
   status: TaskStates = TaskStates.Scheduled;
   retryCount: number = 0;
-  input: {
-    [key: string]: any;
-  };
+  input: any;
   output: any = {};
   createTime: number; // time that push into Kafka
   startTime: number = null; // time that worker ack
