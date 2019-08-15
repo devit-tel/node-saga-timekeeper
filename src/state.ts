@@ -2,11 +2,7 @@ import * as R from 'ramda';
 import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
 import { concatArray } from './utils/common';
 import { poll, consumerClient } from './kafka';
-import {
-  taskInstanceStore,
-  workflowInstanceStore,
-  // workflowDefinitionStore,
-} from './store';
+import { taskInstanceStore, workflowInstanceStore } from './store';
 import {
   AllTaskType,
   IParallelTask,
@@ -202,33 +198,29 @@ export const executor = async () => {
       const workflow: Workflow = await workflowInstanceStore.getValue(
         task.workflowId,
       );
-      // const workflowDefinition: WorkflowDefinition = workflowDefinitionStore.getWorkflowDefinition(
-      //   workflow.workflowName,
-      //   workflow.workflowRev,
-      // );
+
       const updatedTask = processTask(task, taskUpdate);
       await taskInstanceStore.setValue(task.taskId, updatedTask);
       if (taskUpdate.status === TaskStates.Completed) {
-        // await workflow.startNextTask(task.taskReferenceNames);
-        // const nextTaskPath = getNextTaskPath(
-        //   workflowDefinition.tasks,
-        //   findTaskPath(task.taskReferenceNames, workflowDefinition.tasks),
-        // );
-        // if (nextTaskPath) {
-        //   const nextTask = new Task(
-        //     workflow.workflowId,
-        //     R.path(nextTaskPath, workflowDefinition.tasks),
-        //     {},
-        //   );
-        //   await taskInstanceStore.setValue(nextTask.taskId, nextTask);
-        //   await nextTask.dispatch();
-        // }
+        const currentTaskPath = findTaskPath(
+          task.taskReferenceNames,
+          workflow.workflowDefinition.tasks,
+        );
+        const nextTaskPath = getNextTaskPath(
+          workflow.workflowDefinition.tasks,
+          currentTaskPath,
+        );
+        console.log(nextTaskPath);
+        if (nextTaskPath) {
+          await workflow.startTask(nextTaskPath);
+        }
       }
     }
     consumerClient.commit();
   } catch (error) {
     // Handle error here
     console.log(error);
+  } finally {
+    setImmediate(executor);
   }
-  setTimeout(executor, 1);
 };

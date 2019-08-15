@@ -42,7 +42,7 @@ describe('Workflow', () => {
     });
 
     test('Start first task', () => {
-      expect(async () => await simpleWorkflow.startNextTask()).not.toThrow();
+      expect(async () => await simpleWorkflow.startTask()).not.toThrow();
     });
   });
 });

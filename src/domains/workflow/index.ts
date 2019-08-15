@@ -16,7 +16,7 @@ export const startWorkflow = async (
   }
   const workflow = new Workflow(workflowDefinition, input);
   await workflowInstanceStore.setValue(workflow.workflowId, workflow);
-  await workflow.startNextTask();
+  await workflow.startTask();
   return workflow.toObject();
 };
 

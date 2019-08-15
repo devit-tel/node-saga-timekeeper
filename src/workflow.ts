@@ -1,9 +1,8 @@
 import * as R from 'ramda';
 import * as uuid from 'uuid/v4';
-import { IWorkflowDefinition } from './workflowDefinition';
+import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
 import { taskInstanceStore } from './store';
-import { getWorkflowTask } from './state';
 import { Task } from './task';
 
 export interface IWorkflow {
@@ -67,22 +66,17 @@ export class Workflow implements IWorkflow {
     }
   }
 
-  async startNextTask(taskReferenceNames?: string) {
-    const workflowTask = getWorkflowTask(
-      taskReferenceNames ||
-        R.pathOr(
-          '',
-          ['tasks', 0, 'taskReferenceName'],
-          this.workflowDefinition,
-        ),
-      this.workflowDefinition,
+  async startTask(taskPath: (string | number)[] = [0]) {
+    const workflowTask: AllTaskType = R.path(
+      taskPath,
+      this.workflowDefinition.tasks,
     );
     if (workflowTask) {
       const task = new Task(this.workflowId, workflowTask, {});
       await taskInstanceStore.setValue(task.taskId, task);
       await task.dispatch();
     } else {
-      console.log(`Workflow ${this.workflowId} completed`);
+      throw new Error(`WorkflowTask @${taskPath} not found`);
     }
   }
 
