@@ -11,7 +11,7 @@ export class MemoryStore implements IStore {
     return true;
   }
 
-  setValue(key: string, value: any = ''): any {
+  setValue(key: string, value: any): any {
     return (this.localStore = R.set(
       R.lensPath(key.split('.')),
       value,
@@ -19,8 +19,8 @@ export class MemoryStore implements IStore {
     ));
   }
 
-  getValue(key: string = ''): any {
-    return R.path(key.split('.'), this.localStore[key]);
+  getValue(key: string): any {
+    return R.path(key.split('.'), this.localStore);
   }
 
   list(limit: number = Number.MAX_SAFE_INTEGER, offset: number = 0): any[] {

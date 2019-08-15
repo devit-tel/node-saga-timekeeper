@@ -2,7 +2,7 @@ import * as R from 'ramda';
 import * as uuid from 'uuid/v4';
 import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
-import { taskInstanceStore } from './store';
+import { taskInstanceStore, workflowInstanceStore } from './store';
 import { Task } from './task';
 
 export interface IWorkflow {
@@ -18,6 +18,9 @@ export interface IWorkflow {
   createTime: number;
   startTime: number;
   endTime: number;
+  taskRefs: {
+    [taskId: string]: string;
+  };
 }
 
 export class Workflow implements IWorkflow {
@@ -33,6 +36,9 @@ export class Workflow implements IWorkflow {
   createTime: number;
   startTime: number;
   endTime: number;
+  taskRefs: {
+    [taskId: string]: string;
+  };
 
   workflowDefinition: IWorkflowDefinition;
 
@@ -47,7 +53,9 @@ export class Workflow implements IWorkflow {
     this.workflowName = workflowDefinition.name;
     this.workflowRev = workflowDefinition.rev;
 
+    // Node TS didn't support constructor overloading
     if (workflow) {
+      // From store
       this.workflowId = workflow.workflowId;
       this.status = workflow.status;
       this.retryCount = workflow.retryCount;
@@ -55,7 +63,9 @@ export class Workflow implements IWorkflow {
       this.createTime = workflow.createTime;
       this.startTime = workflow.startTime;
       this.endTime = workflow.endTime;
+      this.taskRefs = workflow.taskRefs;
     } else {
+      // Create new one
       this.workflowId = uuid();
       this.status = WorkflowStates.Running;
       this.retryCount = 0;
@@ -63,6 +73,7 @@ export class Workflow implements IWorkflow {
       this.createTime = Date.now();
       this.startTime = Date.now();
       this.endTime = null;
+      this.taskRefs = {};
     }
   }
 
@@ -73,7 +84,14 @@ export class Workflow implements IWorkflow {
     );
     if (workflowTask) {
       const task = new Task(this.workflowId, workflowTask, {});
-      await taskInstanceStore.setValue(task.taskId, task);
+      this.taskRefs = {
+        ...this.taskRefs,
+        [task.taskReferenceName]: task.taskId,
+      };
+      await Promise.all([
+        taskInstanceStore.setValue(task.taskId, task),
+        workflowInstanceStore.setValue(this.workflowId, this),
+      ]);
       await task.dispatch();
     } else {
       throw new Error(`WorkflowTask @${taskPath} not found`);
@@ -93,6 +111,7 @@ export class Workflow implements IWorkflow {
         'createTime',
         'startTime',
         'endTime',
+        'taskRefs',
       ],
       this,
     );
