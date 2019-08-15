@@ -12,11 +12,15 @@ export class MemoryStore implements IStore {
   }
 
   setValue(key: string, value: any = ''): any {
-    return (this.localStore[key] = value);
+    return (this.localStore = R.set(
+      R.lensPath(key.split('.')),
+      value,
+      this.localStore,
+    ));
   }
 
   getValue(key: string = ''): any {
-    return this.localStore[key];
+    return R.path(key.split('.'), this.localStore[key]);
   }
 
   list(limit: number = Number.MAX_SAFE_INTEGER, offset: number = 0): any[] {

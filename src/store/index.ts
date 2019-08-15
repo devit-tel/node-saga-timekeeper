@@ -59,10 +59,27 @@ export class WorkflowDefinitionStore extends Store {
   };
 }
 
+export class TaskInstanceStore extends Store {
+  setTaskInstanceValue = (
+    workflowId: string,
+    taskReferenceName: string,
+    value: any,
+  ): Promise<any> | any => {
+    return this.setValue(`${workflowId}.${taskReferenceName}`, value);
+  };
+
+  getTaskInstanceValue = (
+    workflowId: string,
+    taskReferenceName: string,
+  ): Promise<any> | any => {
+    return this.getValue(`${workflowId}.${taskReferenceName}`);
+  };
+}
+
 // This's global instance
 export const taskDefinitionStore = new Store('Task Definition Store');
 export const workflowDefinitionStore = new WorkflowDefinitionStore(
   'Workflow Definition Store',
 );
-export const taskInstanceStore = new Store('Task Instance Store');
+export const taskInstanceStore = new TaskInstanceStore('Task Instance Store');
 export const workflowInstanceStore = new Store('Workflow Instance Store');

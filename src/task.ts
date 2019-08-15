@@ -6,7 +6,7 @@ import { dispatch } from './kafka';
 
 export interface ITask {
   taskName: string;
-  taskReferenceNames: string;
+  taskReferenceName: string;
   taskId: string;
   workflowId: string;
   status: TaskStates;
@@ -31,7 +31,7 @@ export interface ITask {
 
 export class Task implements ITask {
   taskName: string;
-  taskReferenceNames: string;
+  taskReferenceName: string;
   taskId: string;
   workflowId: string;
   status: TaskStates = TaskStates.Scheduled;
@@ -59,7 +59,7 @@ export class Task implements ITask {
     tasksData: { [taskReferenceName: string]: ITask },
   ) {
     this.taskName = task.name;
-    this.taskReferenceNames = task.taskReferenceName;
+    this.taskReferenceName = task.taskReferenceName;
     this.taskId = uuid();
     this.workflowId = workflowId;
     this.type = task.type;
@@ -84,7 +84,7 @@ export class Task implements ITask {
     return R.pick(
       [
         'taskName',
-        'taskReferenceNames',
+        'taskReferenceName',
         'taskId',
         'workflowId',
         'status',

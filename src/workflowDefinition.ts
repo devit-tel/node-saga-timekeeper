@@ -103,7 +103,7 @@ const isValidWorkflowRev = R.compose(
 
 interface TasksValidateOutput {
   errors: string[];
-  taskReferenceNames: {
+  taskReferenceName: {
     [taskName: string]: string;
   };
 }
@@ -126,10 +126,10 @@ const validateTasks = (
       if (!isValidName(task.taskReferenceName))
         result.errors.push(`${currentRoot}.taskReferenceName is invalid`);
 
-      if (result.taskReferenceNames[task.taskReferenceName])
+      if (result.taskReferenceName[task.taskReferenceName])
         result.errors.push(`${currentRoot}.taskReferenceName is duplicated`);
       else
-        result.taskReferenceNames[task.taskReferenceName] =
+        result.taskReferenceName[task.taskReferenceName] =
           task.taskReferenceName;
 
       // TODO Validate inputParameters
@@ -250,7 +250,7 @@ export class WorkflowDefinition implements IWorkflowDefinition {
       'workflowDefinition',
       {
         errors: workflowValidationErrors,
-        taskReferenceNames: {},
+        taskReferenceName: {},
       },
     );
     if (validateTasksResult.errors.length)

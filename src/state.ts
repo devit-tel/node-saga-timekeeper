@@ -98,7 +98,7 @@ export const getNextTaskPath = (
 };
 
 export const findNextParallelTaskPath = (
-  taskReferenceNames: string,
+  taskReferenceName: string,
   tasks: AllTaskType[],
   currentPath: (string | number)[],
   currentTask: IParallelTask,
@@ -108,7 +108,7 @@ export const findNextParallelTaskPath = (
     pTasksIndex < currentTask.parallelTasks.length;
     pTasksIndex++
   ) {
-    const taskPath = findTaskPath(taskReferenceNames, tasks, [
+    const taskPath = findTaskPath(taskReferenceName, tasks, [
       ...currentPath,
       'parallelTasks',
       pTasksIndex,
@@ -116,11 +116,11 @@ export const findNextParallelTaskPath = (
     ]);
     if (taskPath) return taskPath;
   }
-  return findTaskPath(taskReferenceNames, tasks, getNextPath(currentPath));
+  return findTaskPath(taskReferenceName, tasks, getNextPath(currentPath));
 };
 
 export const findNextDecisionTaskPath = (
-  taskReferenceNames: string,
+  taskReferenceName: string,
   tasks: AllTaskType[],
   currentPath: (string | number)[],
   currentTask: IDecisionTask,
@@ -133,47 +133,46 @@ export const findNextDecisionTaskPath = (
     ['defaultDecision'],
   ];
   for (const decisionPath of decisionsPath) {
-    const taskPath = findTaskPath(taskReferenceNames, tasks, [
+    const taskPath = findTaskPath(taskReferenceName, tasks, [
       ...currentPath,
       ...decisionPath,
       0,
     ]);
     if (taskPath) return taskPath;
   }
-  return findTaskPath(taskReferenceNames, tasks, getNextPath(currentPath));
+  return findTaskPath(taskReferenceName, tasks, getNextPath(currentPath));
 };
 
 export const getWorkflowTask = (
-  taskReferenceNames: string,
+  taskReferenceName: string,
   workflowDefinition: WorkflowDefinition,
 ): AllTaskType => {
-  const taskPath = findTaskPath(taskReferenceNames, workflowDefinition.tasks);
+  const taskPath = findTaskPath(taskReferenceName, workflowDefinition.tasks);
   if (!taskPath)
-    throw new Error(`taskReferenceNames: "${taskReferenceNames}" not found`);
+    throw new Error(`taskReferenceName: "${taskReferenceName}" not found`);
   return R.path(taskPath, workflowDefinition.tasks);
 };
 
 export const findTaskPath = (
-  taskReferenceNames: string,
+  taskReferenceName: string,
   tasks: AllTaskType[],
   currentPath: (string | number)[] = [0],
 ): (string | number)[] => {
   const currentTask: AllTaskType = R.path(currentPath, tasks);
   if (currentTask)
-    if (currentTask.taskReferenceName === taskReferenceNames)
-      return currentPath;
+    if (currentTask.taskReferenceName === taskReferenceName) return currentPath;
     else
       switch (currentTask.type) {
         case TaskTypes.Parallel:
           return findNextParallelTaskPath(
-            taskReferenceNames,
+            taskReferenceName,
             tasks,
             currentPath,
             currentTask,
           );
         case TaskTypes.Decision:
           return findNextDecisionTaskPath(
-            taskReferenceNames,
+            taskReferenceName,
             tasks,
             currentPath,
             currentTask,
@@ -182,7 +181,7 @@ export const findTaskPath = (
         case TaskTypes.Task:
         default:
           return findTaskPath(
-            taskReferenceNames,
+            taskReferenceName,
             tasks,
             getNextPath(currentPath),
           );
@@ -203,7 +202,7 @@ export const executor = async () => {
       await taskInstanceStore.setValue(task.taskId, updatedTask);
       if (taskUpdate.status === TaskStates.Completed) {
         const currentTaskPath = findTaskPath(
-          task.taskReferenceNames,
+          task.taskReferenceName,
           workflow.workflowDefinition.tasks,
         );
         const nextTaskPath = getNextTaskPath(

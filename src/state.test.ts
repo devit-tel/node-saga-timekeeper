@@ -8,7 +8,7 @@ describe('State', () => {
     test('Ack task', () => {
       const scheduledTask = {
         taskName: 'MOCK_TASK',
-        taskReferenceNames: 'MOCK_TASK',
+        taskReferenceName: 'MOCK_TASK',
         taskId: 'MOCK_TASK_001',
         workflowId: 'MOCK_WORKFLOW_001',
         status: TaskStates.Scheduled,
@@ -32,7 +32,7 @@ describe('State', () => {
     test('Complete task', () => {
       const scheduledTask = {
         taskName: 'MOCK_TASK',
-        taskReferenceNames: 'MOCK_TASK',
+        taskReferenceName: 'MOCK_TASK',
         taskId: 'MOCK_TASK_001',
         workflowId: 'MOCK_WORKFLOW_001',
         status: TaskStates.Inprogress,
@@ -70,7 +70,7 @@ describe('State', () => {
           JSON.parse(
             JSON.stringify({
               taskName: 'MOCK_TASK',
-              taskReferenceNames: 'MOCK_TASK',
+              taskReferenceName: 'MOCK_TASK',
               taskId: 'MOCK_TASK_001',
               workflowId: 'MOCK_WORKFLOW_001',
               status: 'INVALID_STATUS',
@@ -98,7 +98,7 @@ describe('State', () => {
           JSON.parse(
             JSON.stringify({
               taskName: 'MOCK_TASK',
-              taskReferenceNames: 'MOCK_TASK',
+              taskReferenceName: 'MOCK_TASK',
               taskId: 'MOCK_TASK_001',
               workflowId: 'MOCK_WORKFLOW_001',
               status: TaskStates.Failed,
@@ -679,7 +679,7 @@ describe('State', () => {
 
     test('Sample 1', () => {
       expect(() => State.getWorkflowTask('Random_string', workflow)).toThrow(
-        'taskReferenceNames: "Random_string" not found',
+        'taskReferenceName: "Random_string" not found',
       );
 
       expect(State.getWorkflowTask('eiei', workflow)).toEqual({

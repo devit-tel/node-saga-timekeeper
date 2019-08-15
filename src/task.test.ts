@@ -29,7 +29,7 @@ describe('Task', () => {
         status: 'SCHEDULED',
         taskId: undefined,
         taskName: 'task_name',
-        taskReferenceNames: 'task_name_1',
+        taskReferenceName: 'task_name_1',
         type: 'TASK',
         workflowId: 'some_id',
       });
@@ -106,7 +106,7 @@ describe('Task', () => {
         status: 'SCHEDULED',
         taskId: undefined,
         taskName: 'task_name',
-        taskReferenceNames: 'task_name_1',
+        taskReferenceName: 'task_name_1',
         type: 'DECISION',
         workflowId: 'some_id',
       });
