@@ -3,6 +3,8 @@ import * as R from 'ramda';
 import { TaskStates, TaskTypes } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
 import { dispatch } from './kafka';
+import { IWorkflow } from './workflow';
+import { isString } from './utils/common';
 
 export interface ITask {
   taskName: string;
@@ -56,7 +58,7 @@ export class Task implements ITask {
   constructor(
     workflowId: string,
     task: AllTaskType,
-    tasksData: { [taskReferenceName: string]: ITask },
+    tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
   ) {
     this.taskName = task.name;
     this.taskReferenceName = task.taskReferenceName;
@@ -71,8 +73,26 @@ export class Task implements ITask {
       this.defaultDecision = task.defaultDecision;
     }
     if (task.type === TaskTypes.SubWorkflow) this.workflow = task.workflow;
-    // TODO inject input later
-    this.input = tasksData;
+
+    const inputParametersPairs = R.toPairs(task.inputParameters);
+    const inputPairs = inputParametersPairs.map(
+      ([key, value]: [string, string | any]): [string, any] => {
+        if (
+          isString(value) &&
+          /^\${[a-z0-9-_]{1,32}[a-z0-9-_.]+}$/i.test(value)
+        ) {
+          return [
+            key,
+            R.path(
+              value.replace(/(^\${)(.+)(}$)/i, '$2').split('.'),
+              tasksData,
+            ),
+          ];
+        }
+        return [key, value];
+      },
+    );
+    this.input = R.fromPairs(inputPairs);
     this.createTime = Date.now();
   }
 

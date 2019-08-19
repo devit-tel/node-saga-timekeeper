@@ -30,18 +30,16 @@ export const isAbleToTranslateTaskStatus = (
   throw new Error(`Current status: "${currentStatus}" is invalid`);
 };
 
-export const processTask = (task: ITask, taskUpdate: ITaskUpdate): ITask => {
+export const processTask = (task: Task, taskUpdate: ITaskUpdate): ITask => {
   if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status))
     throw new Error(
       `Cannot change status from ${task.status} to ${taskUpdate.status}`,
     );
 
-  return {
-    ...task,
-    status: taskUpdate.status,
-    output: R.isNil(taskUpdate.output) ? task.output : taskUpdate.output,
-    logs: concatArray(task.logs, taskUpdate.logs),
-  };
+  task.status = taskUpdate.status;
+  task.output = R.isNil(taskUpdate.output) ? task.output : taskUpdate.output;
+  task.logs = concatArray(task.logs, taskUpdate.logs);
+  return task;
 };
 
 const getNextPath = (currentPath: (string | number)[]): (string | number)[] => [
@@ -189,6 +187,20 @@ export const findTaskPath = (
   else return null;
 };
 
+const getTaskData = async (
+  workflow: Workflow,
+): Promise<{ [taskReferenceName: string]: Task }> => {
+  const taskRefsPairs: [string, string][] = R.toPairs(workflow.taskRefs);
+  const taskDataPairs = await Promise.all(
+    taskRefsPairs.map(
+      async ([taskReferenceName, taskId]: [string, string]): Promise<
+        [string, Task]
+      > => [taskReferenceName, await taskInstanceStore.getValue(taskId)],
+    ),
+  );
+  return R.fromPairs(taskDataPairs);
+};
+
 export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
@@ -198,8 +210,9 @@ export const executor = async () => {
         task.workflowId,
       );
 
-      const updatedTask = processTask(task, taskUpdate);
-      await taskInstanceStore.setValue(task.taskId, updatedTask);
+      processTask(task, taskUpdate);
+
+      await taskInstanceStore.setValue(task.taskId, task);
       if (taskUpdate.status === TaskStates.Completed) {
         const currentTaskPath = findTaskPath(
           task.taskReferenceName,
@@ -210,7 +223,8 @@ export const executor = async () => {
           currentTaskPath,
         );
         if (nextTaskPath) {
-          await workflow.startTask(nextTaskPath);
+          const taskData = await getTaskData(workflow);
+          await workflow.startTask(nextTaskPath, taskData);
         }
       }
     }

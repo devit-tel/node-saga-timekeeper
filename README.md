@@ -16,3 +16,4 @@ This is prototype of saga implementation, written in Node.
 - [x] Config
 - [ ] Logger
 - [ ] Use custom error
+- [ ] Clean up completed workflows/tasks

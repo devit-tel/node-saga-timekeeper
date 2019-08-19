@@ -77,13 +77,19 @@ export class Workflow implements IWorkflow {
     }
   }
 
-  async startTask(taskPath: (string | number)[] = [0]) {
+  async startTask(
+    taskPath: (string | number)[] = [0],
+    taskData: { [taskReferenceName: string]: Task | Workflow } = {},
+  ) {
     const workflowTask: AllTaskType = R.path(
       taskPath,
       this.workflowDefinition.tasks,
     );
     if (workflowTask) {
-      const task = new Task(this.workflowId, workflowTask, {});
+      const task = new Task(this.workflowId, workflowTask, {
+        workflow: this,
+        ...taskData,
+      });
       this.taskRefs = {
         ...this.taskRefs,
         [task.taskReferenceName]: task.taskId,
