@@ -107,10 +107,10 @@ export class Workflow implements IWorkflow {
 
   destroy = async (): Promise<any> => {
     const taskIds = enumToList(this.taskRefs);
-    await Promise.all(
-      taskIds.map((taskId: string) => taskInstanceStore.unsetValue(taskId)),
-    );
-    await workflowInstanceStore.unsetValue(this.workflowId);
+    await Promise.all([
+      ...taskIds.map((taskId: string) => taskInstanceStore.unsetValue(taskId)),
+      workflowInstanceStore.unsetValue(this.workflowId),
+    ]);
   };
 
   toObject = (): any => {
