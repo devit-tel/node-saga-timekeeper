@@ -4,6 +4,7 @@ import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
 import { taskInstanceStore, workflowInstanceStore } from './store';
 import { Task } from './task';
+import { enumToList } from './utils/common';
 
 export interface IWorkflow {
   workflowName: string;
@@ -103,6 +104,14 @@ export class Workflow implements IWorkflow {
       throw new Error(`WorkflowTask @${taskPath} not found`);
     }
   }
+
+  destroy = async (): Promise<any> => {
+    const taskIds = enumToList(this.taskRefs);
+    await Promise.all(
+      taskIds.map((taskId: string) => taskInstanceStore.unsetValue(taskId)),
+    );
+    await workflowInstanceStore.unsetValue(this.workflowId);
+  };
 
   toObject = (): any => {
     return R.pick(

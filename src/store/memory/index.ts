@@ -15,6 +15,10 @@ export class MemoryStore implements IStore {
     this.localStore = R.set(R.lensPath(key.split('.')), value, this.localStore);
   }
 
+  unsetValue(key: string): any {
+    this.localStore = R.dissocPath(key.split('.'), this.localStore);
+  }
+
   getValue(key: string): any {
     return R.path(key.split('.'), this.localStore);
   }

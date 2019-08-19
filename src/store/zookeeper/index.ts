@@ -62,8 +62,21 @@ export class ZookeeperStore implements IStore {
     });
   }
 
-  getValue(key: string = ''): any {
+  getValue(key: string): any {
     return R.path(key.split('.'), this.localStore);
+  }
+
+  unsetValue(key: string): any {
+    return new Promise((resolve: Function, reject: Function) => {
+      this.client.remove(
+        `${this.root}/${key.replace(/\./, '/')}`,
+        -1,
+        (error: Error) => {
+          if (error) return reject(error);
+          resolve();
+        },
+      );
+    });
   }
 
   list(limit: number = Number.MAX_SAFE_INTEGER, offset: number = 0): any[] {

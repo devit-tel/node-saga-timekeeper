@@ -91,7 +91,7 @@ export const getNextTaskPath = (
       return getNextTaskPath(tasks, R.dropLast(3, currentPath));
     // This case should never fall
     default:
-      return null;
+      throw new Error('Task is invalid');
   }
 };
 
@@ -225,6 +225,9 @@ export const executor = async () => {
         if (nextTaskPath) {
           const taskData = await getTaskData(workflow);
           await workflow.startTask(nextTaskPath, taskData);
+        } else {
+          // When workflow is completed
+          await workflow.destroy();
         }
       }
     }
