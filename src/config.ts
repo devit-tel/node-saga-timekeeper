@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { StoreType } from './store';
+import * as kafkaConstant from './constants/kafka';
 
 dotenv.config();
 
@@ -18,6 +19,21 @@ export const server = {
   enabled: process.env['server.enabled'] === 'true',
   port: +process.env['server.port'] || 8080,
   hostname: process.env['server.hostname'] || '127.0.0.1',
+};
+
+export const kafkaTopicName = {
+  task: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
+    kafkaConstant.TASK_TOPIC_NAME
+  }`,
+  systemTask: `${process.env['kafka.prefix'] || 'node'}.${
+    kafkaConstant.PREFIX
+  }.${kafkaConstant.SYSTEM_TASK_TOPIC_NAME}`,
+  command: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
+    kafkaConstant.COMMAND_TOPIC_NAME
+  }`,
+  event: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
+    kafkaConstant.EVENT_TOPIC
+  }`,
 };
 
 export const kafkaAdmin = {

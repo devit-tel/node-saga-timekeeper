@@ -1,5 +1,10 @@
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
-import { kafkaAdmin, kafkaConsumer, kafkaProducer } from '../config';
+import {
+  kafkaAdmin,
+  kafkaConsumer,
+  kafkaProducer,
+  kafkaTopicName,
+} from '../config';
 import { jsonTryParse } from '../utils/common';
 import { Task } from '../task';
 
@@ -20,13 +25,13 @@ export const producerClient = new Producer(kafkaProducer, {});
 consumerClient.connect();
 consumerClient.on('ready', () => {
   console.log('Consumer kafka are ready');
-  consumerClient.subscribe(['EVENT']);
+  consumerClient.subscribe([kafkaTopicName.event]);
 });
 
 systemConsumerClient.connect();
 systemConsumerClient.on('ready', () => {
   console.log('System consumer kafka are ready');
-  systemConsumerClient.subscribe(['SYSTEM_TASK']);
+  systemConsumerClient.subscribe([kafkaTopicName.systemTask]);
 });
 
 producerClient.connect();
@@ -73,9 +78,19 @@ export const poll = (
 
 export const dispatch = (task: Task) =>
   producerClient.produce(
-    `TASK_${task.taskName}`,
+    `${kafkaTopicName.task}.${task.taskName}`,
     null,
     new Buffer(task.toJSON()),
     task.workflowId,
     Date.now(),
   );
+
+// Use to send Retry, Failed, Reject event, Completed workflow, Dispatch task
+// export const sendActions = () =>
+//   producerClient.produce(
+//     kafkaTopicName.command,
+//     null,
+//     new Buffer(task.toJSON()),
+//     task.workflowId,
+//     Date.now(),
+//   );
