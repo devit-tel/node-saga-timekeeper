@@ -35,6 +35,7 @@ describe('Workflow', () => {
         retryCount: 0,
         startTime: undefined,
         status: 'RUNNING',
+        taskRefs: {},
         workflowId: undefined,
         workflowName: 'WORKFLOW_001',
         workflowRev: '1',

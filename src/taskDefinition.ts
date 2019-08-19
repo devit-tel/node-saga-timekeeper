@@ -1,12 +1,11 @@
 import * as R from 'ramda';
-import { TopicConfigurations, FailureStrategies } from './constants/task';
+import { FailureStrategies } from './constants/task';
 import { isValidName } from './utils/common';
 
 export interface ITaskDefinitionData {
   name: string;
   description?: string;
   partitionsCount?: number;
-  topicConfigurations?: TopicConfigurations;
   responseTimeoutSecond?: number;
   timeoutSecond?: number;
   timeoutStrategy?: FailureStrategies;
@@ -28,13 +27,6 @@ export interface ITaskDefinition extends ITaskDefinitionData {
   toObject(): any;
   toJSON(): string;
 }
-
-const defaultTopicConfigurations = {
-  'cleanup.policy': 'compact',
-  'compression.type': 'snappy',
-  'delete.retention.ms': '86400000',
-  'file.delete.delay.ms': '60000',
-};
 
 const isNumber = R.is(Number);
 const isString = R.is(String);
@@ -73,7 +65,6 @@ export class TaskDefinition implements ITaskDefinition {
   name: string;
   description: string = 'No description';
   partitionsCount: number = 10;
-  topicConfigurations: TopicConfigurations = {};
   responseTimeoutSecond: number = 5;
   timeoutSecond: number = 30;
   timeoutStrategy: FailureStrategies = FailureStrategies.Failed;
@@ -89,11 +80,6 @@ export class TaskDefinition implements ITaskDefinition {
       throw new Error(taskValidationErrors.join('\n'));
 
     Object.assign(this, taskDefinition);
-
-    this.topicConfigurations = Object.assign(
-      defaultTopicConfigurations,
-      taskDefinition.topicConfigurations,
-    );
   }
 
   toObject = (): any => {
@@ -102,7 +88,6 @@ export class TaskDefinition implements ITaskDefinition {
         'name',
         'description',
         'partitionsCount',
-        'topicConfigurations',
         'responseTimeoutSecond',
         'timeoutSecond',
         'timeoutStrategy',

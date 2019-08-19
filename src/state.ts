@@ -30,7 +30,7 @@ export const isAbleToTranslateTaskStatus = (
   throw new Error(`Current status: "${currentStatus}" is invalid`);
 };
 
-export const processTask = (task: Task, taskUpdate: ITaskUpdate): ITask => {
+export const processTask = (task: ITask, taskUpdate: ITaskUpdate): ITask => {
   if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status))
     throw new Error(
       `Cannot change status from ${task.status} to ${taskUpdate.status}`,

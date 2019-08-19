@@ -16,12 +16,6 @@ describe('Task', () => {
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
         timeoutStrategy: 'FAILED',
-        topicConfigurations: {
-          'cleanup.policy': 'compact',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
       });
     });
 
@@ -40,39 +34,6 @@ describe('Task', () => {
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
         timeoutStrategy: 'FAILED',
-        topicConfigurations: {
-          'cleanup.policy': 'compact',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
-      });
-    });
-
-    test('set topicConfigurations', () => {
-      expect(
-        new TaskDefinition({
-          name: 'hello-world',
-          failureStrategy: FailureStrategies.Ignore,
-          topicConfigurations: {
-            'cleanup.policy': 'delete',
-          },
-        }).toObject(),
-      ).toEqual({
-        name: 'hello-world',
-        description: 'No description',
-        failureStrategy: 'IGNORE',
-        inputParameters: {},
-        partitionsCount: 10,
-        responseTimeoutSecond: 5,
-        timeoutSecond: 30,
-        timeoutStrategy: 'FAILED',
-        topicConfigurations: {
-          'cleanup.policy': 'delete',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
       });
     });
 
@@ -82,9 +43,6 @@ describe('Task', () => {
           new TaskDefinition({
             name: '',
             failureStrategy: FailureStrategies.RecoveryWorkflow,
-            topicConfigurations: {
-              'cleanup.policy': 'delete',
-            },
           }),
       ).toThrow('taskDefinition.name is invalid');
     });
@@ -95,9 +53,6 @@ describe('Task', () => {
           new TaskDefinition({
             name: 'hello-world',
             failureStrategy: FailureStrategies.RecoveryWorkflow,
-            topicConfigurations: {
-              'cleanup.policy': 'delete',
-            },
           }),
       ).toThrow('taskDefinition.recoveryWorkflow is invalid');
     });
@@ -107,9 +62,6 @@ describe('Task', () => {
         new TaskDefinition({
           name: 'hello-world',
           failureStrategy: FailureStrategies.RecoveryWorkflow,
-          topicConfigurations: {
-            'cleanup.policy': 'delete',
-          },
           recoveryWorkflow: {
             name: 'huhu',
             rev: '3',
@@ -128,12 +80,6 @@ describe('Task', () => {
         responseTimeoutSecond: 5,
         timeoutSecond: 30,
         timeoutStrategy: 'FAILED',
-        topicConfigurations: {
-          'cleanup.policy': 'delete',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
       });
     });
 
@@ -143,9 +89,6 @@ describe('Task', () => {
           new TaskDefinition({
             name: 'hello-world',
             failureStrategy: FailureStrategies.Retry,
-            topicConfigurations: {
-              'cleanup.policy': 'delete',
-            },
           }),
       ).toThrow('taskDefinition.retry is invalid');
     });
@@ -155,9 +98,6 @@ describe('Task', () => {
         new TaskDefinition({
           name: 'hello-world',
           failureStrategy: FailureStrategies.Retry,
-          topicConfigurations: {
-            'cleanup.policy': 'delete',
-          },
           retry: {
             delaySecond: 1,
             limit: 3,
@@ -176,12 +116,6 @@ describe('Task', () => {
         },
         timeoutSecond: 30,
         timeoutStrategy: 'FAILED',
-        topicConfigurations: {
-          'cleanup.policy': 'delete',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
       });
     });
   });

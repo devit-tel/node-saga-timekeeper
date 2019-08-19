@@ -10,10 +10,7 @@ export const createTaskDefinition = async (
     taskDefinition.name,
     taskDefinition.toJSON(),
   );
-  await createTopic(
-    `TASK_${taskDefinition.name}`,
-    taskDefinition.topicConfigurations,
-  );
+  await createTopic(`TASK_${taskDefinition.name}`);
 };
 
 export const getTaskDefinition = async (

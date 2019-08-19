@@ -39,17 +39,19 @@ producerClient.on('ready', () => {
   console.log('Producer kafka are ready');
 });
 
-export const createTopic = (
-  topicName: string,
-  topicConfig: object = {},
-): Promise<any> =>
+export const createTopic = (topicName: string): Promise<any> =>
   new Promise((resolve: Function, reject: Function) => {
     adminClient.createTopic(
       {
         topic: topicName,
         num_partitions: 10,
         replication_factor: 1,
-        config: topicConfig,
+        config: {
+          'cleanup.policy': 'compact',
+          'compression.type': 'snappy',
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
+        },
       },
       (error: Error, data: any) => {
         if (error) return reject(error);
