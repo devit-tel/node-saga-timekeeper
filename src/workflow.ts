@@ -3,7 +3,7 @@ import * as uuid from 'uuid/v4';
 import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
 import { taskInstanceStore, workflowInstanceStore } from './store';
-import { Task } from './task';
+import { Task, TaskFromWorkflow } from './task';
 import { enumToList } from './utils/common';
 
 export interface IWorkflow {
@@ -87,7 +87,7 @@ export class Workflow implements IWorkflow {
       this.workflowDefinition.tasks,
     );
     if (workflowTask) {
-      const task = new Task(this.workflowId, workflowTask, {
+      const task = new TaskFromWorkflow(this.workflowId, workflowTask, {
         workflow: this,
         ...taskData,
       });

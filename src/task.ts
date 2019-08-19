@@ -55,49 +55,12 @@ export class Task implements ITask {
   };
   defaultDecision?: AllTaskType[];
 
-  constructor(
-    workflowId: string,
-    task: AllTaskType,
-    tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
-  ) {
-    this.taskName = task.name;
-    this.taskReferenceName = task.taskReferenceName;
-    this.taskId = uuid();
-    this.workflowId = workflowId;
-    this.type = task.type;
-
-    if (task.type === TaskTypes.Parallel)
-      this.parallelTasks = task.parallelTasks;
-    if (task.type === TaskTypes.Decision) {
-      this.decisions = task.decisions;
-      this.defaultDecision = task.defaultDecision;
-    }
-    if (task.type === TaskTypes.SubWorkflow) this.workflow = task.workflow;
-
-    const inputParametersPairs = R.toPairs(task.inputParameters);
-    const inputPairs = inputParametersPairs.map(
-      ([key, value]: [string, string | any]): [string, any] => {
-        if (
-          isString(value) &&
-          /^\${[a-z0-9-_]{1,32}[a-z0-9-_.]+}$/i.test(value)
-        ) {
-          return [
-            key,
-            R.path(
-              value.replace(/(^\${)(.+)(}$)/i, '$2').split('.'),
-              tasksData,
-            ),
-          ];
-        }
-        return [key, value];
-      },
-    );
-    this.input = R.fromPairs(inputPairs);
-    this.createTime = Date.now();
+  constructor(task: ITask) {
+    Object.assign(this, task);
   }
 
   dispatch() {
-    dispatch(this);
+    dispatch(this, this.type !== TaskTypes.Task);
   }
 
   toObject = (): any => {
@@ -128,4 +91,52 @@ export class Task implements ITask {
   toJSON = (): string => {
     return JSON.stringify(this.toObject());
   };
+}
+
+export class TaskFromWorkflow extends Task {
+  constructor(
+    workflowId: string,
+    task: AllTaskType,
+    tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
+  ) {
+    const inputParametersPairs = R.toPairs(task.inputParameters);
+    const inputPairs = inputParametersPairs.map(
+      ([key, value]: [string, string | any]): [string, any] => {
+        if (
+          isString(value) &&
+          /^\${[a-z0-9-_]{1,32}[a-z0-9-_.]+}$/i.test(value)
+        ) {
+          return [
+            key,
+            R.path(
+              value.replace(/(^\${)(.+)(}$)/i, '$2').split('.'),
+              tasksData,
+            ),
+          ];
+        }
+        return [key, value];
+      },
+    );
+
+    super({
+      taskName: task.name,
+      taskReferenceName: task.taskReferenceName,
+      taskId: uuid(),
+      workflowId: workflowId,
+      type: task.type,
+      status: TaskStates.Scheduled,
+      retryCount: 0,
+      input: R.fromPairs(inputPairs),
+      output: {},
+      createTime: Date.now(),
+      startTime: null,
+      endTime: null,
+      parallelTasks:
+        task.type === TaskTypes.Parallel ? task.parallelTasks : undefined,
+      decisions: task.type === TaskTypes.Decision ? task.decisions : undefined,
+      defaultDecision:
+        task.type === TaskTypes.Decision ? task.defaultDecision : undefined,
+      workflow: task.type === TaskTypes.SubWorkflow ? task.workflow : undefined,
+    });
+  }
 }

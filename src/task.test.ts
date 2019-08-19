@@ -1,4 +1,4 @@
-import { Task } from './task';
+import { TaskFromWorkflow } from './task';
 import { TaskTypes } from './constants/task';
 
 jest.mock('uuid/v4');
@@ -8,7 +8,7 @@ describe('Task', () => {
   describe('Create Task instance', () => {
     test('Task', () => {
       expect(
-        new Task(
+        new TaskFromWorkflow(
           'some_id',
           {
             name: 'task_name',
@@ -37,7 +37,7 @@ describe('Task', () => {
 
     test('Task', () => {
       expect(
-        new Task(
+        new TaskFromWorkflow(
           'some_id',
           {
             name: 'task_name',

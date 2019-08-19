@@ -78,9 +78,11 @@ export const poll = (
     );
   });
 
-export const dispatch = (task: Task) =>
+export const dispatch = (task: Task, isSystemTask: boolean = false) =>
   producerClient.produce(
-    `${kafkaTopicName.task}.${task.taskName}`,
+    isSystemTask
+      ? kafkaTopicName.systemTask
+      : `${kafkaTopicName.task}.${task.taskName}`,
     null,
     new Buffer(task.toJSON()),
     task.workflowId,
