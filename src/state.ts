@@ -19,7 +19,7 @@ export interface ITaskUpdate {
   logs?: any[] | any;
 }
 
-const isAllCompleted = R.all(R.equals(TaskStates.Completed));
+const isAllCompleted = R.all(R.pathEq(['status'], TaskStates.Completed));
 
 export const isAbleToTranslateTaskStatus = (
   currentStatus: TaskStates,
@@ -93,15 +93,11 @@ const getNextTaskPath = (
 
       const allTaskStatuses = R.pathOr(
         [],
-        [...R.dropLast(3, currentPath)],
+        R.dropLast(3, currentPath),
         tasks,
-      ).reduce((taskStatuses: TaskStates[], pTask: AllTaskType[]) => {
-        const lastPTask: AllTaskType = R.last(pTask);
-        return [
-          ...taskStatuses,
-          R.pathOr('', [lastPTask.taskReferenceName, 'status'], taskData),
-        ];
-      }, []);
+      ).map((pTask: AllTaskType[]) =>
+        R.path([R.last(pTask).taskReferenceName], taskData),
+      );
 
       // All of line are completed
       if (isAllCompleted(allTaskStatuses)) {
