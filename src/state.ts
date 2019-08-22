@@ -69,6 +69,44 @@ const isChildOfDecisionCase = (
     tasks,
   ) && R.nth(-3, currentPath) === 'decisions';
 
+const isTaskOfActivityTask = (
+  tasks: AllTaskType[],
+  currentPath: (string | number)[],
+): boolean => !!R.path(getNextPath(currentPath), tasks);
+
+const isTaskOfParallelTask = (
+  tasks: AllTaskType[],
+  currentPath: (string | number)[],
+): boolean =>
+  R.pathEq([...R.dropLast(3, currentPath), 'type'], TaskTypes.Parallel, tasks);
+
+const getNextParallelTask = (
+  tasks: AllTaskType[],
+  currentPath: (string | number)[],
+  taskData: { [taskReferenceName: string]: Task } = {},
+) => {
+  // If still got next task in line
+  if (R.path(getNextPath(R.init(currentPath)), tasks)) {
+    return getNextPath(R.init(currentPath));
+  }
+
+  const allTaskStatuses = R.pathOr([], R.dropLast(3, currentPath), tasks).map(
+    (pTask: AllTaskType[]) =>
+      R.path([R.last(pTask).taskReferenceName], taskData),
+  );
+
+  // All of line are completed
+  if (isAllCompleted(allTaskStatuses)) {
+    console.log(
+      'All task are completed, child of ',
+      R.path([...currentPath, 'childOf'], tasks),
+    );
+  }
+
+  // Wait for other line
+  return null;
+};
+
 // Check if it's system task
 const getNextTaskPath = (
   tasks: AllTaskType[],
@@ -79,36 +117,10 @@ const getNextTaskPath = (
   if (R.equals([tasks.length - 1], currentPath)) return null;
 
   switch (true) {
-    case !!R.path(getNextPath(currentPath), tasks):
+    case isTaskOfActivityTask(tasks, currentPath):
       return getNextPath(currentPath);
-    case R.pathEq(
-      [...R.dropLast(3, currentPath), 'type'],
-      TaskTypes.Parallel,
-      tasks,
-    ):
-      // If still got next task in line
-      if (R.path(getNextPath(R.init(currentPath)), tasks)) {
-        return getNextPath(R.init(currentPath));
-      }
-
-      const allTaskStatuses = R.pathOr(
-        [],
-        R.dropLast(3, currentPath),
-        tasks,
-      ).map((pTask: AllTaskType[]) =>
-        R.path([R.last(pTask).taskReferenceName], taskData),
-      );
-
-      // All of line are completed
-      if (isAllCompleted(allTaskStatuses)) {
-        console.log(
-          'All task are completed, child of ',
-          R.path([...currentPath, 'childOf'], tasks),
-        );
-      }
-
-      // Wait for other line
-      return null;
+    case isTaskOfParallelTask(tasks, currentPath):
+      return getNextParallelTask(tasks, currentPath, taskData);
     case isChildOfDecisionDefault(tasks, currentPath):
       return getNextTaskPath(tasks, R.dropLast(2, currentPath), taskData);
     case isChildOfDecisionCase(tasks, currentPath):
