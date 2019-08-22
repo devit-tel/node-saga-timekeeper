@@ -22,6 +22,7 @@ export interface IWorkflow {
   taskRefs: {
     [taskId: string]: string;
   };
+  childOf?: string;
 }
 
 export class Workflow implements IWorkflow {
@@ -40,6 +41,7 @@ export class Workflow implements IWorkflow {
   taskRefs: {
     [taskId: string]: string;
   };
+  childOf?: string;
 
   workflowDefinition: IWorkflowDefinition;
 
@@ -49,6 +51,7 @@ export class Workflow implements IWorkflow {
       [key: string]: any;
     },
     workflow?: IWorkflow,
+    childOf?: string,
   ) {
     this.workflowDefinition = workflowDefinition;
     this.workflowName = workflowDefinition.name;
@@ -76,6 +79,8 @@ export class Workflow implements IWorkflow {
       this.endTime = null;
       this.taskRefs = {};
     }
+
+    if (childOf) this.childOf = childOf;
   }
 
   async startTask(

@@ -4,7 +4,7 @@ import { TaskStates, TaskTypes } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
 import { dispatch } from './kafka';
 import { IWorkflow } from './workflow';
-import { isString } from './utils/common';
+import { mapInputFromTaskData } from './utils/task';
 
 export interface ITask {
   taskName: string;
@@ -29,6 +29,7 @@ export interface ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
+  childOf?: string;
 }
 
 export class Task implements ITask {
@@ -54,6 +55,7 @@ export class Task implements ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
+  childOf?: string;
 
   constructor(task: ITask) {
     Object.assign(this, task);
@@ -98,26 +100,8 @@ export class TaskFromWorkflow extends Task {
     workflowId: string,
     task: AllTaskType,
     tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
+    childOf?: string,
   ) {
-    const inputParametersPairs = R.toPairs(task.inputParameters);
-    const inputPairs = inputParametersPairs.map(
-      ([key, value]: [string, string | any]): [string, any] => {
-        if (
-          isString(value) &&
-          /^\${[a-z0-9-_]{1,32}[a-z0-9-_.]+}$/i.test(value)
-        ) {
-          return [
-            key,
-            R.path(
-              value.replace(/(^\${)(.+)(}$)/i, '$2').split('.'),
-              tasksData,
-            ),
-          ];
-        }
-        return [key, value];
-      },
-    );
-
     super({
       taskName: task.name,
       taskReferenceName: task.taskReferenceName,
@@ -126,7 +110,7 @@ export class TaskFromWorkflow extends Task {
       type: task.type,
       status: TaskStates.Scheduled,
       retryCount: 0,
-      input: R.fromPairs(inputPairs),
+      input: mapInputFromTaskData(task.inputParameters, tasksData),
       output: {},
       createTime: Date.now(),
       startTime: null,
@@ -137,6 +121,7 @@ export class TaskFromWorkflow extends Task {
       defaultDecision:
         task.type === TaskTypes.Decision ? task.defaultDecision : undefined,
       workflow: task.type === TaskTypes.SubWorkflow ? task.workflow : undefined,
+      childOf,
     });
   }
 }

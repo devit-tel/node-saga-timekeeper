@@ -13,11 +13,13 @@ import { Workflow } from './workflow';
 import { ITask, Task } from './task';
 
 export interface ITaskUpdate {
-  taskId: string;
+  taskId?: string;
   status: TaskStates;
   output?: any;
   logs?: any[] | any;
 }
+
+const isAllCompleted = R.all(R.equals(TaskStates.Completed));
 
 export const isAbleToTranslateTaskStatus = (
   currentStatus: TaskStates,
@@ -68,9 +70,10 @@ const isChildOfDecisionCase = (
   ) && R.nth(-3, currentPath) === 'decisions';
 
 // Check if it's system task
-export const getNextTaskPath = (
+const getNextTaskPath = (
   tasks: AllTaskType[],
   currentPath: (string | number)[],
+  taskData: { [taskReferenceName: string]: Task } = {},
 ): (string | number)[] => {
   // Check if this's the final task
   if (R.equals([tasks.length - 1], currentPath)) return null;
@@ -79,16 +82,41 @@ export const getNextTaskPath = (
     case !!R.path(getNextPath(currentPath), tasks):
       return getNextPath(currentPath);
     case R.pathEq(
-      [...R.dropLast(2, currentPath), 'type'],
+      [...R.dropLast(3, currentPath), 'type'],
       TaskTypes.Parallel,
       tasks,
     ):
-      // TODO Check if all child are completed
-      return getNextPath(R.init(currentPath));
+      // If still got next task in line
+      if (R.path(getNextPath(R.init(currentPath)), tasks)) {
+        return getNextPath(R.init(currentPath));
+      }
+
+      const allTaskStatuses = R.pathOr(
+        [],
+        [...R.dropLast(3, currentPath)],
+        tasks,
+      ).reduce((taskStatuses: TaskStates[], pTask: AllTaskType[]) => {
+        const lastPTask: AllTaskType = R.last(pTask);
+        return [
+          ...taskStatuses,
+          R.pathOr('', [lastPTask.taskReferenceName, 'status'], taskData),
+        ];
+      });
+
+      // All of line are completed
+      if (isAllCompleted(allTaskStatuses)) {
+        console.log(
+          'All task are completed, child of ',
+          R.path([...currentPath, 'childOf'], tasks),
+        );
+      }
+
+      // Wait for other line
+      return null;
     case isChildOfDecisionDefault(tasks, currentPath):
-      return getNextTaskPath(tasks, R.dropLast(2, currentPath));
+      return getNextTaskPath(tasks, R.dropLast(2, currentPath), taskData);
     case isChildOfDecisionCase(tasks, currentPath):
-      return getNextTaskPath(tasks, R.dropLast(3, currentPath));
+      return getNextTaskPath(tasks, R.dropLast(3, currentPath), taskData);
     // This case should never fall
     default:
       throw new Error('Task is invalid');
@@ -187,7 +215,7 @@ export const findTaskPath = (
   else return null;
 };
 
-const getTaskData = async (
+export const getTaskData = async (
   workflow: Workflow,
 ): Promise<{ [taskReferenceName: string]: Task }> => {
   const taskRefsPairs: [string, string][] = R.toPairs(workflow.taskRefs);
@@ -214,16 +242,18 @@ export const executor = async () => {
 
       await taskInstanceStore.setValue(task.taskId, task);
       if (taskUpdate.status === TaskStates.Completed) {
+        const taskData = await getTaskData(workflow);
         const currentTaskPath = findTaskPath(
           task.taskReferenceName,
           workflow.workflowDefinition.tasks,
         );
+        console.log(currentTaskPath, taskUpdate);
         const nextTaskPath = getNextTaskPath(
           workflow.workflowDefinition.tasks,
           currentTaskPath,
+          taskData,
         );
         if (nextTaskPath) {
-          const taskData = await getTaskData(workflow);
           await workflow.startTask(nextTaskPath, taskData);
         } else {
           // When workflow is completed

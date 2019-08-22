@@ -6,6 +6,7 @@ export const startWorkflow = async (
   workflowName: string,
   workflowRef: string,
   input: any,
+  childOf?: string,
 ): Promise<IWorkflow> => {
   const workflowDefinition = await workflowDefinitionStore.getWorkflowDefinition(
     workflowName,
@@ -14,7 +15,7 @@ export const startWorkflow = async (
   if (!workflowDefinition) {
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
-  const workflow = new Workflow(workflowDefinition, input);
+  const workflow = new Workflow(workflowDefinition, input, undefined, childOf);
   await workflowInstanceStore.setValue(workflow.workflowId, workflow);
   await workflow.startTask();
   return workflow.toObject();

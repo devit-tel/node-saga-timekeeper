@@ -6,7 +6,10 @@ import {
   kafkaTopicName,
 } from '../config';
 import { jsonTryParse } from '../utils/common';
-import { Task } from '../task';
+import { Task, ITask } from '../task';
+import { IWorkflow } from '../workflow';
+import { WorkflowStates } from '../constants/workflow';
+import { TaskStates } from '../constants/task';
 
 export interface kafkaConsumerMessage {
   value: Buffer;
@@ -15,6 +18,16 @@ export interface kafkaConsumerMessage {
   topic: string;
   offset: number;
   partition: number;
+}
+
+export interface IEvent {
+  workflowId: string;
+  type: 'WORKFLOW' | 'TASK';
+  status?: WorkflowStates | TaskStates;
+  details?: IWorkflow | ITask;
+  timestamp: number;
+  isError: boolean;
+  error?: string;
 }
 
 export const adminClient = AdminClient.create(kafkaAdmin);
@@ -90,11 +103,11 @@ export const dispatch = (task: Task, isSystemTask: boolean = false) =>
   );
 
 // Use to send Retry, Failed, Reject event, Completed workflow, Dispatch task
-// export const sendActions = () =>
-//   producerClient.produce(
-//     kafkaTopicName.command,
-//     null,
-//     new Buffer(task.toJSON()),
-//     task.workflowId,
-//     Date.now(),
-//   );
+export const sendEvent = (event: IEvent) =>
+  producerClient.produce(
+    kafkaTopicName.command,
+    null,
+    new Buffer(JSON.stringify(event)),
+    event.workflowId,
+    Date.now(),
+  );
