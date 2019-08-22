@@ -6,18 +6,23 @@ import { startWorkflow } from './domains/workflow';
 import { getTaskData, processTask } from './state';
 import { Workflow } from './workflow';
 import { workflowInstanceStore, taskInstanceStore } from './store';
+import { mapInputFromTaskData } from './utils/task';
 
 // TODO watch for sub-tasks are completed
 
 const processDecisionTask = async (systemTask: Task) => {
-  // Check condition
   const workflow: Workflow = await workflowInstanceStore.getValue(
     systemTask.workflowId,
   );
   const taskData = await getTaskData(workflow);
+
+  const taskInputs = mapInputFromTaskData(systemTask, taskData);
+
   const task = new TaskFromWorkflow(
     systemTask.workflowId,
-    systemTask.defaultDecision[0],
+    systemTask.decisions[taskInputs.case]
+      ? systemTask.decisions[taskInputs.case][0]
+      : systemTask.defaultDecision[0],
     {
       workflow,
       ...taskData,
