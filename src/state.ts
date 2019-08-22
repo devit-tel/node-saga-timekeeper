@@ -101,7 +101,7 @@ const getNextTaskPath = (
           ...taskStatuses,
           R.pathOr('', [lastPTask.taskReferenceName, 'status'], taskData),
         ];
-      });
+      }, []);
 
       // All of line are completed
       if (isAllCompleted(allTaskStatuses)) {
