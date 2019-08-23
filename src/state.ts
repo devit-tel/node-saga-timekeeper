@@ -84,27 +84,29 @@ const getNextParallelTask = (
   tasks: AllTaskType[],
   currentPath: (string | number)[],
   taskData: { [taskReferenceName: string]: Task } = {},
-) => {
+): { isCompleted: boolean; taskPath: (string | number)[] } => {
   // If still got next task in line
-  if (R.path(getNextPath(R.init(currentPath)), tasks)) {
-    return getNextPath(R.init(currentPath));
+  if (R.path(getNextPath(currentPath), tasks)) {
+    return {
+      isCompleted: false,
+      taskPath: getNextPath(currentPath),
+    };
   }
 
-  const allTaskStatuses = R.pathOr([], R.dropLast(3, currentPath), tasks).map(
+  const allTaskStatuses = R.pathOr([], R.dropLast(2, currentPath), tasks).map(
     (pTask: AllTaskType[]) =>
       R.path([R.last(pTask).taskReferenceName], taskData),
   );
-
   // All of line are completed
   if (isAllCompleted(allTaskStatuses)) {
-    console.log(
-      'All task are completed, child of ',
-      R.path([...currentPath, 'childOf'], tasks),
-    );
+    return getNextTaskPath(tasks, R.dropLast(3, currentPath), taskData);
   }
 
   // Wait for other line
-  return null;
+  return {
+    isCompleted: false,
+    taskPath: null,
+  };
 };
 
 // Check if it's system task
@@ -112,19 +114,20 @@ const getNextTaskPath = (
   tasks: AllTaskType[],
   currentPath: (string | number)[],
   taskData: { [taskReferenceName: string]: Task } = {},
-): (string | number)[] => {
+): { isCompleted: boolean; taskPath: (string | number)[] } => {
   // Check if this's the final task
-  if (R.equals([tasks.length - 1], currentPath)) return null;
+  if (R.equals([tasks.length - 1], currentPath))
+    return { isCompleted: true, taskPath: null };
 
   switch (true) {
-    case isTaskOfActivityTask(tasks, currentPath):
-      return getNextPath(currentPath);
     case isTaskOfParallelTask(tasks, currentPath):
       return getNextParallelTask(tasks, currentPath, taskData);
     case isChildOfDecisionDefault(tasks, currentPath):
       return getNextTaskPath(tasks, R.dropLast(2, currentPath), taskData);
     case isChildOfDecisionCase(tasks, currentPath):
       return getNextTaskPath(tasks, R.dropLast(3, currentPath), taskData);
+    case isTaskOfActivityTask(tasks, currentPath):
+      return { isCompleted: false, taskPath: getNextPath(currentPath) };
     // This case should never fall
     default:
       throw new Error('Task is invalid');
@@ -255,15 +258,14 @@ export const executor = async () => {
           task.taskReferenceName,
           workflow.workflowDefinition.tasks,
         );
-        console.log(currentTaskPath, taskUpdate);
         const nextTaskPath = getNextTaskPath(
           workflow.workflowDefinition.tasks,
           currentTaskPath,
           taskData,
         );
-        if (nextTaskPath) {
-          await workflow.startTask(nextTaskPath, taskData);
-        } else {
+        if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
+          await workflow.startTask(nextTaskPath.taskPath, taskData);
+        } else if (nextTaskPath.isCompleted) {
           // When workflow is completed
           await workflow.destroy();
         }

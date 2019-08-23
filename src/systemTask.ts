@@ -15,9 +15,7 @@ const processDecisionTask = async (systemTask: Task) => {
     systemTask.workflowId,
   );
   const taskData = await getTaskData(workflow);
-
   const taskInputs = mapInputFromTaskData(systemTask, taskData);
-
   const task = new TaskFromWorkflow(
     systemTask.workflowId,
     systemTask.decisions[taskInputs.case]
@@ -29,10 +27,7 @@ const processDecisionTask = async (systemTask: Task) => {
     },
     systemTask.taskId,
   );
-  workflow.taskRefs = {
-    ...workflow.taskRefs,
-    [task.taskReferenceName]: task.taskId,
-  };
+  workflow.taskRefs[task.taskReferenceName] = task.taskId;
   await dispatch(task);
   await Promise.all([
     taskInstanceStore.setValue(task.taskId, task),
@@ -57,6 +52,9 @@ const processParallelTask = async (systemTask: Task) => {
         systemTask.taskId,
       ),
   );
+  for (const task of tasks) {
+    workflow.taskRefs[task.taskReferenceName] = task.taskId;
+  }
   await Promise.all(tasks.map((task: Task) => dispatch(task)));
   await Promise.all([
     ...tasks.map((task: Task) => taskInstanceStore.setValue(task.taskId, task)),
