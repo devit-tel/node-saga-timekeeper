@@ -2,14 +2,17 @@ import * as config from './config';
 import * as store from './store';
 import { WorkflowDefinitionZookeeperStore } from './store/zookeeper/workflowDefinition';
 import { TaskDefinitionZookeeperStore } from './store/zookeeper/taskDefinition';
-import { MemoryStore } from './store/memory';
+// import { MemoryStore } from './store/memory';
+import { TaskInstanceMongooseStore } from './store/mongoose/taskInstance';
+import { WorkflowInstanceMongoseStore } from './store/mongoose/workflowInstance';
 import { Server } from './server';
 import { executor as stateExecutor } from './state';
 import { executor as systemTaskExecutor } from './systemTask';
+import { StoreType } from './constants/store';
 import './kafka';
 
 switch (config.workflowDefinitionStore.type) {
-  case store.StoreType.ZooKeeper:
+  case StoreType.ZooKeeper:
     store.workflowDefinitionStore.setClient(
       new WorkflowDefinitionZookeeperStore(
         config.workflowDefinitionStore.zookeeperConfig.root,
@@ -25,7 +28,7 @@ switch (config.workflowDefinitionStore.type) {
 }
 
 switch (config.taskDefinitionStore.type) {
-  case store.StoreType.ZooKeeper:
+  case StoreType.ZooKeeper:
     store.taskDefinitionStore.setClient(
       new TaskDefinitionZookeeperStore(
         config.taskDefinitionStore.zookeeperConfig.root,
@@ -41,8 +44,16 @@ switch (config.taskDefinitionStore.type) {
 }
 
 switch (config.workflowInstanceStore.type) {
-  case store.StoreType.Memory:
-    store.workflowInstanceStore.setClient(new MemoryStore());
+  // case StoreType.Memory:
+  //   store.workflowInstanceStore.setClient(new MemoryStore());
+  //   break;
+  case StoreType.MongoDB:
+    store.workflowInstanceStore.setClient(
+      new WorkflowInstanceMongoseStore(
+        config.workflowInstanceStore.mongoDBConfig.uri,
+        config.workflowInstanceStore.mongoDBConfig.options,
+      ),
+    );
     break;
   default:
     throw new Error(
@@ -51,8 +62,16 @@ switch (config.workflowInstanceStore.type) {
 }
 
 switch (config.taskInstanceStore.type) {
-  case store.StoreType.Memory:
-    store.taskInstanceStore.setClient(new MemoryStore());
+  // case StoreType.Memory:
+  //   store.taskInstanceStore.setClient(new MemoryStore());
+  //   break;
+  case StoreType.MongoDB:
+    store.taskInstanceStore.setClient(
+      new TaskInstanceMongooseStore(
+        config.taskInstanceStore.mongoDBConfig.uri,
+        config.taskInstanceStore.mongoDBConfig.options,
+      ),
+    );
     break;
   default:
     throw new Error(

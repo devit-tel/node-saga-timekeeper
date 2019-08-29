@@ -1,68 +1,45 @@
-import { systemConsumerClient, poll, dispatch, sendEvent } from './kafka';
-import { TaskFromWorkflow, ITask, Task } from './task';
+import { systemConsumerClient, poll, sendEvent } from './kafka';
+import { ITask } from './task';
 import { AllTaskType } from './workflowDefinition';
 import { TaskTypes, TaskStates } from './constants/task';
 import { startWorkflow } from './domains/workflow';
-import { getTaskData, processTask } from './state';
+import { getTaskData } from './state';
 import { Workflow } from './workflow';
 import { workflowInstanceStore, taskInstanceStore } from './store';
 import { mapInputFromTaskData } from './utils/task';
 
 // TODO watch for sub-tasks are completed
 
-const processDecisionTask = async (systemTask: Task) => {
-  const workflow: Workflow = await workflowInstanceStore.getValue(
+const processDecisionTask = async (systemTask: ITask) => {
+  const workflow: Workflow = await workflowInstanceStore.get(
     systemTask.workflowId,
   );
   const taskData = await getTaskData(workflow);
   const taskInputs = mapInputFromTaskData(systemTask, taskData);
-  const task = new TaskFromWorkflow(
-    systemTask.workflowId,
+
+  await taskInstanceStore.create(
+    workflow,
     systemTask.decisions[taskInputs.case]
       ? systemTask.decisions[taskInputs.case][0]
       : systemTask.defaultDecision[0],
-    {
-      workflow,
-      ...taskData,
-    },
-    systemTask.taskId,
+    taskData,
+    true,
   );
-  workflow.taskRefs[task.taskReferenceName] = task.taskId;
-  await dispatch(task);
-  await Promise.all([
-    taskInstanceStore.setValue(task.taskId, task),
-    workflowInstanceStore.setValue(workflow.workflowId, workflow),
-  ]);
 };
 
-const processParallelTask = async (systemTask: Task) => {
-  const workflow: Workflow = await workflowInstanceStore.getValue(
+const processParallelTask = async (systemTask: ITask) => {
+  const workflow: Workflow = await workflowInstanceStore.get(
     systemTask.workflowId,
   );
   const taskData = await getTaskData(workflow);
-  const tasks = systemTask.parallelTasks.map(
-    (pTasks: AllTaskType[]) =>
-      new TaskFromWorkflow(
-        systemTask.workflowId,
-        pTasks[0],
-        {
-          workflow,
-          ...taskData,
-        },
-        systemTask.taskId,
-      ),
+  await Promise.all(
+    systemTask.parallelTasks.map((tasks: AllTaskType[]) =>
+      taskInstanceStore.create(workflow, tasks[0], taskData, true),
+    ),
   );
-  for (const task of tasks) {
-    workflow.taskRefs[task.taskReferenceName] = task.taskId;
-  }
-  await Promise.all(tasks.map((task: Task) => dispatch(task)));
-  await Promise.all([
-    ...tasks.map((task: Task) => taskInstanceStore.setValue(task.taskId, task)),
-    workflowInstanceStore.setValue(workflow.workflowId, workflow),
-  ]);
 };
 
-const processSubWorkflowTask = (systemTask: Task) =>
+const processSubWorkflowTask = (systemTask: ITask) =>
   startWorkflow(
     systemTask.workflow.name,
     systemTask.workflow.rev,
@@ -73,10 +50,8 @@ const processSubWorkflowTask = (systemTask: Task) =>
 export const executor = async () => {
   try {
     const tasks: ITask[] = await poll(systemConsumerClient);
-    for (const taskI of tasks) {
-      const task = new Task(taskI);
+    for (const task of tasks) {
       try {
-        processTask(task, { status: TaskStates.Inprogress });
         switch (task.type) {
           case TaskTypes.Decision:
             await processDecisionTask(task);
@@ -90,13 +65,16 @@ export const executor = async () => {
           default:
             throw new Error(`Task: ${task.type} is not system task`);
         }
-        await taskInstanceStore.setValue(task.taskId, task);
+        await taskInstanceStore.update({
+          taskId: task.taskId,
+          status: TaskStates.Inprogress,
+        });
         sendEvent({
           type: 'TASK',
           status: TaskStates.Inprogress,
           workflowId: task.workflowId,
           timestamp: Date.now(),
-          details: task.toObject(),
+          details: task,
           isError: false,
         });
       } catch (error) {
@@ -104,7 +82,7 @@ export const executor = async () => {
           type: 'TASK',
           workflowId: task.workflowId,
           timestamp: Date.now(),
-          details: task.toObject(),
+          details: task,
           isError: true,
           error: error.toString(),
         });

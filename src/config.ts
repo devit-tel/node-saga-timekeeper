@@ -1,9 +1,8 @@
 import * as dotenv from 'dotenv';
-import { StoreType } from './store';
+import { StoreType } from './constants/store';
 import * as kafkaConstant from './constants/kafka';
 
 dotenv.config();
-
 const pickAndReplaceFromENV = (template: string) =>
   Object.keys(process.env).reduce((result: any, key: string) => {
     if (new RegExp(template).test(key)) {
@@ -78,7 +77,7 @@ export const taskDefinitionStore = {
   type: StoreType.ZooKeeper,
   zookeeperConfig: {
     root: '/saga-pm/task-definition',
-    connectionString: process.env['task-definition.connections'],
+    connectionString: process.env['task-definition.zookeeper.connections'],
     options: {
       sessionTimeout: 30000,
       spinDelay: 1000,
@@ -91,7 +90,7 @@ export const workflowDefinitionStore = {
   type: StoreType.ZooKeeper,
   zookeeperConfig: {
     root: '/saga-pm/workflow-definition',
-    connectionString: process.env['workflow-definition.connections'],
+    connectionString: process.env['workflow-definition.zookeeper.connections'],
     options: {
       sessionTimeout: 30000,
       spinDelay: 1000,
@@ -101,9 +100,25 @@ export const workflowDefinitionStore = {
 };
 
 export const taskInstanceStore = {
-  type: StoreType.Memory,
+  type: StoreType.MongoDB,
+  mongoDBConfig: {
+    uri: process.env['task-instance.mongodb.uri'],
+    options: {
+      useNewUrlParser: true,
+      reconnectTries: Number.MAX_SAFE_INTEGER,
+      poolSize: 10,
+    },
+  },
 };
 
 export const workflowInstanceStore = {
-  type: StoreType.Memory,
+  type: StoreType.MongoDB,
+  mongoDBConfig: {
+    uri: process.env['workflow-instance.mongodb.uri'],
+    options: {
+      useNewUrlParser: true,
+      reconnectTries: Number.MAX_SAFE_INTEGER,
+      poolSize: 10,
+    },
+  },
 };

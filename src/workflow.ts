@@ -1,10 +1,5 @@
 import * as R from 'ramda';
-import * as uuid from 'uuid/v4';
-import { IWorkflowDefinition, AllTaskType } from './workflowDefinition';
 import { WorkflowStates } from './constants/workflow';
-import { taskInstanceStore, workflowInstanceStore } from './store';
-import { Task, TaskFromWorkflow } from './task';
-import { enumToList } from './utils/common';
 
 export interface IWorkflow {
   workflowName: string;
@@ -19,9 +14,6 @@ export interface IWorkflow {
   createTime: number;
   startTime: number;
   endTime: number;
-  taskRefs: {
-    [taskId: string]: string;
-  };
   childOf?: string;
 }
 
@@ -38,85 +30,11 @@ export class Workflow implements IWorkflow {
   createTime: number;
   startTime: number;
   endTime: number;
-  taskRefs: {
-    [taskId: string]: string;
-  };
   childOf?: string;
 
-  workflowDefinition: IWorkflowDefinition;
-
-  constructor(
-    workflowDefinition: IWorkflowDefinition,
-    input: {
-      [key: string]: any;
-    },
-    workflow?: IWorkflow,
-    childOf?: string,
-  ) {
-    this.workflowDefinition = workflowDefinition;
-    this.workflowName = workflowDefinition.name;
-    this.workflowRev = workflowDefinition.rev;
-
-    // Node TS didn't support constructor overloading
-    if (workflow) {
-      // From store
-      this.workflowId = workflow.workflowId;
-      this.status = workflow.status;
-      this.retryCount = workflow.retryCount;
-      this.input = workflow.input;
-      this.createTime = workflow.createTime;
-      this.startTime = workflow.startTime;
-      this.endTime = workflow.endTime;
-      this.taskRefs = workflow.taskRefs;
-    } else {
-      // Create new one
-      this.workflowId = uuid();
-      this.status = WorkflowStates.Running;
-      this.retryCount = 0;
-      this.input = input;
-      this.createTime = Date.now();
-      this.startTime = Date.now();
-      this.endTime = null;
-      this.taskRefs = {};
-    }
-
-    if (childOf) this.childOf = childOf;
+  constructor(workflow: IWorkflow) {
+    Object.assign(this, workflow);
   }
-
-  async startTask(
-    taskPath: (string | number)[] = [0],
-    taskData: { [taskReferenceName: string]: Task | Workflow } = {},
-  ) {
-    const workflowTask: AllTaskType = R.path(
-      taskPath,
-      this.workflowDefinition.tasks,
-    );
-    if (workflowTask) {
-      const task = new TaskFromWorkflow(this.workflowId, workflowTask, {
-        workflow: this,
-        ...taskData,
-      });
-      this.taskRefs = {
-        ...this.taskRefs,
-        [task.taskReferenceName]: task.taskId,
-      };
-      await Promise.all([
-        taskInstanceStore.setValue(task.taskId, task),
-        workflowInstanceStore.setValue(this.workflowId, this),
-      ]);
-      await task.dispatch();
-    } else {
-      throw new Error(`WorkflowTask @${taskPath} not found`);
-    }
-  }
-
-  destroy = async (): Promise<any> => {
-    const taskIds = enumToList(this.taskRefs);
-    await Promise.all([
-      ...taskIds.map((taskId: string) => taskInstanceStore.unsetValue(taskId)),
-      workflowInstanceStore.unsetValue(this.workflowId),
-    ]);
-  };
 
   toObject = (): any => {
     return R.pick(
@@ -132,6 +50,7 @@ export class Workflow implements IWorkflow {
         'startTime',
         'endTime',
         'taskRefs',
+        'childOf',
       ],
       this,
     );

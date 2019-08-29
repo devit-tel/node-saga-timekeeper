@@ -15,22 +15,24 @@ export enum FailureStrategies {
   RewideThenRetry = 'REWIDE_THEN_RETRY',
 }
 
-export const WorkflowCompletedNextStates = [];
-export const WorkflowFailedNextStates = [WorkflowStates.Running];
-export const WorkflowTimeoutNextStates = [WorkflowStates.Running];
-export const WorkflowRunningNextStates = [
-  WorkflowStates.Completed,
-  WorkflowStates.Failed,
-  WorkflowStates.Running,
-  WorkflowStates.Timeout,
-  WorkflowStates.Paused,
-  WorkflowStates.Cancelled,
-];
-export const WorkflowPausedNextStates = [
-  WorkflowStates.Completed,
-  WorkflowStates.Failed,
-  WorkflowStates.Running,
-  WorkflowStates.Timeout,
-  WorkflowStates.Cancelled,
-];
-export const WorkflowCancelledNextStates = [WorkflowStates.Running];
+export const WorkflowNextStates = {
+  [WorkflowStates.Completed]: [],
+  [WorkflowStates.Failed]: [WorkflowStates.Running],
+  [WorkflowStates.Timeout]: [WorkflowStates.Running],
+  [WorkflowStates.Running]: [
+    WorkflowStates.Completed,
+    WorkflowStates.Failed,
+    WorkflowStates.Running,
+    WorkflowStates.Timeout,
+    WorkflowStates.Paused,
+    WorkflowStates.Cancelled,
+  ],
+  [WorkflowStates.Paused]: [
+    WorkflowStates.Completed,
+    WorkflowStates.Failed,
+    WorkflowStates.Running,
+    WorkflowStates.Timeout,
+    WorkflowStates.Cancelled,
+  ],
+  [WorkflowStates.Cancelled]: [WorkflowStates.Running],
+};

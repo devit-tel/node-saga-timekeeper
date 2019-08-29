@@ -6,10 +6,15 @@ import {
   IZookeeperEvent,
   ZookeeperEvents,
 } from '../zookeeper';
-import { WorkflowDefinition } from '../../workflowDefinition';
+import { IWorkflowDefinitionStore } from '../../store';
+import {
+  WorkflowDefinition,
+  IWorkflowDefinition,
+} from '../../workflowDefinition';
 import { jsonTryParse } from '../../utils/common';
 
-export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
+export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
+  implements IWorkflowDefinitionStore {
   constructor(
     root: string,
     connectionString: string,
@@ -24,7 +29,21 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
     });
   }
 
-  getAndWatchWorkflows = () => {
+  get(name: string, rev: string): Promise<IWorkflowDefinition> {
+    return R.path([name, rev], this.localStore);
+  }
+
+  create(
+    workflowDefinition: IWorkflowDefinition,
+  ): Promise<IWorkflowDefinition> {
+    return this.setValue(workflowDefinition.name, workflowDefinition);
+  }
+
+  list(): Promise<IWorkflowDefinition[]> {
+    return Promise.resolve(super.listValue(undefined, 0));
+  }
+
+  private getAndWatchWorkflows = () => {
     this.client.getChildren(
       this.root,
       (event: IZookeeperEvent) => {
@@ -44,7 +63,7 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore {
     );
   };
 
-  getAndWatchRefs = (workflow: string) => {
+  private getAndWatchRefs = (workflow: string) => {
     this.client.getChildren(
       `${this.root}/${workflow}`,
       (event: IZookeeperEvent) => {

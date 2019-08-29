@@ -1,73 +1,205 @@
+import { IWorkflowDefinition, AllTaskType } from '../workflowDefinition';
+import { ITaskDefinition } from '../taskDefinition';
+import { Workflow, IWorkflow } from '../workflow';
+import { Task, ITask } from '../task';
+import { WorkflowStates } from '../constants/workflow';
+import { TaskStates, TaskTypes } from '../constants/task';
+import { mapInputFromTaskData } from '../utils/task';
+import { dispatch } from '../kafka';
+import { ITaskUpdate } from '../state';
+
 export interface IStore {
-  setValue(key: string, value: any): Promise<any> | any;
-  unsetValue(key: string): Promise<any> | any;
-  getValue(key: string): Promise<any> | any;
-  list(limit: number, offset: number): Promise<any[]> | any[];
   isHealthy(): boolean;
 }
 
-export enum StoreType {
-  ZooKeeper = 'ZOOKEEPER', // Greate for Definition
-  MongoDB = 'MONGODB',
-  DynamoDB = 'DYNAMODB',
-  Redis = 'REDIS', // Greate for Instance
-  Memory = 'MEMORY', // For Dev/Test, don't use in production
+export interface IWorkflowDefinitionStore extends IStore {
+  get(name: string, rev: string): Promise<IWorkflowDefinition>;
+  create(workflowDefinition: IWorkflowDefinition): Promise<IWorkflowDefinition>;
+  list(): Promise<IWorkflowDefinition[]>;
 }
 
-export class Store implements IStore {
-  name: string;
-  client: IStore;
-  constructor(name: string) {
-    this.name = name;
-  }
+export interface ITaskDefinitionStore extends IStore {
+  get(name: string): Promise<ITaskDefinition>;
+  create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition>;
+  list(): Promise<ITaskDefinition[]>;
+}
 
-  setClient(client: IStore) {
+export interface IWorkflowInstanceStore extends IStore {
+  get(workflowId: string): Promise<Workflow>;
+  create(wofkflowData: IWorkflow): Promise<Workflow>;
+  update(wofkflow: Workflow): Promise<Workflow>;
+  delete(workflowId: string): Promise<any>;
+}
+
+export interface ITaskInstanceStore extends IStore {
+  get(taskId: string): Promise<Task>;
+  getAll(workflowId: string): Promise<Task[]>;
+  create(taskData: ITask): Promise<Task>;
+  update(taskUpdate: ITaskUpdate): Promise<Task>;
+  delete(taskId: string): Promise<any>;
+  deleteAll(workflowId: string): Promise<any>;
+}
+
+export class WorkflowDefinitionStore {
+  client: IWorkflowDefinitionStore;
+
+  setClient(client: IWorkflowDefinitionStore) {
     if (this.client) throw new Error('Already set client');
     this.client = client;
   }
 
-  setValue(key: string, value: any): Promise<any> | any {
-    return this.client.setValue(key, value);
+  get(name: string, rev: string): Promise<IWorkflowDefinition> {
+    return this.client.get(name, rev);
   }
 
-  getValue(key: string): Promise<any> | any {
-    return this.client.getValue(key);
+  list(): Promise<IWorkflowDefinition[]> {
+    return this.client.list();
   }
 
-  unsetValue(key: string): Promise<any> | any {
-    return this.client.unsetValue(key);
-  }
-
-  list(
-    limit: number = Number.MAX_SAFE_INTEGER,
-    offset: number = 0,
-  ): Promise<any[]> | any[] {
-    return this.client.list(limit, offset);
-  }
-
-  isHealthy(): boolean {
-    return this.client.isHealthy();
+  create(
+    workflowDefinition: IWorkflowDefinition,
+  ): Promise<IWorkflowDefinition> {
+    return this.client.create(workflowDefinition);
   }
 }
 
-export class WorkflowDefinitionStore extends Store {
-  setWorkflowDefinition = (
-    name: string,
-    rev: string,
-    value: any,
-  ): Promise<any> | any => {
-    return this.setValue(`${name}.${rev}`, value);
+export class TaskDefinitionStore {
+  client: ITaskDefinitionStore;
+
+  setClient(client: ITaskDefinitionStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  get(name: string): Promise<ITaskDefinition> {
+    return this.client.get(name);
+  }
+
+  list(): Promise<ITaskDefinition[]> {
+    return this.client.list();
+  }
+
+  create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
+    return this.client.create(taskDefinition);
+  }
+}
+
+export class WorkflowInstanceStore {
+  client: IWorkflowInstanceStore;
+
+  setClient(client: IWorkflowInstanceStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  get(workflowId: string): Promise<Workflow> {
+    return this.client.get(workflowId);
+  }
+
+  create(
+    workflowDefinition: IWorkflowDefinition,
+    input: any,
+    childOf?: string,
+  ): Promise<Workflow> {
+    return this.client.create({
+      workflowId: undefined,
+      workflowName: workflowDefinition.name,
+      workflowRev: workflowDefinition.rev,
+      status: WorkflowStates.Running,
+      retryCount: 0,
+      input,
+      output: null,
+      createTime: Date.now(),
+      startTime: Date.now(),
+      endTime: null,
+      childOf,
+    });
+  }
+
+  update(workflow: Workflow) {
+    return this.client.update(workflow);
+  }
+
+  delete(workflowId: string) {
+    return this.client.delete(workflowId);
+  }
+}
+
+export class TaskInstanceStore {
+  client: ITaskInstanceStore;
+
+  setClient(client: ITaskInstanceStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  get(taskId: string) {
+    return this.client.get(taskId);
+  }
+
+  getAll(workflowId: string) {
+    return this.client.getAll(workflowId);
+  }
+
+  create = async (
+    workflow: Workflow,
+    workflowTask: AllTaskType,
+    tasksData: { [taskReferenceName: string]: ITask },
+    autoDispatch: boolean = false,
+  ): Promise<Task> => {
+    const task = await this.client.create({
+      taskId: undefined,
+      taskName: workflowTask.name,
+      taskReferenceName: workflowTask.taskReferenceName,
+      workflowId: workflow.workflowId,
+      type: workflowTask.type,
+      status: TaskStates.Scheduled,
+      retryCount: 0,
+      input: mapInputFromTaskData(workflowTask.inputParameters, {
+        ...tasksData,
+        workflow,
+      }),
+      output: {},
+      createTime: Date.now(),
+      startTime: autoDispatch ? Date.now() : null,
+      endTime: null,
+      parallelTasks:
+        workflowTask.type === TaskTypes.Parallel
+          ? workflowTask.parallelTasks
+          : undefined,
+      decisions:
+        workflowTask.type === TaskTypes.Decision
+          ? workflowTask.decisions
+          : undefined,
+      defaultDecision:
+        workflowTask.type === TaskTypes.Decision
+          ? workflowTask.defaultDecision
+          : undefined,
+      workflow:
+        workflowTask.type === TaskTypes.SubWorkflow
+          ? workflowTask.workflow
+          : undefined,
+    });
+
+    if (autoDispatch) dispatch(task);
+    return task;
   };
 
-  getWorkflowDefinition = (name: string, rev: string): Promise<any> | any => {
-    return this.getValue(`${name}.${rev}`);
-  };
+  update(taskUpdate: ITaskUpdate): Promise<Task> {
+    return this.client.update(taskUpdate);
+  }
+
+  delete(taskId: string): Promise<any> {
+    return this.client.delete(taskId);
+  }
+
+  deleteAll(workflowId: string): Promise<any> {
+    return this.client.deleteAll(workflowId);
+  }
 }
 
 // This's global instance
-export const taskDefinitionStore = new Store('Task Definition Store');
-export const workflowDefinitionStore = new WorkflowDefinitionStore(
-  'Workflow Definition Store',
-);
-export const taskInstanceStore = new Store('Task Instance Store');
-export const workflowInstanceStore = new Store('Workflow Instance Store');
+export const taskDefinitionStore = new TaskDefinitionStore();
+export const workflowDefinitionStore = new WorkflowDefinitionStore();
+export const taskInstanceStore = new TaskInstanceStore();
+export const workflowInstanceStore = new WorkflowInstanceStore();

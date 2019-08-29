@@ -25,7 +25,10 @@ export class MemoryStore implements IStore {
     return R.path(key.split('.'), this.localStore);
   }
 
-  list(limit: number = Number.MAX_SAFE_INTEGER, offset: number = 0): any[] {
+  listValue(
+    limit: number = Number.MAX_SAFE_INTEGER,
+    offset: number = 0,
+  ): any[] {
     return R.slice(offset, limit, enumToList(this.localStore));
   }
 }

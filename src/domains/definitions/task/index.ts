@@ -1,4 +1,8 @@
-import { TaskDefinition, ITaskDefinitionData } from '../../../taskDefinition';
+import {
+  TaskDefinition,
+  ITaskDefinitionData,
+  ITaskDefinition,
+} from '../../../taskDefinition';
 import { taskDefinitionStore } from '../../../store';
 import { createTopic } from '../../../kafka';
 
@@ -6,24 +10,16 @@ export const createTaskDefinition = async (
   taskDefinitionData: ITaskDefinitionData,
 ): Promise<any> => {
   const taskDefinition = new TaskDefinition(taskDefinitionData);
-  await taskDefinitionStore.setValue(
-    taskDefinition.name,
-    taskDefinition.toJSON(),
-  );
+  await taskDefinitionStore.create(taskDefinition);
   await createTopic(`TASK_${taskDefinition.name}`);
 };
 
-export const getTaskDefinition = async (
+export const getTaskDefinition = (
   taskName: string,
-): Promise<TaskDefinition> => {
-  return (await taskDefinitionStore.getValue(taskName)).toObject();
+): Promise<ITaskDefinition> => {
+  return taskDefinitionStore.get(taskName);
 };
 
-export const listTaskDefinition = async (
-  limit: number = Number.MAX_SAFE_INTEGER,
-  offset: number = 0,
-): Promise<TaskDefinition[]> => {
-  return (await taskDefinitionStore.list(limit, offset)).map(
-    (taskDefinition: TaskDefinition) => taskDefinition.toObject(),
-  );
+export const listTaskDefinition = (): Promise<ITaskDefinition[]> => {
+  return taskDefinitionStore.list();
 };

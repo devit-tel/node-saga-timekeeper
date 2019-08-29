@@ -2,7 +2,11 @@ import * as R from 'ramda';
 import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
 import { concatArray } from './utils/common';
 import { poll, consumerClient } from './kafka';
-import { taskInstanceStore, workflowInstanceStore } from './store';
+import {
+  taskInstanceStore,
+  workflowInstanceStore,
+  workflowDefinitionStore,
+} from './store';
 import {
   AllTaskType,
   IParallelTask,
@@ -229,45 +233,51 @@ export const findTaskPath = (
 export const getTaskData = async (
   workflow: Workflow,
 ): Promise<{ [taskReferenceName: string]: Task }> => {
-  const taskRefsPairs: [string, string][] = R.toPairs(workflow.taskRefs);
-  const taskDataPairs = await Promise.all(
-    taskRefsPairs.map(
-      async ([taskReferenceName, taskId]: [string, string]): Promise<
-        [string, Task]
-      > => [taskReferenceName, await taskInstanceStore.getValue(taskId)],
-    ),
-  );
-  return R.fromPairs(taskDataPairs);
+  const tasks = await taskInstanceStore.getAll(workflow.workflowId);
+  return tasks.reduce((result: { [ref: string]: Task }, task: Task) => {
+    result[task.taskReferenceName] = task;
+    return result;
+  }, {});
 };
 
 export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
     for (const taskUpdate of tasksUpdate) {
-      const task: Task = await taskInstanceStore.getValue(taskUpdate.taskId);
-      const workflow: Workflow = await workflowInstanceStore.getValue(
-        task.workflowId,
-      );
+      const task = await taskInstanceStore.update(taskUpdate);
 
-      processTask(task, taskUpdate);
-
-      await taskInstanceStore.setValue(task.taskId, task);
       if (taskUpdate.status === TaskStates.Completed) {
+        const workflow: Workflow = await workflowInstanceStore.get(
+          task.workflowId,
+        );
+
+        const workflowDefinition = await workflowDefinitionStore.get(
+          workflow.workflowName,
+          workflow.workflowRev,
+        );
         const taskData = await getTaskData(workflow);
         const currentTaskPath = findTaskPath(
           task.taskReferenceName,
-          workflow.workflowDefinition.tasks,
+          workflowDefinition.tasks,
         );
         const nextTaskPath = getNextTaskPath(
-          workflow.workflowDefinition.tasks,
+          workflowDefinition.tasks,
           currentTaskPath,
           taskData,
         );
         if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
-          await workflow.startTask(nextTaskPath.taskPath, taskData);
+          await taskInstanceStore.create(
+            workflow,
+            R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
+            taskData,
+            true,
+          );
         } else if (nextTaskPath.isCompleted) {
           // When workflow is completed
-          await workflow.destroy();
+          await Promise.all([
+            workflowInstanceStore.delete(workflow.workflowId),
+            taskInstanceStore.deleteAll(workflow.workflowId),
+          ]);
         }
       }
     }

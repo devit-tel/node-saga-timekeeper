@@ -1,6 +1,11 @@
-import { workflowDefinitionStore, workflowInstanceStore } from '../../store';
+import {
+  workflowDefinitionStore,
+  workflowInstanceStore,
+  taskInstanceStore,
+} from '../../store';
 import { NotFound } from '../../errors';
-import { Workflow, IWorkflow } from '../../workflow';
+import { IWorkflow } from '../../workflow';
+import { IWorkflowDefinition } from '../../workflowDefinition';
 
 export const startWorkflow = async (
   workflowName: string,
@@ -8,21 +13,28 @@ export const startWorkflow = async (
   input: any,
   childOf?: string,
 ): Promise<IWorkflow> => {
-  const workflowDefinition = await workflowDefinitionStore.getWorkflowDefinition(
+  const workflowDefinition: IWorkflowDefinition = await workflowDefinitionStore.get(
     workflowName,
     workflowRef,
   );
   if (!workflowDefinition) {
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
-  const workflow = new Workflow(workflowDefinition, input, undefined, childOf);
-  await workflowInstanceStore.setValue(workflow.workflowId, workflow);
-  await workflow.startTask();
-  return workflow.toObject();
+
+  const workflow = await workflowInstanceStore.create(
+    workflowDefinition,
+    input,
+    childOf,
+  );
+  await taskInstanceStore.create(
+    workflow,
+    workflowDefinition.tasks[0],
+    {},
+    true,
+  );
+  return workflow;
 };
 
 export const listRunningWorkflows = async (): Promise<IWorkflow[]> => {
-  return (await workflowInstanceStore.list()).map((workflow: Workflow) =>
-    workflow.toObject(),
-  );
+  return [];
 };

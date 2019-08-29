@@ -1,10 +1,5 @@
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
-import {
-  kafkaAdmin,
-  kafkaConsumer,
-  kafkaProducer,
-  kafkaTopicName,
-} from '../config';
+import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
 import { Task, ITask } from '../task';
 import { IWorkflow } from '../workflow';
@@ -30,21 +25,21 @@ export interface IEvent {
   error?: string;
 }
 
-export const adminClient = AdminClient.create(kafkaAdmin);
-export const consumerClient = new KafkaConsumer(kafkaConsumer, {});
-export const systemConsumerClient = new KafkaConsumer(kafkaConsumer, {});
-export const producerClient = new Producer(kafkaProducer, {});
+export const adminClient = AdminClient.create(config.kafkaAdmin);
+export const consumerClient = new KafkaConsumer(config.kafkaConsumer, {});
+export const systemConsumerClient = new KafkaConsumer(config.kafkaConsumer, {});
+export const producerClient = new Producer(config.kafkaProducer, {});
 
 consumerClient.connect();
 consumerClient.on('ready', () => {
   console.log('Consumer kafka are ready');
-  consumerClient.subscribe([kafkaTopicName.event]);
+  consumerClient.subscribe([config.kafkaTopicName.event]);
 });
 
 systemConsumerClient.connect();
 systemConsumerClient.on('ready', () => {
   console.log('System consumer kafka are ready');
-  systemConsumerClient.subscribe([kafkaTopicName.systemTask]);
+  systemConsumerClient.subscribe([config.kafkaTopicName.systemTask]);
 });
 
 producerClient.connect();
@@ -94,8 +89,8 @@ export const poll = (
 export const dispatch = (task: Task, isSystemTask: boolean = false) =>
   producerClient.produce(
     isSystemTask
-      ? kafkaTopicName.systemTask
-      : `${kafkaTopicName.task}.${task.taskName}`,
+      ? config.kafkaTopicName.systemTask
+      : `${config.kafkaTopicName.task}.${task.taskName}`,
     null,
     new Buffer(task.toJSON()),
     task.workflowId,
@@ -105,7 +100,7 @@ export const dispatch = (task: Task, isSystemTask: boolean = false) =>
 // Use to send Retry, Failed, Reject event, Completed workflow, Dispatch task
 export const sendEvent = (event: IEvent) =>
   producerClient.produce(
-    kafkaTopicName.command,
+    config.kafkaTopicName.command,
     null,
     new Buffer(JSON.stringify(event)),
     event.workflowId,

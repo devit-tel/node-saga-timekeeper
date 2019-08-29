@@ -6,7 +6,7 @@ import {
   IZookeeperEvent,
   ZookeeperEvents,
 } from '.';
-import { TaskDefinition } from '../../taskDefinition';
+import { TaskDefinition, ITaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 
 // This is wrong
@@ -23,6 +23,28 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore {
         this.getAndWatchTasks();
       }
     });
+  }
+
+  get(name: string): Promise<ITaskDefinition> {
+    return this.localStore[name];
+  }
+
+  create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
+    return new Promise((resolve: Function, reject: Function) =>
+      this.client.create(
+        taskDefinition.name,
+        new Buffer(JSON.stringify(taskDefinition)),
+        'PERSISTENT',
+        (error: Error) => {
+          if (error) return reject(error);
+          resolve(taskDefinition);
+        },
+      ),
+    );
+  }
+
+  list(): Promise<ITaskDefinition[]> {
+    return Promise.resolve(this.listValue(undefined, 0));
   }
 
   getAndWatchTasks = () => {

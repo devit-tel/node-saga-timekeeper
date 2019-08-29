@@ -29,7 +29,6 @@ export interface ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
-  childOf?: string;
 }
 
 export class Task implements ITask {
@@ -55,7 +54,6 @@ export class Task implements ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
-  childOf?: string;
 
   constructor(task: ITask) {
     Object.assign(this, task);
@@ -100,7 +98,6 @@ export class TaskFromWorkflow extends Task {
     workflowId: string,
     task: AllTaskType,
     tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
-    childOf?: string,
   ) {
     super({
       taskName: task.name,
@@ -121,7 +118,6 @@ export class TaskFromWorkflow extends Task {
       defaultDecision:
         task.type === TaskTypes.Decision ? task.defaultDecision : undefined,
       workflow: task.type === TaskTypes.SubWorkflow ? task.workflow : undefined,
-      childOf,
     });
   }
 }
