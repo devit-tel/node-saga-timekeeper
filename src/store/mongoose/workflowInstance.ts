@@ -59,7 +59,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
 
   get = async (workflowId: string): Promise<Workflow> => {
     const workflowData: IWorkflow = await this.model
-      .findOne({ workflowId })
+      .findOne({ _id: workflowId })
       .lean({ virtuals: true })
       .exec();
 
@@ -68,8 +68,8 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
   };
 
   create = async (workflowData: IWorkflow): Promise<Workflow> => {
-    await this.model.create(workflowData);
-    return new Workflow(workflowData);
+    const workflow = (await this.model.create(workflowData)).toObject();
+    return new Workflow({ ...workflowData, ...workflow });
   };
 
   update = async (workflow: IWorkflow): Promise<Workflow> => {

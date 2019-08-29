@@ -247,6 +247,7 @@ export const executor = async () => {
       const task = await taskInstanceStore.update(taskUpdate);
 
       if (taskUpdate.status === TaskStates.Completed) {
+        console.log(' task.workflowId', task.workflowId);
         const workflow: Workflow = await workflowInstanceStore.get(
           task.workflowId,
         );

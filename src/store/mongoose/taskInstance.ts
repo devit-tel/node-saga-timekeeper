@@ -4,7 +4,7 @@ import { MongooseStore } from '../mongoose';
 import { ITaskInstanceStore } from '../../store';
 import { ITask, Task } from '../../task';
 import { ITaskUpdate } from '../../state';
-import { TaskNextStates } from '../../constants/task';
+import { TaskPrevStates } from '../../constants/task';
 
 const taskSchema = new mongoose.Schema(
   {
@@ -70,8 +70,8 @@ export class TaskInstanceMongooseStore extends MongooseStore
   create = async (taskData: ITask): Promise<Task> => {
     const task = (await this.model.create(taskData)).toObject();
     return new Task({
-      taskId: task.taskId,
       ...taskData,
+      ...task,
     });
   };
 
@@ -80,12 +80,12 @@ export class TaskInstanceMongooseStore extends MongooseStore
       .findOneAndUpdate(
         {
           _id: taskUpdate.taskId,
-          status: TaskNextStates[taskUpdate.status],
+          status: TaskPrevStates[taskUpdate.status],
         },
         {
+          output: taskUpdate.output,
+          status: taskUpdate.status,
           $push: {
-            output: taskUpdate.output,
-            status: taskUpdate.status,
             logs: taskUpdate.logs,
           },
         },
@@ -98,7 +98,7 @@ export class TaskInstanceMongooseStore extends MongooseStore
 
   get = async (taskId: string): Promise<Task> => {
     const taskData = await this.model
-      .findById(taskId)
+      .findOne({ _id: taskId })
       .lean({ virtuals: true })
       .exec();
 

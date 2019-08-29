@@ -1,4 +1,5 @@
 import { enumToList } from '../utils/common';
+import { getPrevState } from '../utils/constant';
 
 export enum TaskTypes {
   Task = 'TASK',
@@ -40,6 +41,16 @@ export const TaskNextStates = {
   [TaskStates.Timeout]: [],
 };
 
+const taskPrevStateGetter = getPrevState(TaskNextStates);
+
+export const TaskPrevStates = {
+  [TaskStates.Scheduled]: taskPrevStateGetter(TaskStates.Scheduled),
+  [TaskStates.Inprogress]: taskPrevStateGetter(TaskStates.Inprogress),
+  [TaskStates.Completed]: taskPrevStateGetter(TaskStates.Completed),
+  [TaskStates.Failed]: taskPrevStateGetter(TaskStates.Failed),
+  [TaskStates.Timeout]: taskPrevStateGetter(TaskStates.Timeout),
+};
+
 export const TaskNextStatesSystem = {
   [TaskStates.Scheduled]: [TaskStates.Inprogress, TaskStates.Timeout],
   [TaskStates.Inprogress]: [
@@ -51,6 +62,16 @@ export const TaskNextStatesSystem = {
   [TaskStates.Completed]: [],
   [TaskStates.Failed]: [TaskStates.Scheduled],
   [TaskStates.Timeout]: [TaskStates.Scheduled],
+};
+
+const systemTaskPrevStateGetter = getPrevState(TaskNextStates);
+
+export const SystemTaskPrevStates = {
+  [TaskStates.Scheduled]: systemTaskPrevStateGetter(TaskStates.Scheduled),
+  [TaskStates.Inprogress]: systemTaskPrevStateGetter(TaskStates.Inprogress),
+  [TaskStates.Completed]: systemTaskPrevStateGetter(TaskStates.Completed),
+  [TaskStates.Failed]: systemTaskPrevStateGetter(TaskStates.Failed),
+  [TaskStates.Timeout]: systemTaskPrevStateGetter(TaskStates.Timeout),
 };
 
 // https://docs.confluent.io/current/installation/configuration/topic-configs.html

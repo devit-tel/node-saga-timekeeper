@@ -1,3 +1,5 @@
+import { getPrevState } from '../utils/constant';
+
 export enum WorkflowStates {
   Completed = 'COMPLETED',
   Failed = 'FAILED',
@@ -35,4 +37,15 @@ export const WorkflowNextStates = {
     WorkflowStates.Cancelled,
   ],
   [WorkflowStates.Cancelled]: [WorkflowStates.Running],
+};
+
+const workflowPrevStateGetter = getPrevState(WorkflowNextStates);
+
+export const TaskPrevStates = {
+  [WorkflowStates.Completed]: workflowPrevStateGetter(WorkflowStates.Completed),
+  [WorkflowStates.Failed]: workflowPrevStateGetter(WorkflowStates.Failed),
+  [WorkflowStates.Timeout]: workflowPrevStateGetter(WorkflowStates.Timeout),
+  [WorkflowStates.Running]: workflowPrevStateGetter(WorkflowStates.Running),
+  [WorkflowStates.Paused]: workflowPrevStateGetter(WorkflowStates.Paused),
+  [WorkflowStates.Cancelled]: workflowPrevStateGetter(WorkflowStates.Cancelled),
 };
