@@ -181,7 +181,7 @@ export class TaskInstanceStore {
           : undefined,
     });
 
-    if (autoDispatch) dispatch(task);
+    if (autoDispatch) dispatch(task, workflowTask.type !== TaskTypes.Task);
     return task;
   };
 

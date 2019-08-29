@@ -2,7 +2,6 @@ import * as uuid from 'uuid/v4';
 import * as R from 'ramda';
 import { TaskStates, TaskTypes } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
-import { dispatch } from './kafka';
 import { IWorkflow } from './workflow';
 import { mapInputFromTaskData } from './utils/task';
 
@@ -57,10 +56,6 @@ export class Task implements ITask {
 
   constructor(task: ITask) {
     Object.assign(this, task);
-  }
-
-  dispatch() {
-    dispatch(this, this.type !== TaskTypes.Task);
   }
 
   toObject = (): any => {

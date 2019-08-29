@@ -107,6 +107,7 @@ export const taskInstanceStore = {
       useNewUrlParser: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,
       poolSize: 100,
+      useFindAndModify: false,
     },
   },
 };
@@ -119,6 +120,7 @@ export const workflowInstanceStore = {
       useNewUrlParser: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,
       poolSize: 100,
+      useFindAndModify: false,
     },
   },
 };

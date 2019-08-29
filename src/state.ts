@@ -243,44 +243,55 @@ export const getTaskData = async (
 export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
-    for (const taskUpdate of tasksUpdate) {
-      const task = await taskInstanceStore.update(taskUpdate);
+    const groupedTasks = R.toPairs(
+      R.groupBy(R.path(['workflowId']), tasksUpdate),
+    );
+    console.log(groupedTasks.length);
+    await Promise.all(
+      groupedTasks.map(
+        async ([_workflowId, workflowTasksUpdate]: [string, ITaskUpdate[]]) => {
+          for (const taskUpdate of workflowTasksUpdate) {
+            const task = await taskInstanceStore.update(taskUpdate);
 
-      if (taskUpdate.status === TaskStates.Completed) {
-        const workflow: Workflow = await workflowInstanceStore.get(
-          task.workflowId,
-        );
+            if (taskUpdate.status === TaskStates.Completed) {
+              const workflow: Workflow = await workflowInstanceStore.get(
+                task.workflowId,
+              );
 
-        const workflowDefinition = await workflowDefinitionStore.get(
-          workflow.workflowName,
-          workflow.workflowRev,
-        );
-        const taskData = await getTaskData(workflow);
-        const currentTaskPath = findTaskPath(
-          task.taskReferenceName,
-          workflowDefinition.tasks,
-        );
-        const nextTaskPath = getNextTaskPath(
-          workflowDefinition.tasks,
-          currentTaskPath,
-          taskData,
-        );
-        if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
-          await taskInstanceStore.create(
-            workflow,
-            R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
-            taskData,
-            true,
-          );
-        } else if (nextTaskPath.isCompleted) {
-          // When workflow is completed
-          await Promise.all([
-            workflowInstanceStore.delete(workflow.workflowId),
-            taskInstanceStore.deleteAll(workflow.workflowId),
-          ]);
-        }
-      }
-    }
+              const workflowDefinition = await workflowDefinitionStore.get(
+                workflow.workflowName,
+                workflow.workflowRev,
+              );
+              const taskData = await getTaskData(workflow);
+              const currentTaskPath = findTaskPath(
+                task.taskReferenceName,
+                workflowDefinition.tasks,
+              );
+              const nextTaskPath = getNextTaskPath(
+                workflowDefinition.tasks,
+                currentTaskPath,
+                taskData,
+              );
+              if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
+                await taskInstanceStore.create(
+                  workflow,
+                  R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
+                  taskData,
+                  true,
+                );
+              } else if (nextTaskPath.isCompleted) {
+                // When workflow is completed
+                await Promise.all([
+                  workflowInstanceStore.delete(workflow.workflowId),
+                  taskInstanceStore.deleteAll(workflow.workflowId),
+                ]);
+              }
+            }
+          }
+        },
+      ),
+    );
+
     consumerClient.commit();
   } catch (error) {
     // Handle error here
