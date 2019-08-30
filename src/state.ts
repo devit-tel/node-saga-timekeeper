@@ -240,52 +240,107 @@ export const getTaskData = async (
   }, {});
 };
 
+const getTaskInfo = async (task: ITask) => {
+  const workflow: Workflow = await workflowInstanceStore.get(task.workflowId);
+
+  const workflowDefinition = await workflowDefinitionStore.get(
+    workflow.workflowName,
+    workflow.workflowRev,
+  );
+  const taskData = await getTaskData(workflow);
+  const currentTaskPath = findTaskPath(
+    task.taskReferenceName,
+    workflowDefinition.tasks,
+  );
+  const nextTaskPath = getNextTaskPath(
+    workflowDefinition.tasks,
+    currentTaskPath,
+    taskData,
+  );
+
+  return {
+    workflow,
+    workflowDefinition,
+    taskData,
+    currentTaskPath,
+    nextTaskPath,
+  };
+};
+
+const handleCompletedTask = async (task: ITask) => {
+  const {
+    workflow,
+    workflowDefinition,
+    taskData,
+    nextTaskPath,
+  } = await getTaskInfo(task);
+
+  if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
+    await taskInstanceStore.create(
+      workflow,
+      R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
+      taskData,
+      true,
+    );
+  } else if (nextTaskPath.isCompleted) {
+    // When workflow is completed
+    await Promise.all([
+      workflowInstanceStore.delete(workflow.workflowId),
+      taskInstanceStore.deleteAll(workflow.workflowId),
+    ]);
+  }
+};
+
+const handleFailedTask = async (task: ITask) => {
+  if (task.retries > 0) {
+    const {
+      workflow,
+      workflowDefinition,
+      taskData,
+      currentTaskPath,
+    } = await getTaskInfo(task);
+    console.log(R.path(currentTaskPath, workflowDefinition.tasks));
+    await taskInstanceStore.delete(task.taskId);
+    await taskInstanceStore.create(
+      workflow,
+      R.path(currentTaskPath, workflowDefinition.tasks),
+      taskData,
+      true,
+      {
+        retries: task.retries - 1,
+        isRetried: true,
+      },
+    );
+  } else {
+    // this task is failed
+    console.log('Retired failed');
+    console.log(task);
+  }
+};
+
 export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
     const groupedTasks = R.toPairs(
       R.groupBy(R.path(['workflowId']), tasksUpdate),
     );
-    console.log(groupedTasks.length);
+
     await Promise.all(
       groupedTasks.map(
         async ([_workflowId, workflowTasksUpdate]: [string, ITaskUpdate[]]) => {
           for (const taskUpdate of workflowTasksUpdate) {
             const task = await taskInstanceStore.update(taskUpdate);
 
-            if (taskUpdate.status === TaskStates.Completed) {
-              const workflow: Workflow = await workflowInstanceStore.get(
-                task.workflowId,
-              );
+            switch (taskUpdate.status) {
+              case TaskStates.Completed:
+                await handleCompletedTask(task);
+                break;
+              case TaskStates.Failed:
+                await handleFailedTask(task);
+                break;
 
-              const workflowDefinition = await workflowDefinitionStore.get(
-                workflow.workflowName,
-                workflow.workflowRev,
-              );
-              const taskData = await getTaskData(workflow);
-              const currentTaskPath = findTaskPath(
-                task.taskReferenceName,
-                workflowDefinition.tasks,
-              );
-              const nextTaskPath = getNextTaskPath(
-                workflowDefinition.tasks,
-                currentTaskPath,
-                taskData,
-              );
-              if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
-                await taskInstanceStore.create(
-                  workflow,
-                  R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
-                  taskData,
-                  true,
-                );
-              } else if (nextTaskPath.isCompleted) {
-                // When workflow is completed
-                await Promise.all([
-                  workflowInstanceStore.delete(workflow.workflowId),
-                  taskInstanceStore.deleteAll(workflow.workflowId),
-                ]);
-              }
+              default:
+                break;
             }
           }
         },

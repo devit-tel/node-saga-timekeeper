@@ -10,15 +10,6 @@ export enum TaskTypes {
 
 export const TaskTypesList = enumToList(TaskTypes);
 
-export enum FailureStrategies {
-  Failed = 'FAILED',
-  RecoveryWorkflow = 'RECOVERY_WORKFLOW',
-  Retry = 'RETRY',
-  Ignore = 'IGNORE',
-}
-
-export const FailureStrategiesList = enumToList(FailureStrategies);
-
 export enum TaskStates {
   Scheduled = 'SCHEDULED',
   Inprogress = 'INPROGRESS',
@@ -26,8 +17,6 @@ export enum TaskStates {
   Failed = 'FAILED',
   Timeout = 'TIMEOUT',
 }
-
-export const TaskStatesList = enumToList(FailureStrategies);
 
 export const TaskNextStates = {
   [TaskStates.Scheduled]: [TaskStates.Inprogress],

@@ -1,9 +1,6 @@
-import * as uuid from 'uuid/v4';
 import * as R from 'ramda';
 import { TaskStates, TaskTypes } from './constants/task';
 import { AllTaskType } from './workflowDefinition';
-import { IWorkflow } from './workflow';
-import { mapInputFromTaskData } from './utils/task';
 
 export interface ITask {
   taskName: string;
@@ -11,7 +8,8 @@ export interface ITask {
   taskId: string;
   workflowId: string;
   status: TaskStates;
-  retryCount: number;
+  retries: number;
+  isRetried: boolean;
   input: any;
   output: any;
   createTime: number; // time that push into Kafka
@@ -28,6 +26,7 @@ export interface ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
+  delay?: number;
 }
 
 export class Task implements ITask {
@@ -36,7 +35,8 @@ export class Task implements ITask {
   taskId: string;
   workflowId: string;
   status: TaskStates = TaskStates.Scheduled;
-  retryCount: number = 0;
+  retries: number;
+  isRetried: boolean;
   input: any;
   output: any = {};
   createTime: number; // time that push into Kafka
@@ -53,6 +53,7 @@ export class Task implements ITask {
     [decision: string]: AllTaskType[];
   };
   defaultDecision?: AllTaskType[];
+  delay: number = 0;
 
   constructor(task: ITask) {
     Object.assign(this, task);
@@ -86,33 +87,4 @@ export class Task implements ITask {
   toJSON = (): string => {
     return JSON.stringify(this.toObject());
   };
-}
-
-export class TaskFromWorkflow extends Task {
-  constructor(
-    workflowId: string,
-    task: AllTaskType,
-    tasksData: { [taskReferenceName: string]: ITask | IWorkflow },
-  ) {
-    super({
-      taskName: task.name,
-      taskReferenceName: task.taskReferenceName,
-      taskId: uuid(),
-      workflowId: workflowId,
-      type: task.type,
-      status: TaskStates.Scheduled,
-      retryCount: 0,
-      input: mapInputFromTaskData(task.inputParameters, tasksData),
-      output: {},
-      createTime: Date.now(),
-      startTime: null,
-      endTime: null,
-      parallelTasks:
-        task.type === TaskTypes.Parallel ? task.parallelTasks : undefined,
-      decisions: task.type === TaskTypes.Decision ? task.decisions : undefined,
-      defaultDecision:
-        task.type === TaskTypes.Decision ? task.defaultDecision : undefined,
-      workflow: task.type === TaskTypes.SubWorkflow ? task.workflow : undefined,
-    });
-  }
 }

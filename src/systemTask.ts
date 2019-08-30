@@ -1,5 +1,5 @@
-import { systemConsumerClient, poll, sendEvent } from './kafka';
-import { ITask } from './task';
+import { systemConsumerClient, poll, sendEvent, dispatch } from './kafka';
+import { ITask, Task } from './task';
 import { AllTaskType } from './workflowDefinition';
 import { TaskTypes, TaskStates } from './constants/task';
 import { startWorkflow } from './domains/workflow';
@@ -47,6 +47,21 @@ const processSubWorkflowTask = (systemTask: ITask) =>
     systemTask.taskId,
   );
 
+// TODO This is retry delay concept
+const processActivityTask = (task: ITask) => {
+  const delay = task.createTime + task.delay - Date.now();
+  if (delay > 0) {
+    setTimeout(async () => {
+      await taskInstanceStore.update({
+        taskId: task.taskId,
+        status: TaskStates.Scheduled,
+      });
+      dispatch(new Task(task));
+    }, delay);
+  } else {
+  }
+};
+
 export const executor = async () => {
   try {
     const tasks: ITask[] = await poll(systemConsumerClient);
@@ -61,6 +76,9 @@ export const executor = async () => {
             break;
           case TaskTypes.SubWorkflow:
             await processSubWorkflowTask(task);
+            break;
+          case TaskTypes.Task:
+            processActivityTask(task);
             break;
           default:
             throw new Error(`Task: ${task.type} is not system task`);

@@ -146,6 +146,7 @@ export class TaskInstanceStore {
     workflowTask: AllTaskType,
     tasksData: { [taskReferenceName: string]: ITask },
     autoDispatch: boolean = false,
+    overideTask: ITask | object = {},
   ): Promise<Task> => {
     const task = await this.client.create({
       taskId: undefined,
@@ -154,7 +155,8 @@ export class TaskInstanceStore {
       workflowId: workflow.workflowId,
       type: workflowTask.type,
       status: TaskStates.Scheduled,
-      retryCount: 0,
+      retries: 3,
+      isRetried: false,
       input: mapInputFromTaskData(workflowTask.inputParameters, {
         ...tasksData,
         workflow,
@@ -179,8 +181,8 @@ export class TaskInstanceStore {
         workflowTask.type === TaskTypes.SubWorkflow
           ? workflowTask.workflow
           : undefined,
+      ...overideTask,
     });
-
     if (autoDispatch) dispatch(task, workflowTask.type !== TaskTypes.Task);
     return task;
   };

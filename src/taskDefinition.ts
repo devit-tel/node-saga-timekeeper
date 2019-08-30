@@ -1,25 +1,26 @@
 import * as R from 'ramda';
-import { FailureStrategies } from './constants/task';
 import { isValidName } from './utils/common';
+
+interface IDocIO {
+  [key: string]: {
+    type: 'string' | 'number' | 'mixed';
+    description: string;
+    required?: boolean;
+  };
+}
 
 export interface ITaskDefinitionData {
   name: string;
   description?: string;
-  partitionsCount?: number;
-  responseTimeoutSecond?: number;
-  timeoutSecond?: number;
-  timeoutStrategy?: FailureStrategies;
-  failureStrategy?: FailureStrategies;
+  ackTimeout?: number;
+  timeout?: number;
   retry?: {
     limit: number;
-    delaySecond: number;
+    delay: number;
   };
-  recoveryWorkflow?: {
-    name: string;
-    rev: string;
-  };
-  inputParameters?: {
-    [key: string]: any;
+  document?: {
+    inputs?: IDocIO[];
+    output?: IDocIO[];
   };
 }
 
@@ -28,35 +29,10 @@ export interface ITaskDefinition extends ITaskDefinitionData {
   toJSON(): string;
 }
 
-const isNumber = R.is(Number);
-const isString = R.is(String);
-
-const isRecoveryWorkflowConfigValid = (
-  taskDefinition: ITaskDefinitionData,
-): boolean =>
-  (taskDefinition.timeoutStrategy === FailureStrategies.RecoveryWorkflow ||
-    taskDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow) &&
-  (!isString(R.path(['recoveryWorkflow', 'name'], taskDefinition)) ||
-    !isString(R.path(['recoveryWorkflow', 'rev'], taskDefinition)));
-
-const isFailureStrategiesConfigValid = (
-  taskDefinition: ITaskDefinitionData,
-): boolean =>
-  (taskDefinition.timeoutStrategy === FailureStrategies.Retry ||
-    taskDefinition.failureStrategy === FailureStrategies.Retry) &&
-  (!isNumber(R.path(['retry', 'limit'], taskDefinition)) ||
-    !isNumber(R.path(['retry', 'delaySecond'], taskDefinition)));
-
 const taskValidation = (taskDefinition: ITaskDefinitionData): string[] => {
   const errors = [];
   if (!isValidName(taskDefinition.name))
     errors.push('taskDefinition.name is invalid');
-
-  if (isRecoveryWorkflowConfigValid(taskDefinition))
-    errors.push('taskDefinition.recoveryWorkflow is invalid');
-
-  if (isFailureStrategiesConfigValid(taskDefinition))
-    errors.push('taskDefinition.retry is invalid');
 
   return errors;
 };
@@ -67,11 +43,6 @@ export class TaskDefinition implements ITaskDefinition {
   partitionsCount: number = 10;
   responseTimeoutSecond: number = 5;
   timeoutSecond: number = 30;
-  timeoutStrategy: FailureStrategies = FailureStrategies.Failed;
-  failureStrategy: FailureStrategies = FailureStrategies.Failed;
-  inputParameters: {
-    [key: string]: any;
-  } = {};
 
   constructor(taskDefinition: ITaskDefinitionData) {
     const taskValidationErrors = taskValidation(taskDefinition);

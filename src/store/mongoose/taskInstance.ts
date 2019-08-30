@@ -18,7 +18,8 @@ const taskSchema = new mongoose.Schema(
       type: String,
       index: true,
     },
-    retryCount: Number,
+    retries: Number,
+    isRetried: Boolean,
     input: mongoose.Schema.Types.Mixed,
     output: mongoose.Schema.Types.Mixed,
     createTime: Date, // time that push into Kafka
