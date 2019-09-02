@@ -6,14 +6,16 @@ This is prototype of saga implementation, written in Node.
 
 - [x] Workflow Definition
 - [x] Task Definition
-- [ ] Workflow Instance
-- [ ] Task Instance
-- [ ] State Translation
+- [x] Workflow Instance
+- [x] Task Instance
+- [x] State Translation
 - [x] Store
 - [x] Refacetor code, move to their's domain
-- [ ] Dispatcher
-- [ ] Consumer
+- [x] Dispatcher
+- [x] Consumer
 - [x] Config
 - [ ] Logger
 - [ ] Use custom error
-- [ ] Clean up completed workflows/tasks
+- [x] Clean up completed workflows/tasks
+- [ ] Delay dispatcher
+- [ ] Cron job
