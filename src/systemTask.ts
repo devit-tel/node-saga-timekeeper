@@ -66,14 +66,6 @@ export const executor = async () => {
           taskId: task.taskId,
           status: TaskStates.Inprogress,
         });
-        sendEvent({
-          type: 'TASK',
-          status: TaskStates.Inprogress,
-          workflowId: task.workflowId,
-          timestamp: Date.now(),
-          details: task,
-          isError: false,
-        });
       } catch (error) {
         sendEvent({
           type: 'TASK',

@@ -1,10 +1,9 @@
 import * as R from 'ramda';
-import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
+import { TaskStates, TaskTypes } from './constants/task';
 import {
   FailureStrategies as WorkfloFailureStrategies,
   WorkflowStates,
 } from './constants/workflow';
-import { concatArray } from './utils/common';
 import { poll, consumerClient } from './kafka';
 import {
   taskInstanceStore,
@@ -15,7 +14,6 @@ import {
   AllTaskType,
   IParallelTask,
   IDecisionTask,
-  WorkflowDefinition,
 } from './workflowDefinition';
 import { Workflow } from './workflow';
 import { ITask, Task } from './task';
@@ -34,29 +32,6 @@ export interface ITaskUpdate {
 }
 
 const isAllCompleted = R.all(R.pathEq(['status'], TaskStates.Completed));
-
-export const isAbleToTranslateTaskStatus = (
-  currentStatus: TaskStates,
-  status: TaskStates,
-): boolean => {
-  if (TaskNextStates[currentStatus]) {
-    if (TaskNextStates[currentStatus].includes(status)) return true;
-    return false;
-  }
-  throw new Error(`Current status: "${currentStatus}" is invalid`);
-};
-
-export const processTask = (task: ITask, taskUpdate: ITaskUpdate): ITask => {
-  if (!isAbleToTranslateTaskStatus(task.status, taskUpdate.status))
-    throw new Error(
-      `Cannot change status from ${task.status} to ${taskUpdate.status}`,
-    );
-
-  task.status = taskUpdate.status;
-  task.output = R.isNil(taskUpdate.output) ? task.output : taskUpdate.output;
-  task.logs = concatArray(task.logs, taskUpdate.logs);
-  return task;
-};
 
 const getNextPath = (currentPath: (string | number)[]): (string | number)[] => [
   ...R.init(currentPath),
@@ -148,7 +123,7 @@ const getNextTaskPath = (
   }
 };
 
-export const findNextParallelTaskPath = (
+const findNextParallelTaskPath = (
   taskReferenceName: string,
   tasks: AllTaskType[],
   currentPath: (string | number)[],
@@ -170,7 +145,7 @@ export const findNextParallelTaskPath = (
   return findTaskPath(taskReferenceName, tasks, getNextPath(currentPath));
 };
 
-export const findNextDecisionTaskPath = (
+const findNextDecisionTaskPath = (
   taskReferenceName: string,
   tasks: AllTaskType[],
   currentPath: (string | number)[],
@@ -192,16 +167,6 @@ export const findNextDecisionTaskPath = (
     if (taskPath) return taskPath;
   }
   return findTaskPath(taskReferenceName, tasks, getNextPath(currentPath));
-};
-
-export const getWorkflowTask = (
-  taskReferenceName: string,
-  workflowDefinition: WorkflowDefinition,
-): AllTaskType => {
-  const taskPath = findTaskPath(taskReferenceName, workflowDefinition.tasks);
-  if (!taskPath)
-    throw new Error(`taskReferenceName: "${taskReferenceName}" not found`);
-  return R.path(taskPath, workflowDefinition.tasks);
 };
 
 export const findTaskPath = (
@@ -379,6 +344,26 @@ const handleFailedTask = async (task: ITask) => {
   }
 };
 
+const processTasksOfWorkflow = async (
+  workflowTasksUpdate: ITaskUpdate[],
+): Promise<any> => {
+  for (const taskUpdate of workflowTasksUpdate) {
+    const task = await taskInstanceStore.update(taskUpdate);
+
+    switch (taskUpdate.status) {
+      case TaskStates.Completed:
+        await handleCompletedTask(task);
+        break;
+      case TaskStates.Failed:
+        await handleFailedTask(task);
+        break;
+
+      default:
+        break;
+    }
+  }
+};
+
 export const executor = async () => {
   try {
     const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
@@ -388,23 +373,8 @@ export const executor = async () => {
 
     await Promise.all(
       groupedTasks.map(
-        async ([_workflowId, workflowTasksUpdate]: [string, ITaskUpdate[]]) => {
-          for (const taskUpdate of workflowTasksUpdate) {
-            const task = await taskInstanceStore.update(taskUpdate);
-
-            switch (taskUpdate.status) {
-              case TaskStates.Completed:
-                await handleCompletedTask(task);
-                break;
-              case TaskStates.Failed:
-                await handleFailedTask(task);
-                break;
-
-              default:
-                break;
-            }
-          }
-        },
+        ([_workflowId, workflowTasksUpdate]: [string, ITaskUpdate[]]) =>
+          processTasksOfWorkflow(workflowTasksUpdate),
       ),
     );
 
