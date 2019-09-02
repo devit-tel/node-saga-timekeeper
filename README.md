@@ -23,3 +23,7 @@ This is prototype of saga implementation, written in Node.
 - [ ] Cancle workflow
 - [ ] Event store
 - [ ] Compensate workflow
+
+## Known issues
+
+- parallel tasks can be empty

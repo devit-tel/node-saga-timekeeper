@@ -6,8 +6,6 @@ import { startWorkflow } from './domains/workflow';
 import { getTaskData } from './state';
 import { Workflow } from './workflow';
 import { workflowInstanceStore, taskInstanceStore } from './store';
-import { mapInputFromTaskData } from './utils/task';
-
 // TODO watch for sub-tasks are completed
 
 const processDecisionTask = async (systemTask: ITask) => {
@@ -15,12 +13,11 @@ const processDecisionTask = async (systemTask: ITask) => {
     systemTask.workflowId,
   );
   const taskData = await getTaskData(workflow);
-  const taskInputs = mapInputFromTaskData(systemTask, taskData);
 
   await taskInstanceStore.create(
     workflow,
-    systemTask.decisions[taskInputs.case]
-      ? systemTask.decisions[taskInputs.case][0]
+    systemTask.decisions[systemTask.input.case]
+      ? systemTask.decisions[systemTask.input.case][0]
       : systemTask.defaultDecision[0],
     taskData,
     true,
