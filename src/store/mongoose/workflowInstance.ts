@@ -3,7 +3,8 @@ import * as mongooseLeanVirtuals from 'mongoose-lean-virtuals';
 import { MongooseStore } from '../mongoose';
 import { IWorkflow, Workflow } from '../../workflow';
 import { IWorkflowInstanceStore } from '../../store';
-import { WorkflowNextStates } from '../../constants/workflow';
+import { WorkflowNextStates, WorkflowStates } from '../../constants/workflow';
+import { IWorkflowUpdate } from '../../state';
 
 const workflowSchema = new mongoose.Schema(
   {
@@ -72,27 +73,43 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
     return new Workflow({ ...workflowData, ...workflow });
   };
 
-  update = async (workflow: IWorkflow): Promise<Workflow> => {
-    const workflowUpdated = await this.model
-      .update(
-        {
-          _id: workflow.workflowId,
-          status: WorkflowNextStates[workflow.status],
-        },
-        {
-          status: workflow.status,
-          retryCount: workflow.retryCount,
-          input: workflow.input,
-          output: workflow.output,
-          startTime: workflow.startTime,
-          endTime: workflow.endTime,
-        },
-      )
-      .lean({ virtuals: true })
-      .exec();
+  update = async (workflowUpdate: IWorkflowUpdate): Promise<Workflow> => {
+    if (
+      [
+        WorkflowStates.Failed,
+        WorkflowStates.Completed,
+        WorkflowStates.Timeout,
+      ].includes(workflowUpdate.status)
+    ) {
+      // Final state just remove them from cache state
+      const workflowDeleted = await this.model
+        .findOneAndDelete({
+          _id: workflowUpdate.workflowId,
+          status: WorkflowNextStates[workflowUpdate.status],
+        })
+        .lean({ virtuals: true })
+        .exec();
 
-    if (workflowUpdated) return new Workflow(workflowUpdated);
-    return null;
+      if (workflowDeleted) return new Workflow(workflowDeleted);
+      return null;
+    } else {
+      const workflowUpdated = await this.model
+        .update(
+          {
+            _id: workflowUpdate.workflowId,
+            status: WorkflowNextStates[workflowUpdate.status],
+          },
+          {
+            status: workflowUpdate.status,
+            output: workflowUpdate.output,
+          },
+        )
+        .lean({ virtuals: true })
+        .exec();
+
+      if (workflowUpdated) return new Workflow(workflowUpdated);
+      return null;
+    }
   };
 
   delete = (workflowId: string): Promise<any> =>

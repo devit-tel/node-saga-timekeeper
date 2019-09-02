@@ -1,8 +1,5 @@
-import {
-  workflowDefinitionStore,
-  workflowInstanceStore,
-  taskInstanceStore,
-} from '../../store';
+import * as uuid from 'uuid/v4';
+import { workflowDefinitionStore, workflowInstanceStore } from '../../store';
 import { NotFound } from '../../errors';
 import { IWorkflow } from '../../workflow';
 import { IWorkflowDefinition } from '../../workflowDefinition';
@@ -12,6 +9,7 @@ export const startWorkflow = async (
   workflowRef: string,
   input: any,
   childOf?: string,
+  transactionId?: string,
 ): Promise<IWorkflow> => {
   const workflowDefinition: IWorkflowDefinition = await workflowDefinitionStore.get(
     workflowName,
@@ -21,18 +19,12 @@ export const startWorkflow = async (
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
 
-  const workflow = await workflowInstanceStore.create(
+  return await workflowInstanceStore.create(
+    transactionId || uuid(),
     workflowDefinition,
     input,
     childOf,
   );
-  await taskInstanceStore.create(
-    workflow,
-    workflowDefinition.tasks[0],
-    {},
-    true,
-  );
-  return workflow;
 };
 
 export const listRunningWorkflows = async (): Promise<IWorkflow[]> => {

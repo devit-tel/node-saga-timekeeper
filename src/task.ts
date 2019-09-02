@@ -27,6 +27,10 @@ export interface ITask {
   };
   defaultDecision?: AllTaskType[];
   delay?: number;
+  parentWorkflow: {
+    name: string;
+    rev: string;
+  };
 }
 
 export class Task implements ITask {
@@ -54,6 +58,11 @@ export class Task implements ITask {
   };
   defaultDecision?: AllTaskType[];
   delay: number = 0;
+  parentWorkflow: {
+    // ref to workflowDef, so we don't need to look up workfloInstance first
+    name: string;
+    rev: string;
+  };
 
   constructor(task: ITask) {
     Object.assign(this, task);

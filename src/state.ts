@@ -1,5 +1,9 @@
 import * as R from 'ramda';
 import { TaskStates, TaskNextStates, TaskTypes } from './constants/task';
+import {
+  FailureStrategies as WorkfloFailureStrategies,
+  WorkflowStates,
+} from './constants/workflow';
 import { concatArray } from './utils/common';
 import { poll, consumerClient } from './kafka';
 import {
@@ -16,8 +20,14 @@ import {
 import { Workflow } from './workflow';
 import { ITask, Task } from './task';
 
+export interface IWorkflowUpdate {
+  workflowId: string;
+  status: WorkflowStates;
+  output?: any;
+}
+
 export interface ITaskUpdate {
-  taskId?: string;
+  taskId: string;
   status: TaskStates;
   output?: any;
   logs?: any[] | any;
@@ -299,8 +309,8 @@ const handleFailedTask = async (task: ITask) => {
       taskData,
       currentTaskPath,
     } = await getTaskInfo(task);
-    console.log(R.path(currentTaskPath, workflowDefinition.tasks));
     await taskInstanceStore.delete(task.taskId);
+    // TODO Should delay before dispatch
     await taskInstanceStore.create(
       workflow,
       R.path(currentTaskPath, workflowDefinition.tasks),
@@ -315,6 +325,57 @@ const handleFailedTask = async (task: ITask) => {
     // this task is failed
     console.log('Retired failed');
     console.log(task);
+
+    const tasksData = await taskInstanceStore.getAll(task.workflowId);
+    const runningTasks = tasksData.filter((taskData: Task) => {
+      taskData.status === TaskStates.Inprogress &&
+        taskData.taskReferenceName !== task.taskReferenceName;
+    });
+
+    // No running task start recovery
+    if (runningTasks.length === 0) {
+      const workflowDefinition = await workflowDefinitionStore.get(
+        task.parentWorkflow.name,
+        task.parentWorkflow.rev,
+      );
+      const workflow = await workflowInstanceStore.update({
+        workflowId: task.workflowId,
+        status: WorkflowStates.Failed,
+      });
+
+      switch (workflowDefinition.failureStrategy) {
+        case WorkfloFailureStrategies.RecoveryWorkflow:
+          await workflowInstanceStore.create(
+            undefined,
+            workflowDefinition,
+            tasksData,
+          );
+          break;
+        case WorkfloFailureStrategies.Retry:
+          if (workflow.retries > 0) {
+            await workflowInstanceStore.create(
+              workflow.transactionId,
+              workflowDefinition,
+              tasksData,
+              undefined,
+              {
+                retries: workflow.retries - 1,
+              },
+            );
+          }
+          break;
+        case WorkfloFailureStrategies.Rewide:
+        case WorkfloFailureStrategies.RewideThenRetry:
+          // TODO current implement did not support rewide workflow
+          break;
+
+        case WorkfloFailureStrategies.Failed:
+          // We don't do anything in this case
+          break;
+        default:
+          break;
+      }
+    }
   }
 };
 

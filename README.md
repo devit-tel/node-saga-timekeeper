@@ -19,3 +19,7 @@ This is prototype of saga implementation, written in Node.
 - [x] Clean up completed workflows/tasks
 - [ ] Delay dispatcher
 - [ ] Cron job
+- [ ] Failed workflow handling
+- [ ] Cancle workflow
+- [ ] Event store
+- [ ] Compensate workflow

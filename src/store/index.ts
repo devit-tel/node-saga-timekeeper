@@ -1,3 +1,4 @@
+import * as R from 'ramda';
 import { IWorkflowDefinition, AllTaskType } from '../workflowDefinition';
 import { ITaskDefinition } from '../taskDefinition';
 import { Workflow, IWorkflow } from '../workflow';
@@ -6,7 +7,7 @@ import { WorkflowStates } from '../constants/workflow';
 import { TaskStates, TaskTypes } from '../constants/task';
 import { mapInputFromTaskData } from '../utils/task';
 import { dispatch } from '../kafka';
-import { ITaskUpdate } from '../state';
+import { ITaskUpdate, IWorkflowUpdate } from '../state';
 
 export interface IStore {
   isHealthy(): boolean;
@@ -27,7 +28,7 @@ export interface ITaskDefinitionStore extends IStore {
 export interface IWorkflowInstanceStore extends IStore {
   get(workflowId: string): Promise<Workflow>;
   create(wofkflowData: IWorkflow): Promise<Workflow>;
-  update(wofkflow: Workflow): Promise<Workflow>;
+  update(workflowUpdate: IWorkflowUpdate): Promise<Workflow>;
   delete(workflowId: string): Promise<any>;
 }
 
@@ -96,28 +97,41 @@ export class WorkflowInstanceStore {
     return this.client.get(workflowId);
   }
 
-  create(
+  create = async (
+    transactionId: string,
     workflowDefinition: IWorkflowDefinition,
     input: any,
     childOf?: string,
-  ): Promise<Workflow> {
-    return this.client.create({
+    overideWorkflow?: IWorkflow | object,
+  ): Promise<Workflow> => {
+    const workflow = await this.client.create({
+      transactionId,
       workflowId: undefined,
       workflowName: workflowDefinition.name,
       workflowRev: workflowDefinition.rev,
       status: WorkflowStates.Running,
-      retryCount: 0,
+      retries: R.pathOr(0, ['retry', 'limit'], workflowDefinition),
       input,
       output: null,
       createTime: Date.now(),
       startTime: Date.now(),
       endTime: null,
       childOf,
+      ...overideWorkflow,
     });
-  }
 
-  update(workflow: Workflow) {
-    return this.client.update(workflow);
+    await taskInstanceStore.create(
+      workflow,
+      workflowDefinition.tasks[0],
+      {},
+      true,
+    );
+
+    return workflow;
+  };
+
+  update(workflowUpdate: IWorkflowUpdate) {
+    return this.client.update(workflowUpdate);
   }
 
   delete(workflowId: string) {
@@ -181,6 +195,10 @@ export class TaskInstanceStore {
         workflowTask.type === TaskTypes.SubWorkflow
           ? workflowTask.workflow
           : undefined,
+      parentWorkflow: {
+        name: workflow.workflowName,
+        rev: workflow.workflowRev,
+      },
       ...overideTask,
     });
     if (autoDispatch) dispatch(task, workflowTask.type !== TaskTypes.Task);
