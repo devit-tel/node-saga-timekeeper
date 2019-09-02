@@ -36,7 +36,10 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
   create(
     workflowDefinition: IWorkflowDefinition,
   ): Promise<IWorkflowDefinition> {
-    return this.setValue(workflowDefinition.name, workflowDefinition);
+    return this.setValue(
+      workflowDefinition.name,
+      JSON.stringify(workflowDefinition),
+    );
   }
 
   list(): Promise<IWorkflowDefinition[]> {
