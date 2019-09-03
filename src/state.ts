@@ -4,18 +4,14 @@ import {
   FailureStrategies as WorkfloFailureStrategies,
   WorkflowStates,
 } from './constants/workflow';
-import { poll, consumerClient } from './kafka';
-import {
-  taskInstanceStore,
-  workflowInstanceStore,
-  workflowDefinitionStore,
-} from './store';
+import { poll, consumerClient, flush } from './kafka';
+import { taskInstanceStore, workflowInstanceStore } from './store';
 import {
   AllTaskType,
   IParallelTask,
   IDecisionTask,
 } from './workflowDefinition';
-import { Workflow } from './workflow';
+import { IWorkflow } from './workflow';
 import { ITask, Task } from './task';
 
 export interface IWorkflowUpdate {
@@ -206,7 +202,7 @@ export const findTaskPath = (
 };
 
 export const getTaskData = async (
-  workflow: Workflow,
+  workflow: IWorkflow,
 ): Promise<{ [taskReferenceName: string]: Task }> => {
   const tasks = await taskInstanceStore.getAll(workflow.workflowId);
   return tasks.reduce((result: { [ref: string]: Task }, task: Task) => {
@@ -216,26 +212,21 @@ export const getTaskData = async (
 };
 
 const getTaskInfo = async (task: ITask) => {
-  const workflow: Workflow = await workflowInstanceStore.get(task.workflowId);
+  const workflow: IWorkflow = await workflowInstanceStore.get(task.workflowId);
 
-  const workflowDefinition = await workflowDefinitionStore.get(
-    workflow.workflowName,
-    workflow.workflowRev,
-  );
   const taskData = await getTaskData(workflow);
   const currentTaskPath = findTaskPath(
     task.taskReferenceName,
-    workflowDefinition.tasks,
+    workflow.workflowDefinition.tasks,
   );
   const nextTaskPath = getNextTaskPath(
-    workflowDefinition.tasks,
+    workflow.workflowDefinition.tasks,
     currentTaskPath,
     taskData,
   );
 
   return {
     workflow,
-    workflowDefinition,
     taskData,
     currentTaskPath,
     nextTaskPath,
@@ -243,17 +234,12 @@ const getTaskInfo = async (task: ITask) => {
 };
 
 const handleCompletedTask = async (task: ITask) => {
-  const {
-    workflow,
-    workflowDefinition,
-    taskData,
-    nextTaskPath,
-  } = await getTaskInfo(task);
+  const { workflow, taskData, nextTaskPath } = await getTaskInfo(task);
 
   if (!nextTaskPath.isCompleted && nextTaskPath.taskPath) {
     await taskInstanceStore.create(
       workflow,
-      R.path(nextTaskPath.taskPath, workflowDefinition.tasks),
+      R.path(nextTaskPath.taskPath, workflow.workflowDefinition.tasks),
       taskData,
       true,
     );
@@ -268,17 +254,12 @@ const handleCompletedTask = async (task: ITask) => {
 
 const handleFailedTask = async (task: ITask) => {
   if (task.retries > 0) {
-    const {
-      workflow,
-      workflowDefinition,
-      taskData,
-      currentTaskPath,
-    } = await getTaskInfo(task);
+    const { workflow, taskData, currentTaskPath } = await getTaskInfo(task);
     await taskInstanceStore.delete(task.taskId);
     // TODO Should delay before dispatch
     await taskInstanceStore.create(
       workflow,
-      R.path(currentTaskPath, workflowDefinition.tasks),
+      R.path(currentTaskPath, workflow.workflowDefinition.tasks),
       taskData,
       true,
       {
@@ -299,20 +280,16 @@ const handleFailedTask = async (task: ITask) => {
 
     // No running task start recovery
     if (runningTasks.length === 0) {
-      const workflowDefinition = await workflowDefinitionStore.get(
-        task.parentWorkflow.name,
-        task.parentWorkflow.rev,
-      );
       const workflow = await workflowInstanceStore.update({
         workflowId: task.workflowId,
         status: WorkflowStates.Failed,
       });
 
-      switch (workflowDefinition.failureStrategy) {
+      switch (workflow.workflowDefinition.failureStrategy) {
         case WorkfloFailureStrategies.RecoveryWorkflow:
           await workflowInstanceStore.create(
             undefined,
-            workflowDefinition,
+            workflow.workflowDefinition,
             tasksData,
           );
           break;
@@ -320,7 +297,7 @@ const handleFailedTask = async (task: ITask) => {
           if (workflow.retries > 0) {
             await workflowInstanceStore.create(
               workflow.transactionId,
-              workflowDefinition,
+              workflow.workflowDefinition,
               tasksData,
               undefined,
               {
@@ -366,7 +343,7 @@ const processTasksOfWorkflow = async (
 
 export const executor = async () => {
   try {
-    const tasksUpdate: ITaskUpdate[] = await poll(consumerClient);
+    const tasksUpdate: ITaskUpdate[] = await poll(consumerClient, 300);
     const groupedTasks = R.toPairs(
       R.groupBy(R.path(['workflowId']), tasksUpdate),
     );
@@ -379,6 +356,7 @@ export const executor = async () => {
     );
 
     consumerClient.commit();
+    await flush(1000 + 20 * tasksUpdate.length);
   } catch (error) {
     // Handle error here
     console.log(error);

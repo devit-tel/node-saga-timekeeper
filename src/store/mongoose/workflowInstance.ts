@@ -1,21 +1,14 @@
 import * as mongoose from 'mongoose';
 import * as mongooseLeanVirtuals from 'mongoose-lean-virtuals';
 import { MongooseStore } from '../mongoose';
-import { IWorkflow, Workflow } from '../../workflow';
+import { IWorkflow } from '../../workflow';
 import { IWorkflowInstanceStore } from '../../store';
 import { WorkflowNextStates, WorkflowStates } from '../../constants/workflow';
 import { IWorkflowUpdate } from '../../state';
+import { TaskTypesList } from '../../constants/task';
 
 const workflowSchema = new mongoose.Schema(
   {
-    workflowName: {
-      type: String,
-      index: true,
-    },
-    workflowRev: {
-      type: String,
-      index: true,
-    },
     status: {
       type: String,
       index: true,
@@ -26,6 +19,30 @@ const workflowSchema = new mongoose.Schema(
     createTime: Date,
     startTime: Date,
     endTime: Date,
+    workflowDefinition: {
+      name: String,
+      rev: String,
+      description: String,
+      tasks: [
+        {
+          inputParameters: mongoose.Schema.Types.Mixed,
+          name: String,
+          taskReferenceName: String,
+          type: {
+            type: String,
+            enum: TaskTypesList,
+            required: true,
+          },
+          defaultDecision: [mongoose.Schema.Types.Mixed],
+          decisions: mongoose.Schema.Types.Mixed,
+          parallelTasks: [[mongoose.Schema.Types.Mixed]],
+          workflow: {
+            name: String,
+            rev: String,
+          },
+        },
+      ],
+    },
     childOf: {
       type: String,
       index: true,
@@ -58,22 +75,21 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
     super(uri, mongoOption, 'workflow-instance', workflowSchema);
   }
 
-  get = async (workflowId: string): Promise<Workflow> => {
-    const workflowData: IWorkflow = await this.model
+  get = async (workflowId: string): Promise<IWorkflow> => {
+    return this.model
       .findOne({ _id: workflowId })
       .lean({ virtuals: true })
       .exec();
-
-    if (workflowData) return new Workflow(workflowData);
-    return null;
   };
 
-  create = async (workflowData: IWorkflow): Promise<Workflow> => {
-    const workflow = (await this.model.create(workflowData)).toObject();
-    return new Workflow({ ...workflowData, ...workflow });
+  create = async (workflowData: IWorkflow): Promise<IWorkflow> => {
+    return {
+      ...workflowData,
+      ...(await this.model.create(workflowData)).toObject(),
+    };
   };
 
-  update = async (workflowUpdate: IWorkflowUpdate): Promise<Workflow> => {
+  update = (workflowUpdate: IWorkflowUpdate): Promise<IWorkflow> => {
     if (
       [
         WorkflowStates.Failed,
@@ -82,18 +98,15 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
       ].includes(workflowUpdate.status)
     ) {
       // Final state just remove them from cache state
-      const workflowDeleted = await this.model
+      return this.model
         .findOneAndDelete({
           _id: workflowUpdate.workflowId,
           status: WorkflowNextStates[workflowUpdate.status],
         })
         .lean({ virtuals: true })
         .exec();
-
-      if (workflowDeleted) return new Workflow(workflowDeleted);
-      return null;
     } else {
-      const workflowUpdated = await this.model
+      return this.model
         .update(
           {
             _id: workflowUpdate.workflowId,
@@ -106,9 +119,6 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
         )
         .lean({ virtuals: true })
         .exec();
-
-      if (workflowUpdated) return new Workflow(workflowUpdated);
-      return null;
     }
   };
 

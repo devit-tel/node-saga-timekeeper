@@ -89,9 +89,14 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore {
       },
       (dataError: Error, data: Buffer) => {
         if (!dataError) {
-          this.localStore[task] = new TaskDefinition(
-            jsonTryParse(data.toString()),
-          );
+          try {
+            const taskDefinition = new TaskDefinition(
+              jsonTryParse(data.toString()),
+            );
+            this.localStore[task] = taskDefinition.toObject();
+          } catch (error) {
+            console.error(error);
+          }
         }
       },
     );

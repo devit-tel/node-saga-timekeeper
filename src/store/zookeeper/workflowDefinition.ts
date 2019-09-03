@@ -89,11 +89,18 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
                 null,
                 (dataError: Error, data: Buffer) => {
                   if (!dataError) {
-                    this.localStore = R.set(
-                      R.lensPath([workflow, ref]),
-                      new WorkflowDefinition(jsonTryParse(data.toString())),
-                      this.localStore,
-                    );
+                    try {
+                      const workflowDefinition = new WorkflowDefinition(
+                        jsonTryParse(data.toString()),
+                      );
+                      this.localStore = R.set(
+                        R.lensPath([workflow, ref]),
+                        workflowDefinition.toObject(),
+                        this.localStore,
+                      );
+                    } catch (error) {
+                      console.error(error);
+                    }
                   }
                 },
               );

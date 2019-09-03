@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { IWorkflowDefinition, AllTaskType } from '../workflowDefinition';
 import { ITaskDefinition } from '../taskDefinition';
-import { Workflow, IWorkflow } from '../workflow';
+import { IWorkflow } from '../workflow';
 import { Task, ITask } from '../task';
 import { WorkflowStates } from '../constants/workflow';
 import { TaskStates, TaskTypes } from '../constants/task';
@@ -26,9 +26,9 @@ export interface ITaskDefinitionStore extends IStore {
 }
 
 export interface IWorkflowInstanceStore extends IStore {
-  get(workflowId: string): Promise<Workflow>;
-  create(wofkflowData: IWorkflow): Promise<Workflow>;
-  update(workflowUpdate: IWorkflowUpdate): Promise<Workflow>;
+  get(workflowId: string): Promise<IWorkflow>;
+  create(wofkflowData: IWorkflow): Promise<IWorkflow>;
+  update(workflowUpdate: IWorkflowUpdate): Promise<IWorkflow>;
   delete(workflowId: string): Promise<any>;
 }
 
@@ -93,7 +93,7 @@ export class WorkflowInstanceStore {
     this.client = client;
   }
 
-  get(workflowId: string): Promise<Workflow> {
+  get(workflowId: string): Promise<IWorkflow> {
     return this.client.get(workflowId);
   }
 
@@ -103,12 +103,10 @@ export class WorkflowInstanceStore {
     input: any,
     childOf?: string,
     overideWorkflow?: IWorkflow | object,
-  ): Promise<Workflow> => {
+  ): Promise<IWorkflow> => {
     const workflow = await this.client.create({
       transactionId,
       workflowId: undefined,
-      workflowName: workflowDefinition.name,
-      workflowRev: workflowDefinition.rev,
       status: WorkflowStates.Running,
       retries: R.pathOr(0, ['retry', 'limit'], workflowDefinition),
       input,
@@ -117,6 +115,7 @@ export class WorkflowInstanceStore {
       startTime: Date.now(),
       endTime: null,
       childOf,
+      workflowDefinition,
       ...overideWorkflow,
     });
 
@@ -156,7 +155,7 @@ export class TaskInstanceStore {
   }
 
   create = async (
-    workflow: Workflow,
+    workflow: IWorkflow,
     workflowTask: AllTaskType,
     tasksData: { [taskReferenceName: string]: ITask },
     autoDispatch: boolean = false,
@@ -195,10 +194,6 @@ export class TaskInstanceStore {
         workflowTask.type === TaskTypes.SubWorkflow
           ? workflowTask.workflow
           : undefined,
-      parentWorkflow: {
-        name: workflow.workflowName,
-        rev: workflow.workflowRev,
-      },
       ...overideTask,
     });
     if (autoDispatch) dispatch(task, workflowTask.type !== TaskTypes.Task);

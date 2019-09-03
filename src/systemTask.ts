@@ -4,14 +4,11 @@ import { AllTaskType } from './workflowDefinition';
 import { TaskTypes, TaskStates } from './constants/task';
 import { startWorkflow } from './domains/workflow';
 import { getTaskData } from './state';
-import { Workflow } from './workflow';
 import { workflowInstanceStore, taskInstanceStore } from './store';
 // TODO watch for sub-tasks are completed
 
 const processDecisionTask = async (systemTask: ITask) => {
-  const workflow: Workflow = await workflowInstanceStore.get(
-    systemTask.workflowId,
-  );
+  const workflow = await workflowInstanceStore.get(systemTask.workflowId);
   const taskData = await getTaskData(workflow);
 
   await taskInstanceStore.create(
@@ -25,9 +22,7 @@ const processDecisionTask = async (systemTask: ITask) => {
 };
 
 const processParallelTask = async (systemTask: ITask) => {
-  const workflow: Workflow = await workflowInstanceStore.get(
-    systemTask.workflowId,
-  );
+  const workflow = await workflowInstanceStore.get(systemTask.workflowId);
   const taskData = await getTaskData(workflow);
   await Promise.all(
     systemTask.parallelTasks.map((tasks: AllTaskType[]) =>

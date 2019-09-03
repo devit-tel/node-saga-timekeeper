@@ -19,7 +19,7 @@ export const startWorkflow = async (
     throw new NotFound('Workflow not found', 'WORKFLOW_NOT_FOUND');
   }
 
-  return await workflowInstanceStore.create(
+  return workflowInstanceStore.create(
     transactionId || uuid(),
     workflowDefinition,
     input,

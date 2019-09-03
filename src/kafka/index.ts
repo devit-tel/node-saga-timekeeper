@@ -106,3 +106,11 @@ export const sendEvent = (event: IEvent) =>
     event.workflowId,
     Date.now(),
   );
+
+export const flush = (timeout: number = 1000) =>
+  new Promise((resolve: Function, reject: Function) => {
+    producerClient.flush(timeout, (error: Error) => {
+      if (error) return reject(error);
+      resolve();
+    });
+  });
