@@ -15,6 +15,10 @@ export interface IBaseTask {
 
 export interface ITaskTask extends IBaseTask {
   type: TaskTypes.Task;
+  retry: {
+    limit: number;
+    delaySecond: number;
+  };
 }
 
 export interface ICompensateTask extends IBaseTask {

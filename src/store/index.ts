@@ -169,7 +169,7 @@ export class TaskInstanceStore {
       transactionId: workflow.transactionId,
       type: workflowTask.type,
       status: TaskStates.Scheduled,
-      retries: 3,
+      retries: R.pathOr(0, ['retry', 'limit'], workflowTask),
       isRetried: false,
       input: mapInputFromTaskData(workflowTask.inputParameters, {
         ...tasksData,
