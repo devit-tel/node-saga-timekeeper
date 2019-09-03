@@ -1,5 +1,5 @@
-import { Task } from '../../task';
+import { ITask } from '../../task';
 
-export const listRunningTasks = async (): Promise<Task[]> => {
+export const listRunningTasks = async (): Promise<ITask[]> => {
   return [];
 };

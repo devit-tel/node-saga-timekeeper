@@ -4,7 +4,7 @@ import {
   FailureStrategies as WorkfloFailureStrategies,
   WorkflowStates,
 } from './constants/workflow';
-import { poll, consumerClient, flush } from './kafka';
+import { poll, consumerClient, flush, sendEvent } from './kafka';
 import { taskInstanceStore, workflowInstanceStore } from './store';
 import {
   AllTaskType,
@@ -12,7 +12,7 @@ import {
   IDecisionTask,
 } from './workflowDefinition';
 import { IWorkflow } from './workflow';
-import { ITask, Task } from './task';
+import { ITask } from './task';
 import { toObjectByKey } from './utils/common';
 
 export interface IWorkflowUpdate {
@@ -22,6 +22,7 @@ export interface IWorkflowUpdate {
 }
 
 export interface ITaskUpdate {
+  transactionId: string;
   taskId: string;
   status: TaskStates;
   output?: any;
@@ -69,7 +70,7 @@ const isTaskOfParallelTask = (
 const getNextParallelTask = (
   tasks: AllTaskType[],
   currentPath: (string | number)[],
-  taskData: { [taskReferenceName: string]: Task } = {},
+  taskData: { [taskReferenceName: string]: ITask } = {},
 ): { isCompleted: boolean; taskPath: (string | number)[] } => {
   // If still got next task in line
   if (R.path(getNextPath(currentPath), tasks)) {
@@ -99,7 +100,7 @@ const getNextParallelTask = (
 const getNextTaskPath = (
   tasks: AllTaskType[],
   currentPath: (string | number)[],
-  taskData: { [taskReferenceName: string]: Task } = {},
+  taskData: { [taskReferenceName: string]: ITask } = {},
 ): { isCompleted: boolean; taskPath: (string | number)[] } => {
   // Check if this's the final task
   if (R.equals([tasks.length - 1], currentPath))
@@ -205,9 +206,9 @@ export const findTaskPath = (
 
 export const getTaskData = async (
   workflow: IWorkflow,
-): Promise<{ [taskReferenceName: string]: Task }> => {
+): Promise<{ [taskReferenceName: string]: ITask }> => {
   const tasks = await taskInstanceStore.getAll(workflow.workflowId);
-  return tasks.reduce((result: { [ref: string]: Task }, task: Task) => {
+  return tasks.reduce((result: { [ref: string]: ITask }, task: ITask) => {
     result[task.taskReferenceName] = task;
     return result;
   }, {});
@@ -256,7 +257,7 @@ const handleCompletedTask = async (task: ITask) => {
 
 const getRewindTasks = R.compose(
   R.map(
-    (task: Task): AllTaskType => {
+    (task: ITask): AllTaskType => {
       return {
         name: task.taskName,
         taskReferenceName: task.taskReferenceName,
@@ -268,10 +269,10 @@ const getRewindTasks = R.compose(
       };
     },
   ),
-  R.sort((taskA: Task, taskB: Task): number => {
+  R.sort((taskA: ITask, taskB: ITask): number => {
     return taskB.endTime - taskA.endTime;
   }),
-  R.filter((task: Task | any): boolean => {
+  R.filter((task: ITask | any): boolean => {
     return task.type === TaskTypes.Task && task.status === TaskStates.Completed;
   }),
 );
@@ -294,7 +295,7 @@ const handleFailedTask = async (task: ITask) => {
     );
   } else {
     const tasksData = await taskInstanceStore.getAll(task.workflowId);
-    const runningTasks = tasksData.filter((taskData: Task) => {
+    const runningTasks = tasksData.filter((taskData: ITask) => {
       [TaskStates.Inprogress, TaskStates.Scheduled].includes(taskData.status) &&
         taskData.taskReferenceName !== task.taskReferenceName;
     });
@@ -366,18 +367,28 @@ const processTasksOfWorkflow = async (
   workflowTasksUpdate: ITaskUpdate[],
 ): Promise<any> => {
   for (const taskUpdate of workflowTasksUpdate) {
-    const task = await taskInstanceStore.update(taskUpdate);
+    try {
+      const task = await taskInstanceStore.update(taskUpdate);
 
-    switch (taskUpdate.status) {
-      case TaskStates.Completed:
-        await handleCompletedTask(task);
-        break;
-      case TaskStates.Failed:
-        await handleFailedTask(task);
-        break;
+      switch (taskUpdate.status) {
+        case TaskStates.Completed:
+          await handleCompletedTask(task);
+          break;
+        case TaskStates.Failed:
+          await handleFailedTask(task);
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
+    } catch (error) {
+      sendEvent({
+        transactionId: taskUpdate.transactionId,
+        type: 'TASK',
+        isError: true,
+        error,
+        timestamp: Date.now(),
+      });
     }
   }
 };

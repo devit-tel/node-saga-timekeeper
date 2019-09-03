@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as mongooseLeanVirtuals from 'mongoose-lean-virtuals';
 import { MongooseStore } from '../mongoose';
 import { ITaskInstanceStore } from '../../store';
-import { ITask, Task } from '../../task';
+import { ITask } from '../../task';
 import { ITaskUpdate } from '../../state';
 import { TaskPrevStates, TaskStates } from '../../constants/task';
 
@@ -68,15 +68,15 @@ export class TaskInstanceMongooseStore extends MongooseStore
     super(uri, mongoOption, 'task-instance', taskSchema);
   }
 
-  create = async (taskData: ITask): Promise<Task> => {
+  create = async (taskData: ITask): Promise<ITask> => {
     const task = (await this.model.create(taskData)).toObject();
-    return new Task({
+    return {
       ...taskData,
       ...task,
-    });
+    };
   };
 
-  update = async (taskUpdate: ITaskUpdate): Promise<Task> => {
+  update = async (taskUpdate: ITaskUpdate): Promise<ITask> => {
     const task = await this.model
       .findOneAndUpdate(
         {
@@ -95,27 +95,29 @@ export class TaskInstanceMongooseStore extends MongooseStore
       )
       .lean({ virtuals: true })
       .exec();
-    if (task) return new Task(task);
-    return null;
+    if (task) return task;
+    throw new Error(
+      `Task not match: ${taskUpdate.taskId} with status: ${
+        TaskPrevStates[taskUpdate.status]
+      }`,
+    );
   };
 
-  get = async (taskId: string): Promise<Task> => {
+  get = async (taskId: string): Promise<ITask> => {
     const taskData = await this.model
       .findOne({ _id: taskId })
       .lean({ virtuals: true })
       .exec();
 
-    if (taskData) return new Task(taskData);
+    if (taskData) return taskData;
     return null;
   };
 
-  getAll = async (workflowId: string): Promise<Task[]> => {
-    const tasksData = await this.model
+  getAll = (workflowId: string): Promise<ITask[]> => {
+    return this.model
       .find({ workflowId })
       .lean({ virtuals: true })
       .exec();
-
-    return tasksData.map((taskData: ITask) => new Task(taskData));
   };
 
   delete(taskId: string): Promise<any> {

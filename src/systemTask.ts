@@ -59,12 +59,13 @@ export const executor = async () => {
         }
         await taskInstanceStore.update({
           taskId: task.taskId,
+          transactionId: task.transactionId,
           status: TaskStates.Inprogress,
         });
       } catch (error) {
         sendEvent({
           type: 'TASK',
-          workflowId: task.workflowId,
+          transactionId: task.transactionId,
           timestamp: Date.now(),
           details: task,
           isError: true,

@@ -2,11 +2,11 @@ import * as R from 'ramda';
 import { IWorkflowDefinition, AllTaskType } from '../workflowDefinition';
 import { ITaskDefinition } from '../taskDefinition';
 import { IWorkflow } from '../workflow';
-import { Task, ITask } from '../task';
+import { ITask } from '../task';
 import { WorkflowStates } from '../constants/workflow';
 import { TaskStates, TaskTypes } from '../constants/task';
 import { mapInputFromTaskData } from '../utils/task';
-import { dispatch } from '../kafka';
+import { dispatch, sendEvent } from '../kafka';
 import { ITaskUpdate, IWorkflowUpdate } from '../state';
 
 export interface IStore {
@@ -33,10 +33,10 @@ export interface IWorkflowInstanceStore extends IStore {
 }
 
 export interface ITaskInstanceStore extends IStore {
-  get(taskId: string): Promise<Task>;
-  getAll(workflowId: string): Promise<Task[]>;
-  create(taskData: ITask): Promise<Task>;
-  update(taskUpdate: ITaskUpdate): Promise<Task>;
+  get(taskId: string): Promise<ITask>;
+  getAll(workflowId: string): Promise<ITask[]>;
+  create(taskData: ITask): Promise<ITask>;
+  update(taskUpdate: ITaskUpdate): Promise<ITask>;
   delete(taskId: string): Promise<any>;
   deleteAll(workflowId: string): Promise<any>;
 }
@@ -160,12 +160,13 @@ export class TaskInstanceStore {
     tasksData: { [taskReferenceName: string]: ITask },
     autoDispatch: boolean = false,
     overideTask: ITask | object = {},
-  ): Promise<Task> => {
+  ): Promise<ITask> => {
     const task = await this.client.create({
       taskId: undefined,
       taskName: workflowTask.name,
       taskReferenceName: workflowTask.taskReferenceName,
       workflowId: workflow.workflowId,
+      transactionId: workflow.transactionId,
       type: workflowTask.type,
       status: TaskStates.Scheduled,
       retries: 3,
@@ -196,17 +197,37 @@ export class TaskInstanceStore {
           : undefined,
       ...overideTask,
     });
-    if (autoDispatch)
+    if (autoDispatch) {
       dispatch(
         task,
+        workflow.transactionId,
         ![TaskTypes.Task, TaskTypes.Compensate].includes(workflowTask.type),
       );
+      sendEvent({
+        type: 'TASK',
+        transactionId: workflow.transactionId,
+        isError: false,
+        timestamp: Date.now(),
+        details: task,
+      });
+    }
     return task;
   };
 
-  update(taskUpdate: ITaskUpdate): Promise<Task> {
-    return this.client.update(taskUpdate);
-  }
+  update = async (taskUpdate: ITaskUpdate): Promise<ITask> => {
+    try {
+      return await this.client.update(taskUpdate);
+    } catch (error) {
+      sendEvent({
+        transactionId: taskUpdate.transactionId,
+        type: 'TASK',
+        isError: true,
+        error,
+        timestamp: Date.now(),
+      });
+      throw error;
+    }
+  };
 
   delete(taskId: string): Promise<any> {
     return this.client.delete(taskId);

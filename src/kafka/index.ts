@@ -1,10 +1,8 @@
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
-import { Task, ITask } from '../task';
+import { ITask } from '../task';
 import { IWorkflow } from '../workflow';
-import { WorkflowStates } from '../constants/workflow';
-import { TaskStates } from '../constants/task';
 
 export interface kafkaConsumerMessage {
   value: Buffer;
@@ -16,9 +14,8 @@ export interface kafkaConsumerMessage {
 }
 
 export interface IEvent {
-  workflowId: string;
+  transactionId: string;
   type: 'WORKFLOW' | 'TASK';
-  status?: WorkflowStates | TaskStates;
   details?: IWorkflow | ITask;
   timestamp: number;
   isError: boolean;
@@ -86,14 +83,18 @@ export const poll = (
     );
   });
 
-export const dispatch = (task: Task, isSystemTask: boolean = false) =>
+export const dispatch = (
+  task: ITask,
+  transactionId: string,
+  isSystemTask: boolean = false,
+) =>
   producerClient.produce(
     isSystemTask
       ? config.kafkaTopicName.systemTask
       : `${config.kafkaTopicName.task}.${task.taskName}`,
     null,
-    new Buffer(task.toJSON()),
-    task.workflowId,
+    new Buffer(JSON.stringify(task)),
+    transactionId,
     Date.now(),
   );
 
@@ -103,7 +104,7 @@ export const sendEvent = (event: IEvent) =>
     config.kafkaTopicName.command,
     null,
     new Buffer(JSON.stringify(event)),
-    event.workflowId,
+    event.transactionId,
     Date.now(),
   );
 
