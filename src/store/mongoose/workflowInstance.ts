@@ -42,6 +42,10 @@ const workflowSchema = new mongoose.Schema(
             name: String,
             rev: String,
           },
+          retry: {
+            limit: Number,
+            delay: Number,
+          },
         },
       ],
       failureStrategy: String,
