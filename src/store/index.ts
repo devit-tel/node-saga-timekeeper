@@ -196,7 +196,11 @@ export class TaskInstanceStore {
           : undefined,
       ...overideTask,
     });
-    if (autoDispatch) dispatch(task, workflowTask.type !== TaskTypes.Task);
+    if (autoDispatch)
+      dispatch(
+        task,
+        ![TaskTypes.Task, TaskTypes.Compensate].includes(workflowTask.type),
+      );
     return task;
   };
 

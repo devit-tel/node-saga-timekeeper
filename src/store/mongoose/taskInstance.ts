@@ -4,7 +4,7 @@ import { MongooseStore } from '../mongoose';
 import { ITaskInstanceStore } from '../../store';
 import { ITask, Task } from '../../task';
 import { ITaskUpdate } from '../../state';
-import { TaskPrevStates } from '../../constants/task';
+import { TaskPrevStates, TaskStates } from '../../constants/task';
 
 const taskSchema = new mongoose.Schema(
   {
@@ -89,6 +89,8 @@ export class TaskInstanceMongooseStore extends MongooseStore
           $push: {
             logs: taskUpdate.logs,
           },
+          endTime:
+            taskUpdate.status === TaskStates.Completed ? Date.now() : null,
         },
       )
       .lean({ virtuals: true })

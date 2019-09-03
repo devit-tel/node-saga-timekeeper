@@ -9,7 +9,7 @@ interface IDocIO {
   };
 }
 
-export interface ITaskDefinitionData {
+export interface ITaskDefinition {
   name: string;
   description?: string;
   ackTimeout?: number;
@@ -24,12 +24,7 @@ export interface ITaskDefinitionData {
   };
 }
 
-export interface ITaskDefinition extends ITaskDefinitionData {
-  toObject(): any;
-  toJSON(): string;
-}
-
-const taskValidation = (taskDefinition: ITaskDefinitionData): string[] => {
+const taskValidation = (taskDefinition: ITaskDefinition): string[] => {
   const errors = [];
   if (!isValidName(taskDefinition.name))
     errors.push('taskDefinition.name is invalid');
@@ -44,7 +39,7 @@ export class TaskDefinition implements ITaskDefinition {
   responseTimeoutSecond: number = 5;
   timeoutSecond: number = 30;
 
-  constructor(taskDefinition: ITaskDefinitionData) {
+  constructor(taskDefinition: ITaskDefinition) {
     const taskValidationErrors = taskValidation(taskDefinition);
 
     if (taskValidationErrors.length)

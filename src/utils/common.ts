@@ -28,3 +28,10 @@ export const jsonTryParse = (jsonString: string, defaultValue: any = {}) => {
     return defaultValue;
   }
 };
+
+export const toObjectByKey = (targets: object[], key: string) => {
+  return targets.reduce((result: object, target: object) => {
+    result[target[key]] = target;
+    return result;
+  }, {});
+};

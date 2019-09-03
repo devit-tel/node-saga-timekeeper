@@ -13,6 +13,7 @@ import {
 } from './workflowDefinition';
 import { IWorkflow } from './workflow';
 import { ITask, Task } from './task';
+import { toObjectByKey } from './utils/common';
 
 export interface IWorkflowUpdate {
   workflowId: string;
@@ -191,6 +192,7 @@ export const findTaskPath = (
           );
         case TaskTypes.SubWorkflow:
         case TaskTypes.Task:
+        case TaskTypes.Compensate:
         default:
           return findTaskPath(
             taskReferenceName,
@@ -252,11 +254,34 @@ const handleCompletedTask = async (task: ITask) => {
   }
 };
 
+const getRewindTasks = R.compose(
+  R.map(
+    (task: Task): AllTaskType => {
+      return {
+        name: task.taskName,
+        taskReferenceName: task.taskReferenceName,
+        type: TaskTypes.Compensate,
+        inputParameters: {
+          input: `\${workflow.input.${task.taskReferenceName}.input}`,
+          output: `\${workflow.input.${task.taskReferenceName}.output}`,
+        },
+      };
+    },
+  ),
+  R.sort((taskA: Task, taskB: Task): number => {
+    return taskB.endTime - taskA.endTime;
+  }),
+  R.filter((task: Task | any): boolean => {
+    return task.type === TaskTypes.Task && task.status === TaskStates.Completed;
+  }),
+);
+
 const handleFailedTask = async (task: ITask) => {
+  // If got change to retry
   if (task.retries > 0) {
     const { workflow, taskData, currentTaskPath } = await getTaskInfo(task);
     await taskInstanceStore.delete(task.taskId);
-    // TODO Should delay before dispatch
+    // TODO Much delay before dispatch
     await taskInstanceStore.create(
       workflow,
       R.path(currentTaskPath, workflow.workflowDefinition.tasks),
@@ -268,23 +293,19 @@ const handleFailedTask = async (task: ITask) => {
       },
     );
   } else {
-    // this task is failed
-    console.log('Retired failed');
-    console.log(task);
-
     const tasksData = await taskInstanceStore.getAll(task.workflowId);
     const runningTasks = tasksData.filter((taskData: Task) => {
-      taskData.status === TaskStates.Inprogress &&
+      [TaskStates.Inprogress, TaskStates.Scheduled].includes(taskData.status) &&
         taskData.taskReferenceName !== task.taskReferenceName;
     });
 
-    // No running task start recovery
+    // No running task, start recovery
+    // If there are running task wait for them first
     if (runningTasks.length === 0) {
       const workflow = await workflowInstanceStore.update({
         workflowId: task.workflowId,
         status: WorkflowStates.Failed,
       });
-
       switch (workflow.workflowDefinition.failureStrategy) {
         case WorkfloFailureStrategies.RecoveryWorkflow:
           await workflowInstanceStore.create(
@@ -306,9 +327,29 @@ const handleFailedTask = async (task: ITask) => {
             );
           }
           break;
-        case WorkfloFailureStrategies.Rewide:
-        case WorkfloFailureStrategies.RewideThenRetry:
-          // TODO current implement did not support rewide workflow
+        case WorkfloFailureStrategies.Rewind:
+          await workflowInstanceStore.create(
+            workflow.transactionId,
+            {
+              name: workflow.workflowDefinition.name,
+              rev: `${workflow.workflowDefinition.rev}_compensate`,
+              tasks: getRewindTasks(tasksData),
+              failureStrategy: WorkfloFailureStrategies.Failed,
+            },
+            toObjectByKey(tasksData, 'taskReferenceName'),
+          );
+          break;
+        case WorkfloFailureStrategies.RewindThenRetry:
+          await workflowInstanceStore.create(
+            workflow.transactionId,
+            {
+              name: workflow.workflowDefinition.name,
+              rev: `${workflow.workflowDefinition.rev}_compensate`,
+              tasks: getRewindTasks(tasksData),
+              failureStrategy: WorkfloFailureStrategies.Failed,
+            },
+            toObjectByKey(tasksData, 'taskReferenceName'),
+          );
           break;
 
         case WorkfloFailureStrategies.Failed:

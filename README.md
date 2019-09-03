@@ -19,10 +19,11 @@ This is prototype of saga implementation, written in Node.
 - [x] Clean up completed workflows/tasks
 - [ ] Delay dispatcher
 - [ ] Cron job
-- [ ] Failed workflow handling
+- [x] Failed workflow handling
+- [x] Timeout workflow handling
 - [ ] Cancle workflow
 - [ ] Event store
-- [ ] Compensate workflow
+- [x] Compensate workflow
 - [ ] Publish event to kafka
 
 ## Known issues

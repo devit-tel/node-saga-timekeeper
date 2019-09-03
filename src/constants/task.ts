@@ -3,6 +3,7 @@ import { getPrevState } from '../utils/constant';
 
 export enum TaskTypes {
   Task = 'TASK',
+  Compensate = 'COMPENSATE',
   Parallel = 'PARALLEL',
   SubWorkflow = 'SUB_WORKFLOW',
   Decision = 'DECISION',

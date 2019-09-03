@@ -6,6 +6,7 @@ import { IWorkflowInstanceStore } from '../../store';
 import { WorkflowNextStates, WorkflowStates } from '../../constants/workflow';
 import { IWorkflowUpdate } from '../../state';
 import { TaskTypesList } from '../../constants/task';
+import { taskInstanceStore } from '../../store';
 
 const workflowSchema = new mongoose.Schema(
   {
@@ -25,6 +26,7 @@ const workflowSchema = new mongoose.Schema(
       description: String,
       tasks: [
         {
+          _id: false,
           inputParameters: mongoose.Schema.Types.Mixed,
           name: String,
           taskReferenceName: String,
@@ -42,6 +44,15 @@ const workflowSchema = new mongoose.Schema(
           },
         },
       ],
+      failureStrategy: String,
+      retry: {
+        limit: Number,
+        delaySecond: Number,
+      },
+      recoveryWorkflow: {
+        name: String,
+        rev: String,
+      },
     },
     childOf: {
       type: String,
@@ -89,7 +100,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
     };
   };
 
-  update = (workflowUpdate: IWorkflowUpdate): Promise<IWorkflow> => {
+  update = async (workflowUpdate: IWorkflowUpdate): Promise<IWorkflow> => {
     if (
       [
         WorkflowStates.Failed,
@@ -98,13 +109,18 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
       ].includes(workflowUpdate.status)
     ) {
       // Final state just remove them from cache state
-      return this.model
+      const deletedWorkflow = await this.model
         .findOneAndDelete({
           _id: workflowUpdate.workflowId,
           status: WorkflowNextStates[workflowUpdate.status],
         })
         .lean({ virtuals: true })
         .exec();
+
+      if (deletedWorkflow)
+        taskInstanceStore.deleteAll(workflowUpdate.workflowId);
+
+      return deletedWorkflow;
     } else {
       return this.model
         .update(

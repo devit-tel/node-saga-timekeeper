@@ -13,8 +13,8 @@ export enum FailureStrategies {
   Failed = 'FAILED',
   RecoveryWorkflow = 'RECOVERY_WORKFLOW',
   Retry = 'RETRY',
-  Rewide = 'REWIDE',
-  RewideThenRetry = 'REWIDE_THEN_RETRY',
+  Rewind = 'REWIND',
+  RewindThenRetry = 'REWIND_THEN_RETRY',
 }
 
 export const WorkflowNextStates = {

@@ -1,6 +1,6 @@
 import {
   WorkflowDefinition,
-  IWorkflowDefinitionData,
+  IWorkflowDefinition,
 } from '../../../workflowDefinition';
 import { workflowDefinitionStore } from '../../../store';
 
@@ -13,7 +13,7 @@ export const createWorkflowDefinition = (
 export const getWorkflowDefinition = async (
   workflowName: string,
   workflowRev: string,
-): Promise<IWorkflowDefinitionData> => {
+): Promise<IWorkflowDefinition> => {
   return workflowDefinitionStore.get(workflowName, workflowRev);
 };
 

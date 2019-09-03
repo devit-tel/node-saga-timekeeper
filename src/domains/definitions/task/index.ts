@@ -1,13 +1,9 @@
-import {
-  TaskDefinition,
-  ITaskDefinitionData,
-  ITaskDefinition,
-} from '../../../taskDefinition';
+import { TaskDefinition, ITaskDefinition } from '../../../taskDefinition';
 import { taskDefinitionStore } from '../../../store';
 import { createTopic } from '../../../kafka';
 
 export const createTaskDefinition = async (
-  taskDefinitionData: ITaskDefinitionData,
+  taskDefinitionData: ITaskDefinition,
 ): Promise<any> => {
   const taskDefinition = new TaskDefinition(taskDefinitionData);
   await taskDefinitionStore.create(taskDefinition);

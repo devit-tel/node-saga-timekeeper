@@ -17,6 +17,10 @@ export interface ITaskTask extends IBaseTask {
   type: TaskTypes.Task;
 }
 
+export interface ICompensateTask extends IBaseTask {
+  type: TaskTypes.Compensate;
+}
+
 export interface IParallelTask extends IBaseTask {
   type: TaskTypes.Parallel;
   parallelTasks: AllTaskType[][];
@@ -39,16 +43,17 @@ export interface IDecisionTask extends IBaseTask {
 
 export type AllTaskType =
   | ITaskTask
+  | ICompensateTask
   | IParallelTask
   | ISubWorkflowTask
   | IDecisionTask;
 
-export interface IWorkflowDefinitionData {
+export interface IWorkflowDefinition {
   name: string;
   rev: string;
   description?: string;
   tasks: AllTaskType[];
-  failureStrategy?: FailureStrategies;
+  failureStrategy: FailureStrategies;
   retry?: {
     limit: number;
     delaySecond: number;
@@ -59,23 +64,18 @@ export interface IWorkflowDefinitionData {
   };
 }
 
-export interface IWorkflowDefinition extends IWorkflowDefinitionData {
-  toObject(): any;
-  toJSON(): string;
-}
-
 const isNumber = R.is(Number);
 const isString = R.is(String);
 
 const isRecoveryWorkflowConfigValid = (
-  workflowDefinition: IWorkflowDefinitionData,
+  workflowDefinition: IWorkflowDefinition,
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.RecoveryWorkflow &&
   (!isString(R.path(['recoveryWorkflow', 'name'], workflowDefinition)) ||
     !isString(R.path(['recoveryWorkflow', 'rev'], workflowDefinition)));
 
 const isFailureStrategiesConfigValid = (
-  workflowDefinition: IWorkflowDefinitionData,
+  workflowDefinition: IWorkflowDefinition,
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.Retry &&
   (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
@@ -206,7 +206,7 @@ const validateTasks = (
   );
 
 const workflowValidation = (
-  workflowDefinition: IWorkflowDefinitionData,
+  workflowDefinition: IWorkflowDefinition,
 ): string[] => {
   const errors = [];
   if (!isValidName(workflowDefinition.name))
@@ -232,7 +232,7 @@ export class WorkflowDefinition implements IWorkflowDefinition {
   rev: string;
   description?: string = 'No description';
   tasks: AllTaskType[];
-  failureStrategy?: FailureStrategies;
+  failureStrategy: FailureStrategies;
   retry?: {
     limit: number;
     delaySecond: number;
@@ -242,7 +242,7 @@ export class WorkflowDefinition implements IWorkflowDefinition {
     rev: string;
   };
 
-  constructor(workflowDefinitionData: IWorkflowDefinitionData) {
+  constructor(workflowDefinitionData: IWorkflowDefinition) {
     const workflowValidationErrors = workflowValidation(workflowDefinitionData);
 
     const validateTasksResult = validateTasks(
