@@ -27,8 +27,8 @@ export const kafkaTopicName = {
   systemTask: `${process.env['kafka.prefix'] || 'node'}.${
     kafkaConstant.PREFIX
   }.${kafkaConstant.SYSTEM_TASK_TOPIC_NAME}`,
-  command: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
-    kafkaConstant.COMMAND_TOPIC_NAME
+  store: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
+    kafkaConstant.STORE_TOPIC_NAME
   }`,
   event: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
     kafkaConstant.EVENT_TOPIC
