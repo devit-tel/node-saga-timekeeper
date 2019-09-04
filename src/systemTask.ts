@@ -58,9 +58,10 @@ export const executor = async () => {
             throw new Error(`Task: ${task.type} is not system task`);
         }
         await taskInstanceStore.update({
+          isSystem: true,
           taskId: task.taskId,
           transactionId: task.transactionId,
-          status: TaskStates.Inprogress,
+          status: TaskStates.Completed,
         });
       } catch (error) {
         sendEvent({

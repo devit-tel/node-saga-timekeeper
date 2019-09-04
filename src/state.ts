@@ -27,6 +27,7 @@ export interface ITaskUpdate {
   status: TaskStates;
   output?: any;
   logs?: any[] | any;
+  isSystem: boolean;
 }
 
 const isAllCompleted = R.all(R.pathEq(['status'], TaskStates.Completed));
@@ -368,7 +369,10 @@ const processTasksOfWorkflow = async (
 ): Promise<any> => {
   for (const taskUpdate of workflowTasksUpdate) {
     try {
-      const task = await taskInstanceStore.update(taskUpdate);
+      const task = await taskInstanceStore.update({
+        ...taskUpdate,
+        isSystem: false,
+      });
 
       switch (taskUpdate.status) {
         case TaskStates.Completed:

@@ -4,7 +4,11 @@ import { MongooseStore } from '../mongoose';
 import { ITaskInstanceStore } from '../../store';
 import { ITask } from '../../task';
 import { ITaskUpdate } from '../../state';
-import { TaskPrevStates, TaskStates } from '../../constants/task';
+import {
+  TaskPrevStates,
+  SystemTaskPrevStates,
+  TaskStates,
+} from '../../constants/task';
 
 const taskSchema = new mongoose.Schema(
   {
@@ -75,13 +79,14 @@ export class TaskInstanceMongooseStore extends MongooseStore
       ...task,
     };
   };
-
   update = async (taskUpdate: ITaskUpdate): Promise<ITask> => {
     const task = await this.model
       .findOneAndUpdate(
         {
           _id: taskUpdate.taskId,
-          status: TaskPrevStates[taskUpdate.status],
+          status: taskUpdate.isSystem
+            ? SystemTaskPrevStates[taskUpdate.status]
+            : TaskPrevStates[taskUpdate.status],
         },
         {
           output: taskUpdate.output,
@@ -95,6 +100,7 @@ export class TaskInstanceMongooseStore extends MongooseStore
       )
       .lean({ virtuals: true })
       .exec();
+
     if (task) return task;
     throw new Error(
       `Task not match: ${taskUpdate.taskId} with status: ${

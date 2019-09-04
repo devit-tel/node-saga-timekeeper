@@ -42,7 +42,11 @@ export const TaskPrevStates = {
 };
 
 export const TaskNextStatesSystem = {
-  [TaskStates.Scheduled]: [TaskStates.Inprogress, TaskStates.Timeout],
+  [TaskStates.Scheduled]: [
+    TaskStates.Inprogress,
+    TaskStates.Timeout,
+    TaskStates.Completed,
+  ],
   [TaskStates.Inprogress]: [
     TaskStates.Completed,
     TaskStates.Failed,
@@ -54,7 +58,7 @@ export const TaskNextStatesSystem = {
   [TaskStates.Timeout]: [TaskStates.Scheduled],
 };
 
-const systemTaskPrevStateGetter = getPrevState(TaskNextStates);
+const systemTaskPrevStateGetter = getPrevState(TaskNextStatesSystem);
 
 export const SystemTaskPrevStates = {
   [TaskStates.Scheduled]: systemTaskPrevStateGetter(TaskStates.Scheduled),
