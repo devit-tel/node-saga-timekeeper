@@ -1,19 +1,14 @@
 import koaRouter = require('koa-router');
-import {
-  startWorkflow,
-  listRunningWorkflows,
-} from '../../../../domains/workflow';
+import { startTransaction } from '../../../../domains/transaction';
 
 export const router = new koaRouter();
 
 router.post('/:name/:rev', (ctx: koaRouter.IRouterContext | any) => {
   const { name, rev } = ctx.params;
-  // tslint:disable-next-line: prefer-array-literal
   return Promise.all(
-    new Array(1).fill('').map(() => startWorkflow(name, rev, ctx.request.body)),
+    // tslint:disable-next-line: prefer-array-literal
+    new Array(1)
+      .fill('')
+      .map(() => startTransaction(name, rev, ctx.request.body)),
   );
-});
-
-router.get('/', () => {
-  return listRunningWorkflows();
 });

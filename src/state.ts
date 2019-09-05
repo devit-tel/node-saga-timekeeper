@@ -14,7 +14,13 @@ import {
 import { IWorkflow } from './workflow';
 import { ITask } from './task';
 import { toObjectByKey } from './utils/common';
+import { TransactionStates } from './constants/transaction';
 
+export interface ITransactionUpdate {
+  transactionId: string;
+  status: TransactionStates;
+  output?: any;
+}
 export interface IWorkflowUpdate {
   workflowId: string;
   status: WorkflowStates;

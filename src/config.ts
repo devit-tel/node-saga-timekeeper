@@ -124,3 +124,16 @@ export const workflowInstanceStore = {
     },
   },
 };
+
+export const transactionInstanceStore = {
+  type: StoreType.MongoDB,
+  mongoDBConfig: {
+    uri: process.env['transaction-instance.mongodb.uri'],
+    options: {
+      useNewUrlParser: true,
+      reconnectTries: Number.MAX_SAFE_INTEGER,
+      poolSize: 100,
+      useFindAndModify: false,
+    },
+  },
+};

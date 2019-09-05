@@ -3,7 +3,7 @@ import * as mongooseLeanVirtuals from 'mongoose-lean-virtuals';
 import { MongooseStore } from '../mongoose';
 import { IWorkflow } from '../../workflow';
 import { IWorkflowInstanceStore } from '../../store';
-import { WorkflowNextStates, WorkflowStates } from '../../constants/workflow';
+import { WorkflowPrevStates, WorkflowStates } from '../../constants/workflow';
 import { IWorkflowUpdate } from '../../state';
 import { TaskTypesList } from '../../constants/task';
 import { taskInstanceStore } from '../../store';
@@ -116,7 +116,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
       const deletedWorkflow = await this.model
         .findOneAndDelete({
           _id: workflowUpdate.workflowId,
-          status: WorkflowNextStates[workflowUpdate.status],
+          status: WorkflowPrevStates[workflowUpdate.status],
         })
         .lean({ virtuals: true })
         .exec();
@@ -130,7 +130,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
         .update(
           {
             _id: workflowUpdate.workflowId,
-            status: WorkflowNextStates[workflowUpdate.status],
+            status: WorkflowPrevStates[workflowUpdate.status],
           },
           {
             status: workflowUpdate.status,

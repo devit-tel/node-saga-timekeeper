@@ -10,6 +10,7 @@ import { executor as stateExecutor } from './state';
 import { executor as systemTaskExecutor } from './systemTask';
 import { StoreType } from './constants/store';
 import './kafka';
+import { TransactionInstanceMongoseStore } from './store/mongoose/transactionInstance';
 
 switch (config.workflowDefinitionStore.type) {
   case StoreType.ZooKeeper:
@@ -40,6 +41,24 @@ switch (config.taskDefinitionStore.type) {
   default:
     throw new Error(
       `TaskDefinition Store: ${config.taskDefinitionStore.type} is invalid`,
+    );
+}
+
+switch (config.transactionInstanceStore.type) {
+  // case StoreType.Memory:
+  //   store.transactionInstanceStore.setClient(new MemoryStore());
+  //   break;
+  case StoreType.MongoDB:
+    store.transactionInstanceStore.setClient(
+      new TransactionInstanceMongoseStore(
+        config.transactionInstanceStore.mongoDBConfig.uri,
+        config.transactionInstanceStore.mongoDBConfig.options,
+      ),
+    );
+    break;
+  default:
+    throw new Error(
+      `TranscationInstance Store: ${config.transactionInstanceStore.type} is invalid`,
     );
 }
 

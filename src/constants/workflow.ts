@@ -19,8 +19,8 @@ export enum FailureStrategies {
 
 export const WorkflowNextStates = {
   [WorkflowStates.Completed]: [],
-  [WorkflowStates.Failed]: [WorkflowStates.Running],
-  [WorkflowStates.Timeout]: [WorkflowStates.Running],
+  [WorkflowStates.Failed]: [],
+  [WorkflowStates.Timeout]: [],
   [WorkflowStates.Running]: [
     WorkflowStates.Completed,
     WorkflowStates.Failed,
@@ -36,12 +36,12 @@ export const WorkflowNextStates = {
     WorkflowStates.Timeout,
     WorkflowStates.Cancelled,
   ],
-  [WorkflowStates.Cancelled]: [WorkflowStates.Running],
+  [WorkflowStates.Cancelled]: [],
 };
 
 const workflowPrevStateGetter = getPrevState(WorkflowNextStates);
 
-export const TaskPrevStates = {
+export const WorkflowPrevStates = {
   [WorkflowStates.Completed]: workflowPrevStateGetter(WorkflowStates.Completed),
   [WorkflowStates.Failed]: workflowPrevStateGetter(WorkflowStates.Failed),
   [WorkflowStates.Timeout]: workflowPrevStateGetter(WorkflowStates.Timeout),

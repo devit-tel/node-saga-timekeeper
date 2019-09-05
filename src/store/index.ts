@@ -7,7 +7,9 @@ import { WorkflowStates } from '../constants/workflow';
 import { TaskStates, TaskTypes } from '../constants/task';
 import { mapInputFromTaskData } from '../utils/task';
 import { dispatch, sendEvent } from '../kafka';
-import { ITaskUpdate, IWorkflowUpdate } from '../state';
+import { ITaskUpdate, IWorkflowUpdate, ITransactionUpdate } from '../state';
+import { ITransaction } from '../transaction';
+import { TransactionStates } from '../constants/transaction';
 
 export interface IStore {
   isHealthy(): boolean;
@@ -25,6 +27,11 @@ export interface ITaskDefinitionStore extends IStore {
   list(): Promise<ITaskDefinition[]>;
 }
 
+export interface ITransactionInstanceStore extends IStore {
+  get(workflowId: string): Promise<ITransaction>;
+  create(wofkflowData: ITransaction): Promise<ITransaction>;
+  update(workflowUpdate: ITransactionUpdate): Promise<ITransaction>;
+}
 export interface IWorkflowInstanceStore extends IStore {
   get(workflowId: string): Promise<IWorkflow>;
   create(wofkflowData: IWorkflow): Promise<IWorkflow>;
@@ -82,6 +89,47 @@ export class TaskDefinitionStore {
 
   create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
     return this.client.create(taskDefinition);
+  }
+}
+
+export class TransactionInstanceStore {
+  client: ITransactionInstanceStore;
+
+  setClient(client: ITransactionInstanceStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  get(workflowId: string): Promise<ITransaction> {
+    return this.client.get(workflowId);
+  }
+
+  create = async (
+    transactionId: string,
+    workflowDefinition: IWorkflowDefinition,
+    input: any,
+  ): Promise<ITransaction> => {
+    const transaction = await this.client.create({
+      transactionId,
+      status: TransactionStates.Running,
+      input,
+      output: null,
+      createTime: Date.now(),
+      endTime: null,
+      workflowDefinition,
+    });
+
+    await workflowInstanceStore.create(
+      transactionId,
+      workflowDefinition,
+      input,
+    );
+
+    return transaction;
+  };
+
+  update(transactionUpdate: ITransactionUpdate) {
+    return this.client.update(transactionUpdate);
   }
 }
 
@@ -252,3 +300,4 @@ export const taskDefinitionStore = new TaskDefinitionStore();
 export const workflowDefinitionStore = new WorkflowDefinitionStore();
 export const taskInstanceStore = new TaskInstanceStore();
 export const workflowInstanceStore = new WorkflowInstanceStore();
+export const transactionInstanceStore = new TransactionInstanceStore();
