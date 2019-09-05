@@ -204,8 +204,8 @@ export class TaskInstanceStore {
         ![TaskTypes.Task, TaskTypes.Compensate].includes(workflowTask.type),
       );
       sendEvent({
-        type: 'TASK',
         transactionId: workflow.transactionId,
+        type: 'TASK',
         isError: false,
         timestamp: Date.now(),
         details: task,
@@ -216,13 +216,22 @@ export class TaskInstanceStore {
 
   update = async (taskUpdate: ITaskUpdate): Promise<ITask> => {
     try {
-      return await this.client.update(taskUpdate);
+      const task = await this.client.update(taskUpdate);
+      sendEvent({
+        transactionId: taskUpdate.transactionId,
+        type: 'TASK',
+        isError: false,
+        timestamp: Date.now(),
+        details: task,
+      });
+      return task;
     } catch (error) {
       sendEvent({
         transactionId: taskUpdate.transactionId,
         type: 'TASK',
         isError: true,
         error,
+        details: taskUpdate,
         timestamp: Date.now(),
       });
       throw error;

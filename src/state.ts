@@ -388,9 +388,10 @@ const processTasksOfWorkflow = async (
     } catch (error) {
       sendEvent({
         transactionId: taskUpdate.transactionId,
-        type: 'TASK',
+        type: 'SYSTEM',
         isError: true,
         error,
+        details: taskUpdate,
         timestamp: Date.now(),
       });
     }

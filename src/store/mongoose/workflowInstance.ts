@@ -136,6 +136,9 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
             status: workflowUpdate.status,
             output: workflowUpdate.output,
           },
+          {
+            new: true,
+          },
         )
         .lean({ virtuals: true })
         .exec();

@@ -97,6 +97,9 @@ export class TaskInstanceMongooseStore extends MongooseStore
           endTime:
             taskUpdate.status === TaskStates.Completed ? Date.now() : null,
         },
+        {
+          new: true,
+        },
       )
       .lean({ virtuals: true })
       .exec();
