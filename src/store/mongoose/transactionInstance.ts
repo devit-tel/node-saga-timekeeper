@@ -59,7 +59,7 @@ export class TransactionInstanceMongoseStore extends MongooseStore
     transactionUpdate: ITransactionUpdate,
   ): Promise<ITransaction> => {
     return this.model
-      .update(
+      .findOneAndUpdate(
         {
           transactionId: transactionUpdate.transactionId,
           status: TransactionPrevStates[transactionUpdate.status],
@@ -71,7 +71,7 @@ export class TransactionInstanceMongoseStore extends MongooseStore
             TransactionStates.Completed,
             TransactionStates.Failed,
           ].includes(transactionUpdate.status)
-            ? Date.now
+            ? Date.now()
             : null,
         },
         {

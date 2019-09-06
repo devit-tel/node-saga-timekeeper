@@ -128,7 +128,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
       return deletedWorkflow;
     } else {
       return this.model
-        .update(
+        .findOneAndUpdate(
           {
             _id: workflowUpdate.workflowId,
             status: WorkflowPrevStates[workflowUpdate.status],
