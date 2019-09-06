@@ -14,6 +14,10 @@ const workflowSchema = new mongoose.Schema(
       type: String,
       index: true,
     },
+    transactionId: {
+      index: true,
+      type: String,
+    },
     type: String,
     retryCount: Number,
     input: mongoose.Schema.Types.Mixed,

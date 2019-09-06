@@ -18,6 +18,10 @@ const taskSchema = new mongoose.Schema(
       type: String,
       index: true,
     },
+    transactionId: {
+      index: true,
+      type: String,
+    },
     status: {
       type: String,
       index: true,
