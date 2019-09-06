@@ -118,14 +118,6 @@ export class TransactionInstanceStore {
       endTime: null,
       workflowDefinition,
     });
-
-    await workflowInstanceStore.create(
-      transactionId,
-      WorkflowTypes.Workflow,
-      workflowDefinition,
-      input,
-    );
-
     sendEvent({
       transactionId,
       type: 'TRANSACTION',
@@ -133,6 +125,13 @@ export class TransactionInstanceStore {
       timestamp: Date.now(),
       details: transaction,
     });
+
+    await workflowInstanceStore.create(
+      transactionId,
+      WorkflowTypes.Workflow,
+      workflowDefinition,
+      input,
+    );
 
     return transaction;
   };
@@ -196,14 +195,6 @@ export class WorkflowInstanceStore {
       workflowDefinition,
       ...overideWorkflow,
     });
-
-    await taskInstanceStore.create(
-      workflow,
-      workflowDefinition.tasks[0],
-      {},
-      true,
-    );
-
     sendEvent({
       transactionId: workflow.transactionId,
       type: 'WORKFLOW',
@@ -211,6 +202,13 @@ export class WorkflowInstanceStore {
       timestamp: Date.now(),
       details: workflow,
     });
+
+    await taskInstanceStore.create(
+      workflow,
+      workflowDefinition.tasks[0],
+      {},
+      true,
+    );
 
     return workflow;
   };
