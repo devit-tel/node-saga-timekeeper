@@ -2,9 +2,13 @@ import { systemConsumerClient, poll, sendEvent } from './kafka';
 import { ITask } from './task';
 import { AllTaskType } from './workflowDefinition';
 import { TaskTypes, TaskStates } from './constants/task';
-import { startWorkflow } from './domains/workflow';
 import { getTaskData } from './state';
-import { workflowInstanceStore, taskInstanceStore } from './store';
+import {
+  workflowInstanceStore,
+  taskInstanceStore,
+  workflowDefinitionStore,
+} from './store';
+import { WorkflowTypes } from './constants/workflow';
 // TODO watch for sub-tasks are completed
 
 const processDecisionTask = async (systemTask: ITask) => {
@@ -31,13 +35,24 @@ const processParallelTask = async (systemTask: ITask) => {
   );
 };
 
-const processSubWorkflowTask = (systemTask: ITask) =>
-  startWorkflow(
+const processSubWorkflowTask = async (systemTask: ITask) => {
+  const workflowDefinition = await workflowDefinitionStore.get(
     systemTask.workflow.name,
     systemTask.workflow.rev,
+  );
+
+  if (!workflowDefinition) {
+    //TODO dispatch to state management or somthing
+  }
+
+  return workflowInstanceStore.create(
+    systemTask.transactionId,
+    WorkflowTypes.SubWorkflow,
+    workflowDefinition,
     systemTask.input,
     systemTask.taskId,
   );
+};
 
 export const executor = async () => {
   try {
