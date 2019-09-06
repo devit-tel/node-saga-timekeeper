@@ -3,9 +3,14 @@ import { TaskStates, TaskTypes } from './constants/task';
 import {
   FailureStrategies as WorkfloFailureStrategies,
   WorkflowStates,
+  WorkflowTypes,
 } from './constants/workflow';
-import { poll, consumerClient, flush, sendEvent } from './kafka';
-import { taskInstanceStore, workflowInstanceStore } from './store';
+import { poll, consumerClient, sendEvent } from './kafka';
+import {
+  taskInstanceStore,
+  workflowInstanceStore,
+  transactionInstanceStore,
+} from './store';
 import {
   AllTaskType,
   IParallelTask,
@@ -22,6 +27,7 @@ export interface ITransactionUpdate {
   output?: any;
 }
 export interface IWorkflowUpdate {
+  transactionId: string;
   workflowId: string;
   status: WorkflowStates;
   output?: any;
@@ -243,6 +249,40 @@ const getTaskInfo = async (task: ITask) => {
   };
 };
 
+const handleCompletedWorkflow = async (workflow: IWorkflow) =>
+  transactionInstanceStore.update({
+    transactionId: workflow.transactionId,
+    status: TransactionStates.Completed,
+  });
+
+const handleCompletedCompensateWorkflow = async (workflow: IWorkflow) =>
+  transactionInstanceStore.update({
+    transactionId: workflow.transactionId,
+    status: TransactionStates.Compensated,
+  });
+
+const handleCompletedCompensateThenRetryWorkflow = async (
+  workflow: IWorkflow,
+) => {
+  if (workflow.retries > 0) {
+    const transaction = await transactionInstanceStore.get(
+      workflow.transactionId,
+    );
+    await workflowInstanceStore.create(
+      workflow.transactionId,
+      WorkflowTypes.Workflow,
+      transaction.workflowDefinition,
+      transaction.input,
+      undefined,
+      {
+        retries: workflow.retries - 1,
+      },
+    );
+  } else {
+    await handleCompletedCompensateWorkflow(workflow);
+  }
+};
+
 const handleCompletedTask = async (task: ITask) => {
   const { workflow, taskData, nextTaskPath } = await getTaskInfo(task);
 
@@ -255,10 +295,28 @@ const handleCompletedTask = async (task: ITask) => {
     );
   } else if (nextTaskPath.isCompleted) {
     // When workflow is completed
-    await Promise.all([
-      workflowInstanceStore.delete(workflow.workflowId),
-      taskInstanceStore.deleteAll(workflow.workflowId),
-    ]);
+    await workflowInstanceStore.update({
+      transactionId: task.transactionId,
+      workflowId: task.workflowId,
+      status: WorkflowStates.Completed,
+    });
+
+    switch (workflow.type) {
+      case WorkflowTypes.Workflow:
+        await handleCompletedWorkflow(workflow);
+        break;
+      case WorkflowTypes.SubWorkflow:
+        // Update it's parent task
+        break;
+      case WorkflowTypes.CompensateWorkflow:
+        await handleCompletedCompensateWorkflow(workflow);
+        break;
+      case WorkflowTypes.CompensateThenRetryWorkflow:
+        await handleCompletedCompensateThenRetryWorkflow(workflow);
+        break;
+      default:
+        break;
+    }
   }
 };
 
@@ -283,6 +341,69 @@ const getRewindTasks = R.compose(
     return task.type === TaskTypes.Task && task.status === TaskStates.Completed;
   }),
 );
+
+const handleRecoveryWorkflow = (workflow: IWorkflow, tasksData: ITask[]) =>
+  workflowInstanceStore.create(
+    workflow.transactionId,
+    WorkflowTypes.Workflow,
+    workflow.workflowDefinition,
+    toObjectByKey(tasksData, 'taskReferenceName'),
+  );
+
+const handleRetryWorkflow = (workflow: IWorkflow, tasksData: ITask[]) => {
+  if (workflow.retries > 0) {
+    return workflowInstanceStore.create(
+      workflow.transactionId,
+      WorkflowTypes.Workflow,
+      workflow.workflowDefinition,
+      tasksData,
+      undefined,
+      {
+        retries: workflow.retries - 1,
+      },
+    );
+  }
+  return handleFailedWorkflow(workflow);
+};
+
+const handleCompenstateWorkflow = (workflow: IWorkflow, tasksData: ITask[]) =>
+  workflowInstanceStore.create(
+    workflow.transactionId,
+    WorkflowTypes.CompensateWorkflow,
+    {
+      name: workflow.workflowDefinition.name,
+      rev: `${workflow.workflowDefinition.rev}_compensate`,
+      tasks: getRewindTasks(tasksData),
+      failureStrategy: WorkfloFailureStrategies.Failed,
+    },
+    toObjectByKey(tasksData, 'taskReferenceName'),
+  );
+
+const handleCompenstateThenRetryWorkflow = (
+  workflow: IWorkflow,
+  tasksData: ITask[],
+) =>
+  workflowInstanceStore.create(
+    workflow.transactionId,
+    WorkflowTypes.CompensateThenRetryWorkflow,
+    {
+      name: workflow.workflowDefinition.name,
+      rev: `${workflow.workflowDefinition.rev}_compensate`,
+      tasks: getRewindTasks(tasksData),
+      failureStrategy: WorkfloFailureStrategies.Failed,
+    },
+    toObjectByKey(tasksData, 'taskReferenceName'),
+    undefined,
+    {
+      retries: workflow.retries,
+    },
+  );
+
+const handleFailedWorkflow = (workflow: IWorkflow) =>
+  transactionInstanceStore.update({
+    transactionId: workflow.transactionId,
+    status: TransactionStates.Failed,
+  });
 
 const handleFailedTask = async (task: ITask) => {
   // If got change to retry
@@ -311,57 +432,25 @@ const handleFailedTask = async (task: ITask) => {
     // If there are running task wait for them first
     if (runningTasks.length === 0) {
       const workflow = await workflowInstanceStore.update({
+        transactionId: task.transactionId,
         workflowId: task.workflowId,
         status: WorkflowStates.Failed,
       });
       switch (workflow.workflowDefinition.failureStrategy) {
         case WorkfloFailureStrategies.RecoveryWorkflow:
-          await workflowInstanceStore.create(
-            undefined,
-            workflow.workflowDefinition,
-            tasksData,
-          );
+          await handleRecoveryWorkflow(workflow, tasksData);
           break;
         case WorkfloFailureStrategies.Retry:
-          if (workflow.retries > 0) {
-            await workflowInstanceStore.create(
-              workflow.transactionId,
-              workflow.workflowDefinition,
-              tasksData,
-              undefined,
-              {
-                retries: workflow.retries - 1,
-              },
-            );
-          }
+          await handleRetryWorkflow(workflow, tasksData);
           break;
         case WorkfloFailureStrategies.Rewind:
-          await workflowInstanceStore.create(
-            workflow.transactionId,
-            {
-              name: workflow.workflowDefinition.name,
-              rev: `${workflow.workflowDefinition.rev}_compensate`,
-              tasks: getRewindTasks(tasksData),
-              failureStrategy: WorkfloFailureStrategies.Failed,
-            },
-            toObjectByKey(tasksData, 'taskReferenceName'),
-          );
+          await handleCompenstateWorkflow(workflow, tasksData);
           break;
         case WorkfloFailureStrategies.RewindThenRetry:
-          await workflowInstanceStore.create(
-            workflow.transactionId,
-            {
-              name: workflow.workflowDefinition.name,
-              rev: `${workflow.workflowDefinition.rev}_compensate`,
-              tasks: getRewindTasks(tasksData),
-              failureStrategy: WorkfloFailureStrategies.Failed,
-            },
-            toObjectByKey(tasksData, 'taskReferenceName'),
-          );
+          await handleCompenstateThenRetryWorkflow(workflow, tasksData);
           break;
-
         case WorkfloFailureStrategies.Failed:
-          // We don't do anything in this case
+          await handleFailedWorkflow(workflow);
           break;
         default:
           break;
@@ -387,7 +476,9 @@ const processTasksOfWorkflow = async (
         case TaskStates.Failed:
           await handleFailedTask(task);
           break;
-
+        case TaskStates.Timeout:
+          // Timeout task will make workflow timeout and manual fix
+          break;
         default:
           break;
       }
@@ -419,7 +510,6 @@ export const executor = async () => {
     );
 
     consumerClient.commit();
-    await flush(1000 + 20 * tasksUpdate.length);
   } catch (error) {
     // Handle error here
     console.log(error);

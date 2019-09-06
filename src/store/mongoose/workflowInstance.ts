@@ -14,6 +14,7 @@ const workflowSchema = new mongoose.Schema(
       type: String,
       index: true,
     },
+    type: String,
     retryCount: Number,
     input: mongoose.Schema.Types.Mixed,
     output: mongoose.Schema.Types.Mixed,
@@ -122,7 +123,7 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
         .exec();
 
       if (deletedWorkflow)
-        taskInstanceStore.deleteAll(workflowUpdate.workflowId);
+        await taskInstanceStore.deleteAll(workflowUpdate.workflowId);
 
       return deletedWorkflow;
     } else {

@@ -3,6 +3,7 @@ import { workflowDefinitionStore, workflowInstanceStore } from '../../store';
 import { NotFound } from '../../errors';
 import { IWorkflow } from '../../workflow';
 import { IWorkflowDefinition } from '../../workflowDefinition';
+import { WorkflowTypes } from '../../constants/workflow';
 
 export const startWorkflow = async (
   workflowName: string,
@@ -20,6 +21,7 @@ export const startWorkflow = async (
   }
   return workflowInstanceStore.create(
     transactionId || uuid(),
+    WorkflowTypes.Workflow,
     workflowDefinition,
     input,
     childOf,

@@ -1,9 +1,10 @@
-import { WorkflowStates } from './constants/workflow';
+import { WorkflowStates, WorkflowTypes } from './constants/workflow';
 import { IWorkflowDefinition } from './workflowDefinition';
 
 export interface IWorkflow {
   transactionId: string;
   workflowId: string;
+  type: WorkflowTypes;
   status: WorkflowStates;
   retries: number;
   input: {

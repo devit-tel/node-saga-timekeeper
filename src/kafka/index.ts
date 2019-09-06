@@ -4,6 +4,7 @@ import { jsonTryParse } from '../utils/common';
 import { ITask } from '../task';
 import { IWorkflow } from '../workflow';
 import { ITaskUpdate } from '../state';
+import { ITransaction } from '../transaction';
 
 export interface kafkaConsumerMessage {
   value: Buffer;
@@ -16,8 +17,8 @@ export interface kafkaConsumerMessage {
 
 export interface IEvent {
   transactionId: string;
-  type: 'WORKFLOW' | 'TASK' | 'SYSTEM';
-  details?: IWorkflow | ITask | ITaskUpdate;
+  type: 'TRANSACTION' | 'WORKFLOW' | 'TASK' | 'SYSTEM';
+  details?: ITransaction | IWorkflow | ITask | ITaskUpdate;
   timestamp: number;
   isError: boolean;
   error?: string;

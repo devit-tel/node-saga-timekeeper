@@ -3,7 +3,7 @@ import { IWorkflowDefinition, AllTaskType } from '../workflowDefinition';
 import { ITaskDefinition } from '../taskDefinition';
 import { IWorkflow } from '../workflow';
 import { ITask } from '../task';
-import { WorkflowStates } from '../constants/workflow';
+import { WorkflowStates, WorkflowTypes } from '../constants/workflow';
 import { TaskStates, TaskTypes } from '../constants/task';
 import { mapInputFromTaskData } from '../utils/task';
 import { dispatch, sendEvent } from '../kafka';
@@ -100,8 +100,8 @@ export class TransactionInstanceStore {
     this.client = client;
   }
 
-  get(workflowId: string): Promise<ITransaction> {
-    return this.client.get(workflowId);
+  get(transactionId: string): Promise<ITransaction> {
+    return this.client.get(transactionId);
   }
 
   create = async (
@@ -121,16 +121,44 @@ export class TransactionInstanceStore {
 
     await workflowInstanceStore.create(
       transactionId,
+      WorkflowTypes.Workflow,
       workflowDefinition,
       input,
     );
 
+    sendEvent({
+      transactionId,
+      type: 'TRANSACTION',
+      isError: false,
+      timestamp: Date.now(),
+      details: transaction,
+    });
+
     return transaction;
   };
 
-  update(transactionUpdate: ITransactionUpdate) {
-    return this.client.update(transactionUpdate);
-  }
+  update = async (transactionUpdate: ITransactionUpdate) => {
+    try {
+      const transaction = await this.client.update(transactionUpdate);
+      sendEvent({
+        transactionId: transactionUpdate.transactionId,
+        type: 'TRANSACTION',
+        isError: false,
+        timestamp: Date.now(),
+        details: transaction,
+      });
+      return transaction;
+    } catch (error) {
+      sendEvent({
+        transactionId: transactionUpdate.transactionId,
+        type: 'TRANSACTION',
+        isError: true,
+        timestamp: Date.now(),
+        error,
+      });
+      return undefined;
+    }
+  };
 }
 
 export class WorkflowInstanceStore {
@@ -147,6 +175,7 @@ export class WorkflowInstanceStore {
 
   create = async (
     transactionId: string,
+    type: WorkflowTypes,
     workflowDefinition: IWorkflowDefinition,
     input: any,
     childOf?: string,
@@ -154,6 +183,7 @@ export class WorkflowInstanceStore {
   ): Promise<IWorkflow> => {
     const workflow = await this.client.create({
       transactionId,
+      type,
       workflowId: undefined,
       status: WorkflowStates.Running,
       retries: R.pathOr(0, ['retry', 'limit'], workflowDefinition),
@@ -174,12 +204,39 @@ export class WorkflowInstanceStore {
       true,
     );
 
+    sendEvent({
+      transactionId: workflow.transactionId,
+      type: 'WORKFLOW',
+      isError: false,
+      timestamp: Date.now(),
+      details: workflow,
+    });
+
     return workflow;
   };
 
-  update(workflowUpdate: IWorkflowUpdate) {
-    return this.client.update(workflowUpdate);
-  }
+  update = async (workflowUpdate: IWorkflowUpdate) => {
+    try {
+      const workflow = await this.client.update(workflowUpdate);
+      sendEvent({
+        transactionId: workflow.transactionId,
+        type: 'WORKFLOW',
+        isError: false,
+        timestamp: Date.now(),
+        details: workflow,
+      });
+      return workflow;
+    } catch (error) {
+      sendEvent({
+        transactionId: workflowUpdate.transactionId,
+        type: 'WORKFLOW',
+        isError: true,
+        error,
+        timestamp: Date.now(),
+      });
+      return undefined;
+    }
+  };
 
   delete(workflowId: string) {
     return this.client.delete(workflowId);

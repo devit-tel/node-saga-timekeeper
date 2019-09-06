@@ -6,6 +6,7 @@ export enum TransactionStates {
   Running = 'RUNNING',
   Paused = 'PAUSED',
   Cancelled = 'CANCELLED',
+  Compensated = 'COMPENSATED',
 }
 
 export const TransactionNextStates = {
@@ -25,6 +26,7 @@ export const TransactionNextStates = {
     TransactionStates.Cancelled,
   ],
   [TransactionStates.Cancelled]: [],
+  [TransactionStates.Compensated]: [],
 };
 
 const workflowPrevStateGetter = getPrevState(TransactionNextStates);
@@ -40,5 +42,8 @@ export const TransactionPrevStates = {
   [TransactionStates.Paused]: workflowPrevStateGetter(TransactionStates.Paused),
   [TransactionStates.Cancelled]: workflowPrevStateGetter(
     TransactionStates.Cancelled,
+  ),
+  [TransactionStates.Compensated]: workflowPrevStateGetter(
+    TransactionStates.Compensated,
   ),
 };
