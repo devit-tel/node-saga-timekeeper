@@ -129,7 +129,11 @@ export class WorkflowInstanceMongoseStore extends MongooseStore
       if (deletedWorkflow)
         await taskInstanceStore.deleteAll(workflowUpdate.workflowId);
 
-      return deletedWorkflow;
+      return {
+        ...deletedWorkflow,
+        status: workflowUpdate.status,
+        output: workflowUpdate.output,
+      };
     } else {
       return this.model
         .findOneAndUpdate(
