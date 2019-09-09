@@ -13,8 +13,8 @@ export enum FailureStrategies {
   Failed = 'FAILED',
   RecoveryWorkflow = 'RECOVERY_WORKFLOW',
   Retry = 'RETRY',
-  Rewind = 'REWIND',
-  RewindThenRetry = 'REWIND_THEN_RETRY',
+  Compensate = 'COMPENSATE',
+  CompensateThenRetry = 'COMPENSATE_THEN_RETRY',
 }
 
 export enum WorkflowTypes {

@@ -322,7 +322,7 @@ const handleCompletedTask = async (task: ITask) => {
   }
 };
 
-const getRewindTasks = R.compose(
+const getCompenstateTasks = R.compose(
   R.map(
     (task: ITask): AllTaskType => {
       return {
@@ -375,7 +375,7 @@ const handleCompenstateWorkflow = (workflow: IWorkflow, tasksData: ITask[]) =>
     {
       name: workflow.workflowDefinition.name,
       rev: `${workflow.workflowDefinition.rev}_compensate`,
-      tasks: getRewindTasks(tasksData),
+      tasks: getCompenstateTasks(tasksData),
       failureStrategy: WorkfloFailureStrategies.Failed,
     },
     toObjectByKey(tasksData, 'taskReferenceName'),
@@ -391,7 +391,7 @@ const handleCompenstateThenRetryWorkflow = (
     {
       name: workflow.workflowDefinition.name,
       rev: `${workflow.workflowDefinition.rev}_compensate`,
-      tasks: getRewindTasks(tasksData),
+      tasks: getCompenstateTasks(tasksData),
       failureStrategy: WorkfloFailureStrategies.Failed,
     },
     toObjectByKey(tasksData, 'taskReferenceName'),
@@ -445,10 +445,10 @@ const handleFailedTask = async (task: ITask, isTimeout: boolean = false) => {
         case WorkfloFailureStrategies.Retry:
           await handleRetryWorkflow(workflow, tasksData);
           break;
-        case WorkfloFailureStrategies.Rewind:
+        case WorkfloFailureStrategies.Compensate:
           await handleCompenstateWorkflow(workflow, tasksData);
           break;
-        case WorkfloFailureStrategies.RewindThenRetry:
+        case WorkfloFailureStrategies.CompensateThenRetry:
           await handleCompenstateThenRetryWorkflow(workflow, tasksData);
           break;
         case WorkfloFailureStrategies.Failed:
