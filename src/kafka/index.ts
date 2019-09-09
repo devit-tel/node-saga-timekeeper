@@ -3,7 +3,7 @@ import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
 import { ITask } from '../task';
 import { IWorkflow } from '../workflow';
-import { ITaskUpdate } from '../state';
+import { ITaskUpdate, IWorkflowUpdate, ITransactionUpdate } from '../state';
 import { ITransaction } from '../transaction';
 
 export interface kafkaConsumerMessage {
@@ -18,7 +18,13 @@ export interface kafkaConsumerMessage {
 export interface IEvent {
   transactionId: string;
   type: 'TRANSACTION' | 'WORKFLOW' | 'TASK' | 'SYSTEM';
-  details?: ITransaction | IWorkflow | ITask | ITaskUpdate;
+  details?:
+    | ITransaction
+    | IWorkflow
+    | ITask
+    | ITransactionUpdate
+    | IWorkflowUpdate
+    | ITaskUpdate;
   timestamp: number;
   isError: boolean;
   error?: string;

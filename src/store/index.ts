@@ -153,6 +153,7 @@ export class TransactionInstanceStore {
         type: 'TRANSACTION',
         isError: true,
         timestamp: Date.now(),
+        details: transactionUpdate,
         error,
       });
       return undefined;
@@ -230,6 +231,7 @@ export class WorkflowInstanceStore {
         type: 'WORKFLOW',
         isError: true,
         error,
+        details: workflowUpdate,
         timestamp: Date.now(),
       });
       return undefined;
