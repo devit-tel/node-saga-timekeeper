@@ -405,9 +405,9 @@ const handleFailedWorkflow = (workflow: IWorkflow) =>
     status: TransactionStates.Failed,
   });
 
-const handleFailedTask = async (task: ITask) => {
+const handleFailedTask = async (task: ITask, isTimeout: boolean = false) => {
   // If got change to retry
-  if (task.retries > 0) {
+  if (task.retries > 0 && !isTimeout) {
     const { workflow, taskData, currentTaskPath } = await getTaskInfo(task);
     await taskInstanceStore.delete(task.taskId);
     // TODO Much delay before dispatch
@@ -478,6 +478,7 @@ const processTasksOfWorkflow = async (
           break;
         case TaskStates.Timeout:
           // Timeout task will make workflow timeout and manual fix
+          await handleFailedTask(task, true);
           break;
         default:
           break;
