@@ -95,9 +95,13 @@ export class TaskInstanceMongooseStore extends MongooseStore
         {
           output: taskUpdate.output,
           status: taskUpdate.status,
-          $push: {
-            logs: taskUpdate.logs,
-          },
+          ...(taskUpdate.logs
+            ? {
+                $push: {
+                  logs: taskUpdate.logs,
+                },
+              }
+            : {}),
           endTime:
             taskUpdate.status === TaskStates.Completed ? Date.now() : null,
         },
