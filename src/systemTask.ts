@@ -9,7 +9,6 @@ import {
   workflowDefinitionStore,
 } from './store';
 import { WorkflowTypes } from './constants/workflow';
-// TODO watch for sub-tasks are completed
 
 const processDecisionTask = async (systemTask: ITask) => {
   const workflow = await workflowInstanceStore.get(systemTask.workflowId);
@@ -42,7 +41,19 @@ const processSubWorkflowTask = async (systemTask: ITask) => {
   );
 
   if (!workflowDefinition) {
-    //TODO dispatch to state management or somthing
+    sendEvent({
+      type: 'TASK',
+      transactionId: systemTask.transactionId,
+      timestamp: Date.now(),
+      isError: true,
+      error: `Workflow: "${systemTask.workflow.name}":"${systemTask.workflow.rev}" is not exists`,
+    });
+    return taskInstanceStore.update({
+      transactionId: systemTask.transactionId,
+      taskId: systemTask.taskId,
+      status: TaskStates.Failed,
+      isSystem: true,
+    });
   }
 
   return workflowInstanceStore.create(

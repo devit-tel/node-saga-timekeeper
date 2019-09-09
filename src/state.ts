@@ -306,7 +306,9 @@ const handleCompletedTask = async (task: ITask) => {
         await handleCompletedWorkflow(workflow);
         break;
       case WorkflowTypes.SubWorkflow:
-        // Update it's parent task
+        await handleCompletedTask(
+          await taskInstanceStore.get(workflow.childOf),
+        );
         break;
       case WorkflowTypes.CompensateWorkflow:
         await handleCompletedCompensateWorkflow(workflow);
