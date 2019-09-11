@@ -9,7 +9,6 @@ import {
 import { TaskDefinition, ITaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 import { ITaskDefinitionStore } from '..';
-import * as config from '../../config';
 
 // This is wrong
 export class TaskDefinitionZookeeperStore extends ZookeeperStore
