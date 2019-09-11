@@ -500,7 +500,7 @@ const processTasksOfWorkflow = async (
 
 export const executor = async () => {
   try {
-    const tasksUpdate: ITaskUpdate[] = await poll(consumerClient, 300);
+    const tasksUpdate: ITaskUpdate[] = await poll(consumerClient, 200);
     const groupedTasks = R.toPairs(
       R.groupBy(R.path(['workflowId']), tasksUpdate),
     );
