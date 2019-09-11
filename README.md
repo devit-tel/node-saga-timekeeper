@@ -32,3 +32,4 @@ This is prototype of saga implementation, written in Node.
 ## Known issues
 
 - parallel tasks can be empty
+- Sub workflow won't get compensate

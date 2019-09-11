@@ -8,9 +8,12 @@ import {
 } from '.';
 import { TaskDefinition, ITaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
+import { ITaskDefinitionStore } from '..';
+import * as config from '../../config';
 
 // This is wrong
-export class TaskDefinitionZookeeperStore extends ZookeeperStore {
+export class TaskDefinitionZookeeperStore extends ZookeeperStore
+  implements ITaskDefinitionStore {
   constructor(
     root: string,
     connectionString: string,
@@ -32,9 +35,23 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore {
   create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
     return new Promise((resolve: Function, reject: Function) =>
       this.client.create(
-        taskDefinition.name,
+        `${this.root}/${taskDefinition.name}`,
         new Buffer(JSON.stringify(taskDefinition)),
         'PERSISTENT',
+        (error: Error) => {
+          if (error) return reject(error);
+          resolve(taskDefinition);
+        },
+      ),
+    );
+  }
+
+  update(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
+    return new Promise((resolve: Function, reject: Function) =>
+      this.client.setData(
+        `${this.root}/${taskDefinition.name}`,
+        new Buffer(JSON.stringify(taskDefinition)),
+        null,
         (error: Error) => {
           if (error) return reject(error);
           resolve(taskDefinition);

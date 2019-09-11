@@ -49,10 +49,9 @@ export class ZookeeperStore implements IStore {
   setValue(key: string, value: any = ''): Promise<any> | any {
     return new Promise((resolve: Function, reject: Function) => {
       // This can make sure it's never overwrite old data
-      this.client.mkdirp(
+      this.client.setData(
         `${this.root}/${key.replace(/\./, '/')}`,
         new Buffer(value),
-        null,
         null,
         (error: Error, path: string) => {
           if (error) return reject(error);

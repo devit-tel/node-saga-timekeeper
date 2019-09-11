@@ -17,7 +17,7 @@ export interface ITaskTask extends IBaseTask {
   type: TaskTypes.Task;
   retry: {
     limit: number;
-    delaySecond: number;
+    delay: number;
   };
 }
 
@@ -60,7 +60,7 @@ export interface IWorkflowDefinition {
   failureStrategy: FailureStrategies;
   retry?: {
     limit: number;
-    delaySecond: number;
+    delay: number;
   };
   recoveryWorkflow?: {
     name: string;
@@ -83,7 +83,7 @@ const isFailureStrategiesConfigValid = (
 ): boolean =>
   workflowDefinition.failureStrategy === FailureStrategies.Retry &&
   (!isNumber(R.path(['retry', 'limit'], workflowDefinition)) ||
-    !isNumber(R.path(['retry', 'delaySecond'], workflowDefinition)));
+    !isNumber(R.path(['retry', 'delay'], workflowDefinition)));
 
 const isEmptyTasks = R.compose(
   R.isEmpty,
@@ -239,7 +239,7 @@ export class WorkflowDefinition implements IWorkflowDefinition {
   failureStrategy: FailureStrategies;
   retry?: {
     limit: number;
-    delaySecond: number;
+    delay: number;
   };
   recoveryWorkflow?: {
     name: string;

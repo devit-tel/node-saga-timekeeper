@@ -36,9 +36,16 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
   create(
     workflowDefinition: IWorkflowDefinition,
   ): Promise<IWorkflowDefinition> {
-    return this.setValue(
-      `${workflowDefinition.name}/${workflowDefinition.rev}`,
-      JSON.stringify(workflowDefinition),
+    return new Promise((resolve: Function, reject: Function) =>
+      this.client.create(
+        `${this.root}/${workflowDefinition.name}/${workflowDefinition.rev}`,
+        new Buffer(JSON.stringify(workflowDefinition)),
+        'PERSISTENT',
+        (error: Error) => {
+          if (error) return reject(error);
+          resolve(workflowDefinition);
+        },
+      ),
     );
   }
 

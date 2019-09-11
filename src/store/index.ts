@@ -24,6 +24,7 @@ export interface IWorkflowDefinitionStore extends IStore {
 export interface ITaskDefinitionStore extends IStore {
   get(name: string): Promise<ITaskDefinition>;
   create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition>;
+  update(taskDefinition: ITaskDefinition): Promise<ITaskDefinition>;
   list(): Promise<ITaskDefinition[]>;
 }
 
