@@ -5,9 +5,10 @@ import {
 import { workflowDefinitionStore } from '../../../store';
 
 export const createWorkflowDefinition = (
-  workflowDefinition: WorkflowDefinition,
+  workflowDefinitionData: WorkflowDefinition,
 ): Promise<any> => {
-  return workflowDefinitionStore.create(workflowDefinition);
+  const workflowDefinition = new WorkflowDefinition(workflowDefinitionData);
+  return workflowDefinitionStore.create(workflowDefinition.toObject());
 };
 
 export const getWorkflowDefinition = async (

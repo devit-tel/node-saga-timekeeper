@@ -6,8 +6,15 @@ export const createTaskDefinition = async (
   taskDefinitionData: ITaskDefinition,
 ): Promise<any> => {
   const taskDefinition = new TaskDefinition(taskDefinitionData);
-  await taskDefinitionStore.create(taskDefinition);
+  await taskDefinitionStore.create(taskDefinition.toObject());
   await createTopic(`TASK_${taskDefinition.name}`);
+  return taskDefinition.toObject();
+};
+export const updateTaskDefinition = async (
+  taskDefinitionData: ITaskDefinition,
+): Promise<any> => {
+  const taskDefinition = new TaskDefinition(taskDefinitionData);
+  await taskDefinitionStore.update(taskDefinition.toObject());
 };
 
 export const getTaskDefinition = (

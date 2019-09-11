@@ -46,6 +46,17 @@ export class ZookeeperStore implements IStore {
     );
   }
 
+  isExists(path: string): Promise<boolean> {
+    return new Promise((resolve: Function, reject: Function) => {
+      this.client.exists(path, (error: Error, stat: any) => {
+        if (error) return reject(error);
+
+        if (stat) return resolve(true);
+        resolve(false);
+      });
+    });
+  }
+
   setValue(key: string, value: any = ''): Promise<any> | any {
     return new Promise((resolve: Function, reject: Function) => {
       // This can make sure it's never overwrite old data

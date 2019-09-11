@@ -91,6 +91,10 @@ export class TaskDefinitionStore {
   create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
     return this.client.create(taskDefinition);
   }
+
+  update(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
+    return this.client.update(taskDefinition);
+  }
 }
 
 export class TransactionInstanceStore {

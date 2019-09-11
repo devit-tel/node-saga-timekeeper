@@ -9,6 +9,7 @@ import {
 import { TaskDefinition, ITaskDefinition } from '../../taskDefinition';
 import { jsonTryParse } from '../../utils/common';
 import { ITaskDefinitionStore } from '..';
+import { BadRequest } from '../../errors';
 
 // This is wrong
 export class TaskDefinitionZookeeperStore extends ZookeeperStore
@@ -31,7 +32,16 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore
     return this.localStore[name];
   }
 
-  create(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
+  create = async (
+    taskDefinition: ITaskDefinition,
+  ): Promise<ITaskDefinition> => {
+    const isWorkflowExists = await this.isExists(
+      `${this.root}/${taskDefinition.name}`,
+    );
+
+    if (isWorkflowExists)
+      throw new BadRequest(`Workflow: ${taskDefinition.name} already exists`);
+
     return new Promise((resolve: Function, reject: Function) =>
       this.client.create(
         `${this.root}/${taskDefinition.name}`,
@@ -43,14 +53,14 @@ export class TaskDefinitionZookeeperStore extends ZookeeperStore
         },
       ),
     );
-  }
+  };
 
   update(taskDefinition: ITaskDefinition): Promise<ITaskDefinition> {
     return new Promise((resolve: Function, reject: Function) =>
       this.client.setData(
         `${this.root}/${taskDefinition.name}`,
         new Buffer(JSON.stringify(taskDefinition)),
-        null,
+        -1,
         (error: Error) => {
           if (error) return reject(error);
           resolve(taskDefinition);

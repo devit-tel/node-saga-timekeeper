@@ -12,6 +12,7 @@ import {
   IWorkflowDefinition,
 } from '../../workflowDefinition';
 import { jsonTryParse } from '../../utils/common';
+import { BadRequest } from '../../errors';
 
 export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
   implements IWorkflowDefinitionStore {
@@ -33,13 +34,22 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
     return R.path([name, rev], this.localStore);
   }
 
-  create(
+  create = async (
     workflowDefinition: IWorkflowDefinition,
-  ): Promise<IWorkflowDefinition> {
+  ): Promise<IWorkflowDefinition> => {
+    const isWorkflowExists = await this.isExists(
+      `${this.root}/${workflowDefinition.name}`,
+    );
+    if (isWorkflowExists)
+      throw new BadRequest(
+        `Workflow: ${workflowDefinition.name} already exists`,
+      );
+
     return new Promise((resolve: Function, reject: Function) =>
-      this.client.create(
+      this.client.mkdirp(
         `${this.root}/${workflowDefinition.name}/${workflowDefinition.rev}`,
         new Buffer(JSON.stringify(workflowDefinition)),
+        null,
         'PERSISTENT',
         (error: Error) => {
           if (error) return reject(error);
@@ -47,7 +57,7 @@ export class WorkflowDefinitionZookeeperStore extends ZookeeperStore
         },
       ),
     );
-  }
+  };
 
   list(): Promise<IWorkflowDefinition[]> {
     return Promise.resolve(super.listValue(undefined, 0));
