@@ -14,12 +14,6 @@ const pickAndReplaceFromENV = (template: string) =>
     return result;
   }, {});
 
-export const server = {
-  enabled: process.env['server.enabled'] === 'true',
-  port: +process.env['server.port'] || 8080,
-  hostname: process.env['server.hostname'] || '127.0.0.1',
-};
-
 export const kafkaTopicName = {
   task: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
     kafkaConstant.TASK_TOPIC_NAME
@@ -35,26 +29,12 @@ export const kafkaTopicName = {
   }`,
 };
 
-export const kafkaAdmin = {
-  'client.id': 'saga-pm',
-  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
-  ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
-};
-
-export const kafkaConsumer = {
+export const kafkaConsumerTimer = {
   'client.id': 'saga-pm',
   'enable.auto.commit': 'false',
-  'group.id': 'saga-pm-consumer',
+  'group.id': 'saga-pm-consumer-timer',
   ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
-  ...pickAndReplaceFromENV('^consumer\\.kafka\\.conf\\.'),
-};
-
-export const kafkaSystemConsumer = {
-  'client.id': 'saga-pm',
-  'enable.auto.commit': 'false',
-  'group.id': 'saga-pm-system-consumer',
-  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
-  ...pickAndReplaceFromENV('^system-consumer\\.kafka\\.conf\\.'),
+  ...pickAndReplaceFromENV('^consumer-timer\\.kafka\\.conf\\.'),
 };
 
 export const kafkaProducer = {
@@ -73,62 +53,10 @@ export const kafkaProducer = {
   ...pickAndReplaceFromENV('^producer\\.kafka\\.conf\\.'),
 };
 
-export const taskDefinitionStore = {
-  type: StoreType.ZooKeeper,
-  zookeeperConfig: {
-    root: '/saga-pm/task-definition',
-    connectionString: process.env['task-definition.zookeeper.connections'],
-    options: {
-      sessionTimeout: 30000,
-      spinDelay: 1000,
-      retries: 0,
-    },
-  },
-};
-
-export const workflowDefinitionStore = {
-  type: StoreType.ZooKeeper,
-  zookeeperConfig: {
-    root: '/saga-pm/workflow-definition',
-    connectionString: process.env['workflow-definition.zookeeper.connections'],
-    options: {
-      sessionTimeout: 30000,
-      spinDelay: 1000,
-      retries: 0,
-    },
-  },
-};
-
-export const taskInstanceStore = {
+export const timerInstanceStore = {
   type: StoreType.MongoDB,
   mongoDBConfig: {
-    uri: process.env['task-instance.mongodb.uri'],
-    options: {
-      useNewUrlParser: true,
-      reconnectTries: Number.MAX_SAFE_INTEGER,
-      poolSize: 100,
-      useFindAndModify: false,
-    },
-  },
-};
-
-export const workflowInstanceStore = {
-  type: StoreType.MongoDB,
-  mongoDBConfig: {
-    uri: process.env['workflow-instance.mongodb.uri'],
-    options: {
-      useNewUrlParser: true,
-      reconnectTries: Number.MAX_SAFE_INTEGER,
-      poolSize: 100,
-      useFindAndModify: false,
-    },
-  },
-};
-
-export const transactionInstanceStore = {
-  type: StoreType.MongoDB,
-  mongoDBConfig: {
-    uri: process.env['transaction-instance.mongodb.uri'],
+    uri: process.env['timer-instance.mongodb.uri'],
     options: {
       useNewUrlParser: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,

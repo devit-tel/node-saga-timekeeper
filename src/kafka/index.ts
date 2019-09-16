@@ -1,10 +1,8 @@
-import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
+import { KafkaConsumer, Producer } from 'node-rdkafka';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
+import { TaskStates } from '../constants/task';
 import { ITask } from '../task';
-import { IWorkflow } from '../workflow';
-import { ITaskUpdate, IWorkflowUpdate, ITransactionUpdate } from '../state';
-import { ITransaction } from '../transaction';
 
 export interface kafkaConsumerMessage {
   value: Buffer;
@@ -18,62 +16,39 @@ export interface kafkaConsumerMessage {
 export interface IEvent {
   transactionId: string;
   type: 'TRANSACTION' | 'WORKFLOW' | 'TASK' | 'SYSTEM';
-  details?:
-    | ITransaction
-    | IWorkflow
-    | ITask
-    | ITransactionUpdate
-    | IWorkflowUpdate
-    | ITaskUpdate;
+  details?: ITask;
   timestamp: number;
   isError: boolean;
   error?: string;
 }
 
-export const adminClient = AdminClient.create(config.kafkaAdmin);
-export const consumerClient = new KafkaConsumer(config.kafkaConsumer, {});
-export const systemConsumerClient = new KafkaConsumer(config.kafkaConsumer, {});
+export interface ITaskUpdate {
+  transactionId: string;
+  taskId: string;
+  status: TaskStates;
+  output?: any;
+  logs?: any[] | any;
+  isSystem: boolean;
+}
+
+export const consumerTimerClient = new KafkaConsumer(
+  config.kafkaConsumerTimer,
+  {},
+);
+
 export const producerClient = new Producer(config.kafkaProducer, {});
 
-consumerClient.setDefaultConsumeTimeout(10);
-consumerClient.connect();
-consumerClient.on('ready', () => {
+consumerTimerClient.setDefaultConsumeTimeout(1);
+consumerTimerClient.connect();
+consumerTimerClient.on('ready', () => {
   console.log('Consumer kafka are ready');
-  consumerClient.subscribe([config.kafkaTopicName.event]);
-});
-
-consumerClient.setDefaultConsumeTimeout(10);
-systemConsumerClient.connect();
-systemConsumerClient.on('ready', () => {
-  console.log('System consumer kafka are ready');
-  systemConsumerClient.subscribe([config.kafkaTopicName.systemTask]);
+  consumerTimerClient.subscribe([config.kafkaTopicName.store]);
 });
 
 producerClient.connect();
 producerClient.on('ready', () => {
   console.log('Producer kafka are ready');
 });
-
-export const createTopic = (topicName: string): Promise<any> =>
-  new Promise((resolve: Function, reject: Function) => {
-    adminClient.createTopic(
-      {
-        topic: topicName,
-        num_partitions: 10,
-        replication_factor: 1,
-        config: {
-          'cleanup.policy': 'compact',
-          'compression.type': 'snappy',
-          'delete.retention.ms': '86400000',
-          'file.delete.delay.ms': '60000',
-        },
-      },
-      (error: Error, data: any) => {
-        if (error) return reject(error);
-        resolve(data);
-      },
-    );
-  });
 
 export const poll = (
   consumer: KafkaConsumer,
@@ -93,35 +68,11 @@ export const poll = (
     );
   });
 
-export const dispatch = (
-  task: ITask,
-  transactionId: string,
-  isSystemTask: boolean = false,
-) =>
+export const updateTask = (taskUpdate: ITaskUpdate) =>
   producerClient.produce(
-    isSystemTask
-      ? config.kafkaTopicName.systemTask
-      : `${config.kafkaTopicName.task}.${task.taskName}`,
+    config.kafkaTopicName.task,
     null,
-    new Buffer(JSON.stringify(task)),
-    transactionId,
+    new Buffer(JSON.stringify(taskUpdate)),
+    taskUpdate.transactionId,
     Date.now(),
   );
-
-// Use to send Retry, Failed, Reject event, Completed workflow, Dispatch task
-export const sendEvent = (event: IEvent) =>
-  producerClient.produce(
-    config.kafkaTopicName.store,
-    null,
-    new Buffer(JSON.stringify(event)),
-    event.transactionId,
-    Date.now(),
-  );
-
-export const flush = (timeout: number = 1000) =>
-  new Promise((resolve: Function, reject: Function) => {
-    producerClient.flush(timeout, (error: Error) => {
-      if (error) return reject(error);
-      resolve();
-    });
-  });
