@@ -23,7 +23,6 @@ const handleScheduleTask = async (tasks: ITask[]) => {
   const scheduleTasks = tasks.filter(
     (task: ITask) => task.status === TaskStates.Scheduled,
   );
-
   await Promise.all(
     scheduleTasks.map(async (task: ITask) => {
       if (

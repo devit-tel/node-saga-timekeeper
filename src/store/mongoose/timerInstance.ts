@@ -5,8 +5,8 @@ import { ITimerUpdate, ITimerData } from '../../timer';
 
 const taskSchema = new mongoose.Schema(
   {
-    ackTimeoutId: Boolean,
-    timeoutId: Boolean,
+    ackTimeout: Boolean,
+    timeout: Boolean,
     task: {
       taskName: String,
       taskReferenceName: String,
@@ -89,7 +89,7 @@ export class TimerInstanceMongooseStore extends MongooseStore
 
   delete(taskId: string): Promise<any> {
     return this.model
-      .deleteOne({ _id: taskId })
+      .deleteOne({ taskId })
       .lean({ virtuals: true })
       .exec();
   }

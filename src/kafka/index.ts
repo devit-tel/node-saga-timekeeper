@@ -70,7 +70,7 @@ export const poll = (
 
 export const updateTask = (taskUpdate: ITaskUpdate) =>
   producerClient.produce(
-    config.kafkaTopicName.task,
+    config.kafkaTopicName.event,
     null,
     new Buffer(JSON.stringify(taskUpdate)),
     taskUpdate.transactionId,
