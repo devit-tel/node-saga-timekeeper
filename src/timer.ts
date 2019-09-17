@@ -25,9 +25,10 @@ const handleScheduleTask = async (tasks: ITask[]) => {
   );
   await Promise.all(
     scheduleTasks.map(async (task: ITask) => {
+      const startTime = +new Date(task.startTime);
       if (
-        Date.now() - (task.ackTimeout + task.startTime) < 0 ||
-        Date.now() - (task.timeout + task.startTime) < 0
+        task.ackTimeout + startTime - Date.now() < 0 ||
+        task.timeout + startTime - Date.now() < 0
       ) {
         updateTask({
           taskId: task.taskId,
@@ -41,7 +42,6 @@ const handleScheduleTask = async (tasks: ITask[]) => {
           timeout: false,
           ackTimeout: false,
         });
-
         const ackTimeout = setTimeout(() => {
           clearTimeout(timerPartitions['0'][task.taskId].timeout);
           updateTask({
@@ -51,7 +51,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
             status: TaskStates.Timeout,
           });
           timerInstanceStore.delete(task.taskId);
-        }, Date.now() - (task.ackTimeout + task.startTime));
+        }, task.ackTimeout + startTime - Date.now());
 
         const timeout = setTimeout(() => {
           updateTask({
@@ -61,7 +61,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
             status: TaskStates.Timeout,
           });
           timerInstanceStore.delete(task.taskId);
-        }, Date.now() - (task.timeout + task.startTime));
+        }, task.timeout + startTime - Date.now());
 
         timerPartitions['0'][task.taskId] = {
           ackTimeout,
