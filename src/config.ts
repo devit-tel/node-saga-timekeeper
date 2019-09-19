@@ -30,7 +30,6 @@ export const kafkaTopicName = {
 };
 
 export const kafkaConsumerTimer = {
-  'client.id': 'saga-pm',
   'enable.auto.commit': 'false',
   'group.id': 'saga-pm-consumer-timer',
   ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
@@ -38,7 +37,6 @@ export const kafkaConsumerTimer = {
 };
 
 export const kafkaProducer = {
-  'client.id': 'saga-pm',
   'compression.type': 'snappy',
   'retry.backoff.ms': '100',
   'enable.idempotence': 'true',

@@ -7,6 +7,7 @@ const taskSchema = new mongoose.Schema(
   {
     ackTimeout: Boolean,
     timeout: Boolean,
+    retry: Boolean,
     task: {
       taskName: String,
       taskReferenceName: String,

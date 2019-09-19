@@ -76,3 +76,12 @@ export const updateTask = (taskUpdate: ITaskUpdate) =>
     taskUpdate.transactionId,
     Date.now(),
   );
+
+export const dispatch = (task: ITask) =>
+  producerClient.produce(
+    config.kafkaTopicName.systemTask,
+    null,
+    new Buffer(JSON.stringify(task)),
+    task.transactionId,
+    Date.now(),
+  );
