@@ -14,19 +14,19 @@ const pickAndReplaceFromENV = (template: string) =>
     return result;
   }, {});
 
+export const saga = {
+  namespace: process.env['saga.namespace'] || 'node',
+};
+
 export const kafkaTopicName = {
-  task: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
-    kafkaConstant.TASK_TOPIC_NAME
-  }`,
-  systemTask: `${process.env['kafka.prefix'] || 'node'}.${
-    kafkaConstant.PREFIX
-  }.${kafkaConstant.SYSTEM_TASK_TOPIC_NAME}`,
-  store: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
-    kafkaConstant.STORE_TOPIC_NAME
-  }`,
-  event: `${process.env['kafka.prefix'] || 'node'}.${kafkaConstant.PREFIX}.${
-    kafkaConstant.EVENT_TOPIC
-  }`,
+  // Publish to specified task
+  task: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.TASK_TOPIC_NAME}`,
+  // Publish to system task
+  systemTask: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.SYSTEM_TASK_TOPIC_NAME}`,
+  // Publish to store event
+  store: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.STORE_TOPIC_NAME}`,
+  // Subscriptions to update event
+  event: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.EVENT_TOPIC}`,
 };
 
 export const kafkaConsumerTimer = {
@@ -56,7 +56,9 @@ export const timerInstanceStore = {
   mongoDBConfig: {
     uri: process.env['timer-instance.mongodb.uri'],
     options: {
+      dbName: `saga-pm-${saga.namespace}`,
       useNewUrlParser: true,
+      useCreateIndex: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,
       poolSize: 100,
       useFindAndModify: false,
