@@ -32,11 +32,14 @@ export interface ITaskUpdate {
 }
 
 export const consumerTimerClient = new KafkaConsumer(
-  config.kafkaConsumerTimer,
-  {},
+  config.kafkaTaskWatcherConfig.config,
+  config.kafkaTaskWatcherConfig.topic,
 );
 
-export const producerClient = new Producer(config.kafkaProducer, {});
+export const producerClient = new Producer(
+  config.kafkaProducerConfig.config,
+  config.kafkaProducerConfig.topic,
+);
 
 consumerTimerClient.setDefaultConsumeTimeout(1);
 consumerTimerClient.connect();

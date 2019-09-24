@@ -44,9 +44,7 @@
     "mongoose": "^5.6.11",
     "mongoose-lean-virtuals": "^0.4.3",
     "node-rdkafka": "^2.7.1-2",
-    "node-zookeeper-client": "^1.0.0",
     "ramda": "^0.26.1",
-    "tslib": "~1.10.0",
-    "uuid": "^3.3.2"
+    "tslib": "~1.10.0"
   }
 }

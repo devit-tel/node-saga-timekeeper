@@ -1,5 +1,4 @@
 import * as dotenv from 'dotenv';
-import { StoreType } from './constants/store';
 import * as kafkaConstant from './constants/kafka';
 
 dotenv.config();
@@ -29,30 +28,40 @@ export const kafkaTopicName = {
   event: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.EVENT_TOPIC}`,
 };
 
-export const kafkaConsumerTimer = {
-  'enable.auto.commit': 'false',
-  'group.id': 'saga-pm-consumer-timer',
-  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
-  ...pickAndReplaceFromENV('^consumer-timer\\.kafka\\.conf\\.'),
+export const kafkaTaskWatcherConfig = {
+  config: {
+    'enable.auto.commit': 'false',
+    'group.id': `saga-${saga.namespace}-task-watcher`,
+    ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
+    ...pickAndReplaceFromENV('^task-watcher\\.kafka\\.conf\\.'),
+  },
+  topic: {
+    'auto.offset.reset': 'earliest',
+    ...pickAndReplaceFromENV('^kafka\\.topic-conf\\.'),
+    ...pickAndReplaceFromENV('^task-watcher\\.kafka\\.topic-conf\\.'),
+  },
 };
 
-export const kafkaProducer = {
-  'compression.type': 'snappy',
-  'retry.backoff.ms': '100',
-  'enable.idempotence': 'true',
-  'message.send.max.retries': '100000',
-  'socket.keepalive.enable': 'true',
-  'queue.buffering.max.messages': '10000',
-  'queue.buffering.max.ms': '1',
-  'batch.num.messages': '100',
-  'delivery.report.only.error': 'true',
-  dr_cb: 'true',
-  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
-  ...pickAndReplaceFromENV('^producer\\.kafka\\.conf\\.'),
+export const kafkaProducerConfig = {
+  config: {
+    'compression.type': 'snappy',
+    'enable.idempotence': 'true',
+    'message.send.max.retries': '100000',
+    'socket.keepalive.enable': 'true',
+    'queue.buffering.max.messages': '10000',
+    'queue.buffering.max.ms': '1',
+    'batch.num.messages': '100',
+    ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
+    ...pickAndReplaceFromENV('^producer\\.kafka\\.conf\\.'),
+  },
+  topic: {
+    ...pickAndReplaceFromENV('^kafka\\.topic-confg\\.'),
+    ...pickAndReplaceFromENV('^producer\\.kafka\\.topic-confg\\.'),
+  },
 };
 
-export const timerInstanceStore = {
-  type: StoreType.MongoDB,
+export const timerInstanceStoreConfig = {
+  type: process.env['timer-instance.type'],
   mongoDBConfig: {
     uri: process.env['timer-instance.mongodb.uri'],
     options: {
