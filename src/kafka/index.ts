@@ -75,7 +75,7 @@ export const updateTask = (taskUpdate: ITaskUpdate) =>
   producerClient.produce(
     config.kafkaTopicName.event,
     null,
-    new Buffer(JSON.stringify(taskUpdate)),
+    Buffer.from(JSON.stringify(taskUpdate)),
     taskUpdate.transactionId,
     Date.now(),
   );
@@ -84,7 +84,7 @@ export const dispatch = (task: ITask) =>
   producerClient.produce(
     config.kafkaTopicName.systemTask,
     null,
-    new Buffer(JSON.stringify(task)),
+    Buffer.from(JSON.stringify(task)),
     task.transactionId,
     Date.now(),
   );
