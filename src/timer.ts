@@ -27,6 +27,25 @@ const timerPartitions = {
   '0': {},
 };
 
+const clearTimer = (taskId: string) => {
+  const ackTimeout: NodeJS.Timeout = R.path(
+    ['0', taskId, 'ackTimeout'],
+    timerPartitions,
+  );
+  const timeout: NodeJS.Timeout = R.path(
+    ['0', taskId, 'timeout'],
+    timerPartitions,
+  );
+  if (ackTimeout) {
+    clearTimeout(ackTimeout);
+    delete timerPartitions['0'][taskId]['ackTimeout'];
+  }
+  if (timeout) {
+    clearTimeout(timeout);
+    delete timerPartitions['0'][taskId]['timeout'];
+  }
+};
+
 const handleScheduleTask = async (tasks: ITask[]) => {
   const scheduleTasks = tasks.filter(
     (task: ITask) => task.status === TaskStates.Scheduled,
@@ -34,10 +53,11 @@ const handleScheduleTask = async (tasks: ITask[]) => {
   await Promise.all(
     scheduleTasks.map(async (task: ITask) => {
       if (
-        task.ackTimeout + task.startTime - Date.now() < 0 ||
-        task.timeout + task.startTime - Date.now() < 0
+        (task.ackTimeout > 0 &&
+          task.ackTimeout + task.startTime - Date.now() < 0) ||
+        (task.timeout > 0 && task.timeout + task.startTime - Date.now() < 0)
       ) {
-        console.log('send first timeout');
+        console.log('send timeout delay consume');
         updateTask({
           taskId: task.taskId,
           transactionId: task.transactionId,
@@ -56,7 +76,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
         if (task.ackTimeout > 0) {
           timerPartitions['0'][task.taskId].ackTimeout = setTimeout(() => {
             console.log('send ack timeout');
-            clearTimeout(timerPartitions['0'][task.taskId].timeout);
+            clearTimer(task.taskId);
             updateTask({
               taskId: task.taskId,
               transactionId: task.transactionId,
@@ -70,6 +90,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
         if (task.timeout > 0) {
           timerPartitions['0'][task.taskId].timeout = setTimeout(() => {
             console.log('send timeout');
+            clearTimer(task.taskId);
             updateTask({
               taskId: task.taskId,
               transactionId: task.transactionId,
@@ -93,9 +114,7 @@ const handleAckTask = async (tasks: ITask[]) => {
     inprogressTasks.map((task: ITask) => {
       try {
         if (R.path(['0', task.taskId, 'ackTimeout'], timerPartitions)) {
-          console.log('cancle ack timeout');
-          clearTimeout(timerPartitions['0'][task.taskId].ackTimeout);
-          delete timerPartitions['0'][task.taskId].ackTimeout;
+          clearTimer(task.taskId);
           if (task.timeout > 0) {
             return timerInstanceStore.update({
               taskId: task.taskId,
@@ -121,11 +140,7 @@ const handleFinishedTask = async (tasks: ITask[]) => {
   return Promise.all(
     finishedTasks.map((task: ITask) => {
       try {
-        console.log('cancle ackTimeout/timeout');
-        clearTimeout(timerPartitions['0'][task.taskId].ackTimeout);
-        clearTimeout(timerPartitions['0'][task.taskId].timeout);
-        delete timerPartitions['0'][task.taskId].ackTimeout;
-        delete timerPartitions['0'][task.taskId].timeout;
+        clearTimer(task.taskId);
         return timerInstanceStore.delete(task.taskId);
       } catch (error) {
         console.log(error);
