@@ -44,6 +44,7 @@ const clearTimer = (taskId: string) => {
     clearTimeout(timeout);
     delete timerPartitions['0'][taskId]['timeout'];
   }
+  return timerInstanceStore.delete(taskId);
 };
 
 const handleScheduleTask = async (tasks: ITask[]) => {
@@ -83,7 +84,6 @@ const handleScheduleTask = async (tasks: ITask[]) => {
               isSystem: true,
               status: TaskStates.Timeout,
             });
-            timerInstanceStore.delete(task.taskId);
           }, task.ackTimeout + task.startTime - Date.now());
         }
 
@@ -97,7 +97,6 @@ const handleScheduleTask = async (tasks: ITask[]) => {
               isSystem: true,
               status: TaskStates.Timeout,
             });
-            timerInstanceStore.delete(task.taskId);
           }, task.timeout + task.startTime - Date.now());
         }
       }
@@ -114,14 +113,13 @@ const handleAckTask = async (tasks: ITask[]) => {
     inprogressTasks.map((task: ITask) => {
       try {
         if (R.path(['0', task.taskId, 'ackTimeout'], timerPartitions)) {
-          clearTimer(task.taskId);
           if (task.timeout > 0) {
             return timerInstanceStore.update({
               taskId: task.taskId,
               ackTimeout: true,
             });
           }
-          return timerInstanceStore.delete(task.taskId);
+          return clearTimer(task.taskId);
         }
         return null;
       } catch (error) {
@@ -139,13 +137,7 @@ const handleFinishedTask = async (tasks: ITask[]) => {
 
   return Promise.all(
     finishedTasks.map((task: ITask) => {
-      try {
-        clearTimer(task.taskId);
-        return timerInstanceStore.delete(task.taskId);
-      } catch (error) {
-        console.log(error);
-        return null;
-      }
+      return clearTimer(task.taskId);
     }),
   );
 };
