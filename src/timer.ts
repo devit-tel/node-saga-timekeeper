@@ -6,7 +6,7 @@ import {
   IEvent,
   dispatch,
 } from './kafka';
-import { timerInstanceStore } from './store';
+// import { timerInstanceStore } from './store';
 import { TaskStates } from './constants/task';
 import * as R from 'ramda';
 
@@ -44,7 +44,7 @@ const clearTimer = (taskId: string) => {
     clearTimeout(timeout);
     delete timerPartitions['0'][taskId]['timeout'];
   }
-  return timerInstanceStore.delete(taskId);
+  // return timerInstanceStore.delete(taskId);
 };
 
 const handleScheduleTask = async (tasks: ITask[]) => {
@@ -66,12 +66,12 @@ const handleScheduleTask = async (tasks: ITask[]) => {
           status: TaskStates.Timeout,
         });
       } else if (task.ackTimeout > 0 || task.timeout > 0) {
-        await timerInstanceStore.create({
-          task,
-          timeout: task.timeout > 0,
-          ackTimeout: task.ackTimeout > 0,
-          delay: false,
-        });
+        // await timerInstanceStore.create({
+        //   task,
+        //   timeout: task.timeout > 0,
+        //   ackTimeout: task.ackTimeout > 0,
+        //   delay: false,
+        // });
         timerPartitions['0'][task.taskId] = {};
 
         if (task.ackTimeout > 0) {
@@ -114,10 +114,11 @@ const handleAckTask = async (tasks: ITask[]) => {
       try {
         if (R.path(['0', task.taskId, 'ackTimeout'], timerPartitions)) {
           if (task.timeout > 0) {
-            return timerInstanceStore.update({
-              taskId: task.taskId,
-              ackTimeout: true,
-            });
+            return;
+            // return timerInstanceStore.update({
+            //   taskId: task.taskId,
+            //   ackTimeout: true,
+            // });
           }
           return clearTimer(task.taskId);
         }
@@ -149,12 +150,12 @@ const recoveryTasks = async (tasks: ITask[]) => {
   return Promise.all(
     failedTasks.map(async (task: ITask) => {
       try {
-        await timerInstanceStore.create({
-          task,
-          timeout: task.timeout > 0,
-          ackTimeout: task.ackTimeout > 0,
-          delay: false,
-        });
+        // await timerInstanceStore.create({
+        //   task,
+        //   timeout: task.timeout > 0,
+        //   ackTimeout: task.ackTimeout > 0,
+        //   delay: false,
+        // });
         timerPartitions['0'][task.taskId].delay = setTimeout(() => {
           console.log('dispatch delay task');
           dispatch(task);
