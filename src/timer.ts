@@ -72,7 +72,8 @@ const handleScheduleTask = async (tasks: ITask[]) => {
         //   ackTimeout: task.ackTimeout > 0,
         //   delay: false,
         // });
-        timerPartitions['0'][task.taskId] = {};
+        if (!timerPartitions['0'][task.taskId])
+          timerPartitions['0'][task.taskId] = {};
 
         if (task.ackTimeout > 0) {
           timerPartitions['0'][task.taskId].ackTimeout = setTimeout(() => {
@@ -150,6 +151,8 @@ const recoveryTasks = async (tasks: ITask[]) => {
   return Promise.all(
     failedTasks.map(async (task: ITask) => {
       try {
+        if (!timerPartitions['0'][task.taskId])
+          timerPartitions['0'][task.taskId] = {};
         // await timerInstanceStore.create({
         //   task,
         //   timeout: task.timeout > 0,
@@ -159,6 +162,14 @@ const recoveryTasks = async (tasks: ITask[]) => {
         timerPartitions['0'][task.taskId].delay = setTimeout(() => {
           console.log('dispatch delay task');
           dispatch(task);
+          if (
+            !timerPartitions['0'][task.taskId].ackTimeout &&
+            !timerPartitions['0'][task.taskId].timeout
+          ) {
+            delete timerPartitions['0'][task.taskId];
+          } else {
+            delete timerPartitions['0'][task.taskId].delay;
+          }
         }, task.retryDelay + task.endTime - Date.now());
       } catch (error) {
         console.log(error);
