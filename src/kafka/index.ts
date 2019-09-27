@@ -49,12 +49,9 @@ consumerTimerClient.on('ready', () => {
 });
 
 producerClient.connect();
+producerClient.setPollInterval(100);
 producerClient.on('ready', () => {
   console.log('Producer kafka are ready');
-
-  setInterval(() => {
-    producerClient.poll();
-  }, 100);
 });
 
 export const poll = (
