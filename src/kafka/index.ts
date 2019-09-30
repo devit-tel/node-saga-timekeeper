@@ -41,7 +41,7 @@ export const producerClient = new Producer(
   config.kafkaProducerConfig.topic,
 );
 
-consumerTimerClient.setDefaultConsumeTimeout(1);
+consumerTimerClient.setDefaultConsumeTimeout(5);
 consumerTimerClient.connect();
 consumerTimerClient.on('ready', () => {
   console.log('Consumer kafka are ready');
