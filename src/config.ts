@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-import * as kafkaConstant from './constants/kafka';
+import { Kafka } from '@melonade/melonade-declaration';
 
 dotenv.config();
 const pickAndReplaceFromENV = (template: string) =>
@@ -13,25 +13,27 @@ const pickAndReplaceFromENV = (template: string) =>
     return result;
   }, {});
 
-export const saga = {
-  namespace: process.env['saga.namespace'] || 'node',
+export const melonade = {
+  namespace: process.env['melonade.namespace'] || 'node',
 };
 
 export const kafkaTopicName = {
   // Publish to specified task
-  task: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.TASK_TOPIC_NAME}`,
+  task: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.task}`,
   // Publish to system task
-  systemTask: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.SYSTEM_TASK_TOPIC_NAME}`,
+  systemTask: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.systemTask}`,
   // Publish to store event
-  store: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.STORE_TOPIC_NAME}`,
+  store: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.store}`,
   // Subscriptions to update event
-  event: `${saga.namespace}.${kafkaConstant.PREFIX}.${kafkaConstant.EVENT_TOPIC}`,
+  event: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.event}`,
+  // Subscriptions to command
+  command: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.command}`,
 };
 
 export const kafkaTaskWatcherConfig = {
   config: {
     'enable.auto.commit': 'false',
-    'group.id': `saga-${saga.namespace}-task-watcher`,
+    'group.id': `melonade-${melonade.namespace}-task-watcher`,
     ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
     ...pickAndReplaceFromENV('^task-watcher\\.kafka\\.conf\\.'),
   },
@@ -65,7 +67,7 @@ export const timerInstanceStoreConfig = {
   mongoDBConfig: {
     uri: process.env['timer-instance.mongodb.uri'],
     options: {
-      dbName: `saga-pm-${saga.namespace}`,
+      dbName: `melonade-${melonade.namespace}`,
       useNewUrlParser: true,
       useCreateIndex: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,

@@ -1,7 +1,7 @@
 import * as config from './config';
 import * as store from './store';
 import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
-import { StoreType } from './constants/store';
+import { StoreType } from './store';
 import './kafka';
 import { executor as timerExecutor } from './timer';
 

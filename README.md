@@ -1,4 +1,4 @@
-# node-saga-pm
+# melonade-time-keeper
 
 This is prototype of saga implementation, written in Node.
 

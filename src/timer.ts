@@ -1,20 +1,13 @@
-import { ITask } from './task';
-import {
-  poll,
-  consumerTimerClient,
-  updateTask,
-  IEvent,
-  dispatch,
-} from './kafka';
+import { Task, Event, State } from '@melonade/melonade-declaration';
+import { poll, consumerTimerClient, updateTask, dispatch } from './kafka';
 // import { timerInstanceStore } from './store';
-import { TaskStates } from './constants/task';
 import * as R from 'ramda';
 
 export interface ITimerData {
   ackTimeout: boolean;
   timeout: boolean;
   delay: boolean;
-  task: ITask;
+  task: Task.ITask;
 }
 
 export interface ITimerUpdate {
@@ -47,12 +40,12 @@ const clearTimer = (taskId: string) => {
   // return timerInstanceStore.delete(taskId);
 };
 
-const handleScheduleTask = async (tasks: ITask[]) => {
+const handleScheduleTask = async (tasks: Task.ITask[]) => {
   const scheduleTasks = tasks.filter(
-    (task: ITask) => task.status === TaskStates.Scheduled,
+    (task: Task.ITask) => task.status === State.TaskStates.Scheduled,
   );
   await Promise.all(
-    scheduleTasks.map(async (task: ITask) => {
+    scheduleTasks.map(async (task: Task.ITask) => {
       if (
         (task.ackTimeout > 0 &&
           task.ackTimeout + task.startTime - Date.now() < 0) ||
@@ -63,7 +56,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
           taskId: task.taskId,
           transactionId: task.transactionId,
           isSystem: true,
-          status: TaskStates.Timeout,
+          status: State.TaskStates.Timeout,
         });
       } else if (task.ackTimeout > 0 || task.timeout > 0) {
         // await timerInstanceStore.create({
@@ -83,7 +76,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
               taskId: task.taskId,
               transactionId: task.transactionId,
               isSystem: true,
-              status: TaskStates.Timeout,
+              status: State.TaskStates.Timeout,
             });
           }, task.ackTimeout + task.startTime - Date.now());
         }
@@ -96,7 +89,7 @@ const handleScheduleTask = async (tasks: ITask[]) => {
               taskId: task.taskId,
               transactionId: task.transactionId,
               isSystem: true,
-              status: TaskStates.Timeout,
+              status: State.TaskStates.Timeout,
             });
           }, task.timeout + task.startTime - Date.now());
         }
@@ -105,13 +98,13 @@ const handleScheduleTask = async (tasks: ITask[]) => {
   );
 };
 
-const handleAckTask = async (tasks: ITask[]) => {
+const handleAckTask = async (tasks: Task.ITask[]) => {
   const inprogressTasks = tasks.filter(
-    (task: ITask) => task.status === TaskStates.Inprogress,
+    (task: Task.ITask) => task.status === State.TaskStates.Inprogress,
   );
 
   return Promise.all(
-    inprogressTasks.map((task: ITask) => {
+    inprogressTasks.map((task: Task.ITask) => {
       try {
         if (R.path(['0', task.taskId, 'ackTimeout'], timerPartitions)) {
           if (task.timeout > 0) {
@@ -132,24 +125,25 @@ const handleAckTask = async (tasks: ITask[]) => {
   );
 };
 
-const handleFinishedTask = async (tasks: ITask[]) => {
-  const finishedTasks = tasks.filter((task: ITask) =>
-    [TaskStates.Completed, TaskStates.Failed].includes(task.status),
+const handleFinishedTask = async (tasks: Task.ITask[]) => {
+  const finishedTasks = tasks.filter((task: Task.ITask) =>
+    [State.TaskStates.Completed, State.TaskStates.Failed].includes(task.status),
   );
 
   return Promise.all(
-    finishedTasks.map((task: ITask) => {
+    finishedTasks.map((task: Task.ITask) => {
       return clearTimer(task.taskId);
     }),
   );
 };
 
-const recoveryTasks = async (tasks: ITask[]) => {
+const recoveryTasks = async (tasks: Task.ITask[]) => {
   const failedTasks = tasks.filter(
-    (task: ITask) => task.status === TaskStates.Failed && task.retries > 0,
+    (task: Task.ITask) =>
+      task.status === State.TaskStates.Failed && task.retries > 0,
   );
   return Promise.all(
-    failedTasks.map(async (task: ITask) => {
+    failedTasks.map(async (task: Task.ITask) => {
       try {
         if (!timerPartitions['0'][task.taskId])
           timerPartitions['0'][task.taskId] = {};
@@ -181,14 +175,17 @@ const recoveryTasks = async (tasks: ITask[]) => {
 
 export const executor = async () => {
   try {
-    const events: IEvent[] = await poll(consumerTimerClient, 100);
+    const events: Event.AllEvent[] = await poll(consumerTimerClient, 100);
 
-    const tasks = events.reduce((result: ITask[], event: IEvent) => {
-      if (event.type === 'TASK' && event.isError === false) {
-        result.push(event.details);
-      }
-      return result;
-    }, []);
+    const tasks = events.reduce(
+      (result: Task.ITask[], event: Event.AllEvent) => {
+        if (event.type === 'TASK' && event.isError === false) {
+          result.push(event.details);
+        }
+        return result;
+      },
+      [],
+    );
 
     await Promise.all([
       recoveryTasks(tasks),

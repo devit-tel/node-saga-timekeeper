@@ -1,35 +1,7 @@
 import { KafkaConsumer, Producer } from 'node-rdkafka';
+import { Task, Kafka, Event } from '@melonade/melonade-declaration';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
-import { TaskStates } from '../constants/task';
-import { ITask } from '../task';
-
-export interface kafkaConsumerMessage {
-  value: Buffer;
-  size: number;
-  key: string;
-  topic: string;
-  offset: number;
-  partition: number;
-}
-
-export interface IEvent {
-  transactionId: string;
-  type: 'TRANSACTION' | 'WORKFLOW' | 'TASK' | 'SYSTEM';
-  details?: ITask;
-  timestamp: number;
-  isError: boolean;
-  error?: string;
-}
-
-export interface ITaskUpdate {
-  transactionId: string;
-  taskId: string;
-  status: TaskStates;
-  output?: any;
-  logs?: any[] | any;
-  isSystem: boolean;
-}
 
 export const consumerTimerClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.config,
@@ -61,10 +33,10 @@ export const poll = (
   new Promise((resolve: Function, reject: Function) => {
     consumer.consume(
       messageNumber,
-      (error: Error, messages: kafkaConsumerMessage[]) => {
+      (error: Error, messages: Kafka.kafkaConsumerMessage[]) => {
         if (error) return reject(error);
         resolve(
-          messages.map((message: kafkaConsumerMessage) =>
+          messages.map((message: Kafka.kafkaConsumerMessage) =>
             jsonTryParse(message.value.toString(), {}),
           ),
         );
@@ -72,7 +44,7 @@ export const poll = (
     );
   });
 
-export const updateTask = (taskUpdate: ITaskUpdate) =>
+export const updateTask = (taskUpdate: Event.ITaskUpdate) =>
   producerClient.produce(
     config.kafkaTopicName.event,
     null,
@@ -81,7 +53,7 @@ export const updateTask = (taskUpdate: ITaskUpdate) =>
     Date.now(),
   );
 
-export const dispatch = (task: ITask) =>
+export const dispatch = (task: Task.ITask) =>
   producerClient.produce(
     config.kafkaTopicName.systemTask,
     null,
