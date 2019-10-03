@@ -14,7 +14,7 @@ const pickAndReplaceFromENV = (template: string) =>
   }, {});
 
 export const melonade = {
-  namespace: process.env['melonade.namespace'] || 'node',
+  namespace: process.env['melonade.namespace'] || 'default',
 };
 
 export const kafkaTopicName = {
