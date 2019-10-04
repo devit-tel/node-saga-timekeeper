@@ -1,4 +1,4 @@
-import { KafkaConsumer, Producer } from 'node-rdkafka';
+import { KafkaConsumer, Producer } from '@nv4re/node-rdkafka';
 import { Task, Kafka, Event } from '@melonade/melonade-declaration';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
