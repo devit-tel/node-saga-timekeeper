@@ -140,7 +140,9 @@ const handleFinishedTask = async (tasks: Task.ITask[]) => {
 const recoveryTasks = async (tasks: Task.ITask[]) => {
   const failedTasks = tasks.filter(
     (task: Task.ITask) =>
-      task.status === State.TaskStates.Failed && task.retries > 0,
+      [State.TaskStates.Failed, State.TaskStates.Timeout].includes(
+        task.status,
+      ) && task.retries > 0,
   );
   return Promise.all(
     failedTasks.map(async (task: Task.ITask) => {
