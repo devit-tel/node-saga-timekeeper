@@ -4,14 +4,20 @@ import { State } from '@melonade/melonade-declaration';
 
 const handleTimeoutTask = async (taskId: string) => {
   const timerData = await timerInstanceStore.get(taskId);
-  updateTask({
-    taskId: timerData.task.taskId,
-    transactionId: timerData.task.transactionId,
-    status: State.TaskStates.Timeout,
-    isSystem: true,
-  });
-  await timerInstanceStore.delete(timerData.task.taskId);
-  console.log('send timeout task');
+  try {
+    updateTask({
+      taskId: timerData.task.taskId,
+      transactionId: timerData.task.transactionId,
+      status: State.TaskStates.Timeout,
+      isSystem: true,
+    });
+    await timerInstanceStore.delete(timerData.task.taskId);
+    console.log('send timeout task');
+  } catch (error) {
+    // Sometime handleDelayTask did not delete key and before ttl runout
+    // So to make sure it only prob here just log to make sure
+    console.log(taskId, timerData, error);
+  }
 };
 
 const handleDelayTask = async (taskId: string) => {
