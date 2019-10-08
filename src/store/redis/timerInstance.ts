@@ -1,11 +1,11 @@
 import * as redis from 'redis';
+import { Timer } from '@melonade/melonade-declaration';
 import { RedisStore, RedisSubscriber } from '../redis';
 import {
   ITimerInstanceStore,
   ITimerUpdate,
   WatcherCallback,
 } from '../../store';
-import { ITimerData } from '../../timer';
 import { prefix } from '../../config';
 
 export class TimerInstanceRedisStore extends RedisStore
@@ -45,7 +45,7 @@ export class TimerInstanceRedisStore extends RedisStore
     );
   }
 
-  create = async (timerData: ITimerData): Promise<ITimerData> => {
+  create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
     const key = `${prefix}.timer.${timerData.task.taskId}`;
     const list = [this.setValue(key, JSON.stringify(timerData))];
 
@@ -87,7 +87,7 @@ export class TimerInstanceRedisStore extends RedisStore
     return timerData;
   };
 
-  get = async (taskId: string): Promise<ITimerData> => {
+  get = async (taskId: string): Promise<Timer.ITimerData> => {
     const taskData = await this.getValue(`${prefix}.timer.${taskId}`);
 
     if (taskData) return JSON.parse(taskData);

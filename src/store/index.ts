@@ -1,4 +1,4 @@
-import { ITimerData } from '../timer';
+import { Timer } from '@melonade/melonade-declaration';
 
 export enum StoreType {
   ZooKeeper = 'ZOOKEEPER', // Greate for Definition
@@ -24,10 +24,10 @@ export type WatcherCallback = (
 ) => void;
 
 export interface ITimerInstanceStore extends IStore {
-  get(taskId: string): Promise<ITimerData>;
-  create(taskData: ITimerData): Promise<ITimerData>;
+  get(taskId: string): Promise<Timer.ITimerData>;
+  create(taskData: Timer.ITimerData): Promise<Timer.ITimerData>;
   delete(taskId: string): Promise<any>;
-  update(timerUpdate: ITimerUpdate): Promise<ITimerData>;
+  update(timerUpdate: ITimerUpdate): Promise<Timer.ITimerData>;
   watch(callback: WatcherCallback): void;
 }
 
@@ -43,7 +43,7 @@ export class TimerInstanceStore {
     return this.client.get(taskId);
   }
 
-  create(timerData: ITimerData) {
+  create(timerData: Timer.ITimerData) {
     return this.client.create(timerData);
   }
 

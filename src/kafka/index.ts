@@ -3,6 +3,16 @@ import { Task, Kafka, Event } from '@melonade/melonade-declaration';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
 
+export const consumerTasksClient = new KafkaConsumer(
+  config.kafkaTaskWatcherConfig.config,
+  config.kafkaTaskWatcherConfig.topic,
+);
+
+export const consumerEventsClient = new KafkaConsumer(
+  config.kafkaTaskWatcherConfig.config,
+  config.kafkaTaskWatcherConfig.topic,
+);
+
 export const consumerTimerClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.config,
   config.kafkaTaskWatcherConfig.topic,
@@ -13,11 +23,25 @@ export const producerClient = new Producer(
   config.kafkaProducerConfig.topic,
 );
 
+consumerTasksClient.setDefaultConsumeTimeout(5);
+consumerTasksClient.connect();
+consumerTasksClient.on('ready', () => {
+  console.log('Consumer Tasks kafka are ready');
+  consumerTasksClient.subscribe([`${config.kafkaTopicName.task}.*`]);
+});
+
+consumerEventsClient.setDefaultConsumeTimeout(5);
+consumerEventsClient.connect();
+consumerEventsClient.on('ready', () => {
+  console.log('Consumer Event kafka are ready');
+  consumerEventsClient.subscribe([config.kafkaTopicName.event]);
+});
+
 consumerTimerClient.setDefaultConsumeTimeout(5);
 consumerTimerClient.connect();
 consumerTimerClient.on('ready', () => {
-  console.log('Consumer kafka are ready');
-  consumerTimerClient.subscribe([config.kafkaTopicName.store]);
+  console.log('Consumer Timer kafka are ready');
+  consumerTimerClient.subscribe([config.kafkaTopicName.event]);
 });
 
 producerClient.connect();
