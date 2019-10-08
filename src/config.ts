@@ -31,7 +31,7 @@ export const kafkaTopicName = {
   // Subscriptions to command
   command: `${prefix}.${Kafka.topicSuffix.command}`,
   // Timer event (Cron, Delay task)
-  timer: `${prefix}.${Kafka.topicSuffix.command}`,
+  timer: `${prefix}.${Kafka.topicSuffix.timer}`,
 };
 
 export const kafkaTaskWatcherConfig = {
