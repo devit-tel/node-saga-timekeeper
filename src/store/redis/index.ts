@@ -1,90 +1,71 @@
 import { IStore } from '../../store';
-import * as redis from 'redis';
+import ioredis from 'ioredis';
 
 export class RedisStore implements IStore {
-  client: redis.RedisClient;
-  constructor(redisOptions: redis.ClientOpts) {
-    this.client = redis.createClient(redisOptions);
+  client: ioredis.Redis;
+  connected: boolean = false;
+  constructor(redisOptions: ioredis.RedisOptions) {
+    // this.client = redis.createClient(redisOptions);
+    this.client = new ioredis(redisOptions);
+
+    this.client
+      .on('connect', () => {
+        this.connected = true;
+      })
+      .on('close', () => {
+        this.connected = false;
+      });
   }
 
   isHealthy(): boolean {
-    return this.client.connected;
+    return this.connected;
   }
 
   setValue(key: string, value: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.set(key, value, (error: Error) => {
-        if (error) return reject(error);
-        resolve(value);
-      });
-    });
+    return this.client.set(key, value);
   }
 
   setValueExpire(key: string, value: string, ms: number): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.set(key, value, 'PX', ms, (error: Error) => {
-        if (error) return reject(error);
-        resolve(value);
-      });
-    });
+    return this.client.set(key, value, 'PX', ms);
   }
 
-  unsetValue(key: string | string[]): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.client.del(key, (error: Error, reply: number) => {
-        if (error) return reject(error);
-        resolve(reply);
-      });
-    });
+  unsetValue(keys: string[]): Promise<number> {
+    return this.client.del(...keys);
   }
 
   getValue(key: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.get(key, (error: Error, reply: string) => {
-        if (error) return reject(error);
-        resolve(reply);
-      });
-    });
+    return this.client.get(key);
   }
 
-  checkKeys(keys: string[]): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.client.exists(keys, (error: Error, reply: number) => {
-        if (error) return reject(error);
-        resolve(reply);
-      });
-    });
-  }
-
-  scanKey(pattern: string): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      this.client.scan(
-        '0',
-        'MATCH',
-        pattern,
-        (error: Error, reply: [string, string[]]) => {
-          if (error) return reject(error);
-          resolve(reply[1]);
-        },
-      );
-    });
+  checkKeys(keys: string[]) {
+    return this.client.exists(...keys);
   }
 }
 
 export class RedisSubscriber implements IStore {
-  client: redis.RedisClient;
+  client: ioredis.Redis;
+  connected: boolean = false;
+  constructor(redisOptions: ioredis.RedisOptions, patterns: string[]) {
+    this.client = new ioredis(redisOptions);
 
-  constructor(redisOptions: redis.ClientOpts, patterns: string[]) {
-    this.client = redis.createClient(redisOptions);
+    this.client
+      .on('connect', () => {
+        this.connected = true;
+      })
+      .on('close', () => {
+        this.connected = false;
+      });
 
     this.client.config('SET', 'notify-keyspace-events', 'xK');
 
-    for (const pattern of patterns) {
-      this.client.psubscribe(`__keyspace@${redisOptions.db}__:${pattern}`);
-    }
+    this.client.psubscribe(
+      ...patterns.map(
+        (pattern: string) => `__keyspace@${redisOptions.db}__:${pattern}`,
+      ),
+    );
   }
 
   isHealthy(): boolean {
-    return this.client.connected;
+    return this.connected;
   }
 }

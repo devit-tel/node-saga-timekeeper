@@ -1,4 +1,4 @@
-import * as redis from 'redis';
+import ioredis from 'ioredis';
 import { Timer } from '@melonade/melonade-declaration';
 import { RedisStore, RedisSubscriber } from '../redis';
 import {
@@ -11,7 +11,7 @@ import { prefix } from '../../config';
 export class TimerInstanceRedisStore extends RedisStore
   implements ITimerInstanceStore {
   subscriber: RedisSubscriber;
-  constructor(redisOptions: redis.ClientOpts) {
+  constructor(redisOptions: ioredis.RedisOptions) {
     super(redisOptions);
     this.subscriber = new RedisSubscriber(redisOptions, [
       `${prefix}.delay.*`,
@@ -34,55 +34,52 @@ export class TimerInstanceRedisStore extends RedisStore
           ).exec(channel);
 
           if (extractedTimeoutChannel) {
+            console.log(extractedTimeoutChannel[1], extractedTimeoutChannel[2]);
             callback('TIMEOUT', extractedTimeoutChannel[2]);
           } else if (extractedDelayChannel) {
             callback('DELAY', extractedDelayChannel[1]);
           }
         }
-
-        callback;
       },
     );
   }
 
   create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
     const key = `${prefix}.timer.${timerData.task.taskId}`;
-    const list = [this.setValue(key, JSON.stringify(timerData))];
+
+    const pipeline = this.client.pipeline().set(key, JSON.stringify(timerData));
 
     if (timerData.ackTimeout) {
-      console.log('set ackTimeout');
-      list.push(
-        this.setValueExpire(
-          `${prefix}.ackTimeout.${timerData.task.taskId}`,
-          '',
-          timerData.ackTimeout,
-        ),
+      // console.log('set ackTimeout');
+      pipeline.set(
+        `${prefix}.ackTimeout.${timerData.task.taskId}`,
+        '',
+        'PX',
+        timerData.ackTimeout,
       );
     }
 
     if (timerData.timeout) {
-      console.log('set timeout');
-      list.push(
-        this.setValueExpire(
-          `${prefix}.timeout.${timerData.task.taskId}`,
-          '',
-          timerData.timeout,
-        ),
+      // console.log('set timeout');
+      pipeline.set(
+        `${prefix}.timeout.${timerData.task.taskId}`,
+        '',
+        'PX',
+        timerData.timeout,
       );
     }
 
     if (timerData.delay) {
-      console.log('set delay');
-      list.push(
-        this.setValueExpire(
-          `${prefix}.delay.${timerData.task.taskId}`,
-          '',
-          timerData.delay,
-        ),
+      // console.log('set delay');
+      pipeline.set(
+        `${prefix}.delay.${timerData.task.taskId}`,
+        '',
+        'PX',
+        timerData.delay,
       );
     }
 
-    await Promise.all(list);
+    await pipeline.exec();
 
     return timerData;
   };
@@ -112,22 +109,22 @@ export class TimerInstanceRedisStore extends RedisStore
       this.checkKeys([timeoutKey]),
     ]);
 
-    const list = [];
+    const pipeline = this.client.pipeline();
 
     if (timerUpdate.ackTimeout) {
-      list.push(this.unsetValue(ackTimeoutKey));
+      pipeline.del(ackTimeoutKey);
       notExpiredAckTimeout--;
     }
 
     if (timerUpdate.timeout) {
-      list.push(this.unsetValue(timeoutKey));
+      pipeline.del(timeoutKey);
       notExpiredTimeout--;
     }
 
     if (notExpiredAckTimeout <= 0 && notExpiredTimeout <= 0) {
-      list.push(this.unsetValue(`${prefix}.timer.${timerUpdate.taskId}`));
+      pipeline.del(`${prefix}.timer.${timerUpdate.taskId}`);
     }
 
-    await Promise.all(list);
+    await pipeline.exec();
   };
 }
