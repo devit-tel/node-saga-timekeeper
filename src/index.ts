@@ -1,8 +1,8 @@
+import { Store } from '@melonade/melonade-declaration';
 import * as config from './config';
 import * as store from './store';
 // import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
 import { TimerInstanceRedisStore } from './store/redis/timerInstance';
-import { StoreType } from './store';
 import './kafka';
 import { executor as eventExecutor } from './eventWatcher';
 import { executor as storeExecutor } from './storeWatcher';
@@ -21,7 +21,7 @@ switch (config.timerInstanceStoreConfig.type) {
   //     ),
   //   );
   //   break;
-  case StoreType.Redis:
+  case Store.StoreType.Redis:
     store.timerInstanceStore.setClient(
       new TimerInstanceRedisStore(config.timerInstanceStoreConfig.redisConfig),
     );
