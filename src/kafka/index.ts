@@ -27,7 +27,9 @@ consumerTasksClient.setDefaultConsumeTimeout(5);
 consumerTasksClient.connect();
 consumerTasksClient.on('ready', () => {
   console.log('Consumer Tasks kafka are ready');
-  consumerTasksClient.subscribe([`${config.kafkaTopicName.task}.*`]);
+  consumerTasksClient.subscribe([
+    new RegExp(`^${config.kafkaTopicName.task}.*`),
+  ]);
 });
 
 consumerEventsClient.setDefaultConsumeTimeout(5);

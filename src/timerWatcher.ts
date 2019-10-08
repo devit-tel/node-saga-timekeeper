@@ -1,5 +1,5 @@
 import { Timer } from '@melonade/melonade-declaration';
-import { poll, consumerEventsClient, dispatch } from './kafka';
+import { poll, consumerTimerClient, dispatch } from './kafka';
 import { timerInstanceStore } from './store';
 
 const handleDelayTimers = async (timers: Timer.AllTimerType[]) => {
@@ -27,10 +27,12 @@ const handleDelayTimers = async (timers: Timer.AllTimerType[]) => {
 
 export const executor = async () => {
   try {
-    const timers: Timer.AllTimerType[] = await poll(consumerEventsClient, 100);
-
-    await handleDelayTimers(timers);
-    consumerEventsClient.commit();
+    const timers: Timer.AllTimerType[] = await poll(consumerTimerClient, 100);
+    if (timers.length) {
+      console.log(timers);
+      await handleDelayTimers(timers);
+    }
+    consumerTimerClient.commit();
   } catch (error) {
     console.log(error);
   } finally {
