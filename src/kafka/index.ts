@@ -43,7 +43,7 @@ consumerTimerClient.setDefaultConsumeTimeout(5);
 consumerTimerClient.connect();
 consumerTimerClient.on('ready', () => {
   console.log('Consumer Timer kafka are ready');
-  consumerTimerClient.subscribe([config.kafkaTopicName.event]);
+  consumerTimerClient.subscribe([config.kafkaTopicName.timer]);
 });
 
 producerClient.connect();
