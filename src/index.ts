@@ -4,9 +4,10 @@ import * as store from './store';
 import { TimerInstanceRedisStore } from './store/redis/timerInstance';
 import { StoreType } from './store';
 import './kafka';
-import { executor as taskExecutor } from './taskWatcher';
 import { executor as eventExecutor } from './eventWatcher';
-import { executor as watcherExecutor } from './storeWatcher';
+import { executor as storeExecutor } from './storeWatcher';
+import { executor as taskExecutor } from './taskWatcher';
+import { executor as timerExecutor } from './timerWatcher';
 
 switch (config.timerInstanceStoreConfig.type) {
   // case StoreType.Memory:
@@ -31,6 +32,7 @@ switch (config.timerInstanceStoreConfig.type) {
     );
 }
 
-watcherExecutor();
+storeExecutor();
+timerExecutor();
 taskExecutor();
 eventExecutor();
