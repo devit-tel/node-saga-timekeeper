@@ -17,17 +17,19 @@ export const melonade = {
   namespace: process.env['melonade.namespace'] || 'default',
 };
 
+export const prefix = `${Kafka.topicPrefix}.${melonade.namespace}`;
+
 export const kafkaTopicName = {
   // Publish to specified task
-  task: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.task}`,
+  task: `${prefix}.${Kafka.topicSuffix.task}`,
   // Publish to system task
-  systemTask: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.systemTask}`,
+  systemTask: `${prefix}.${Kafka.topicSuffix.systemTask}`,
   // Publish to store event
-  store: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.store}`,
+  store: `${prefix}.${Kafka.topicSuffix.store}`,
   // Subscriptions to update event
-  event: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.event}`,
+  event: `${prefix}.${Kafka.topicSuffix.event}`,
   // Subscriptions to command
-  command: `${Kafka.topicPrefix}.${melonade.namespace}.${Kafka.topicSuffix.command}`,
+  command: `${prefix}.${Kafka.topicSuffix.command}`,
 };
 
 export const kafkaTaskWatcherConfig = {
@@ -74,5 +76,9 @@ export const timerInstanceStoreConfig = {
       poolSize: 100,
       useFindAndModify: false,
     },
+  },
+  redisConfig: {
+    db: '2',
+    ...pickAndReplaceFromENV('^timer-instance\\.redis\\.'),
   },
 };

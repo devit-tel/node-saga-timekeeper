@@ -1,4 +1,4 @@
-import { ITimerData, ITimerUpdate } from '../timer';
+import { ITimerData } from '../timer';
 
 export enum StoreType {
   ZooKeeper = 'ZOOKEEPER', // Greate for Definition
@@ -8,16 +8,27 @@ export enum StoreType {
   Memory = 'MEMORY', // For Dev/Test, don't use in production
 }
 
+export interface ITimerUpdate {
+  ackTimeout?: boolean;
+  timeout?: boolean;
+  taskId: string;
+}
+
 export interface IStore {
   isHealthy(): boolean;
 }
 
+export type WatcherCallback = (
+  type: 'DELAY' | 'TIMEOUT',
+  taskId: string,
+) => void;
+
 export interface ITimerInstanceStore extends IStore {
   get(taskId: string): Promise<ITimerData>;
-  getAll(partitionId: string): Promise<ITimerData[]>;
   create(taskData: ITimerData): Promise<ITimerData>;
   delete(taskId: string): Promise<any>;
   update(timerUpdate: ITimerUpdate): Promise<ITimerData>;
+  watch(callback: WatcherCallback): void;
 }
 
 export class TimerInstanceStore {
@@ -32,10 +43,6 @@ export class TimerInstanceStore {
     return this.client.get(taskId);
   }
 
-  getAll(partitionId: string) {
-    return this.client.getAll(partitionId);
-  }
-
   create(timerData: ITimerData) {
     return this.client.create(timerData);
   }
@@ -46,6 +53,10 @@ export class TimerInstanceStore {
 
   update(timerUpdate: ITimerUpdate) {
     return this.client.update(timerUpdate);
+  }
+
+  watch(callback: WatcherCallback) {
+    return this.client.watch(callback);
   }
 }
 
