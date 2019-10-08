@@ -29,7 +29,6 @@ export const executor = async () => {
   try {
     const timers: Timer.AllTimerType[] = await poll(consumerTimerClient, 100);
     if (timers.length) {
-      console.log(timers);
       await handleDelayTimers(timers);
     }
     consumerTimerClient.commit();
