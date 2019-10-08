@@ -5,7 +5,6 @@ export class RedisStore implements IStore {
   client: ioredis.Redis;
   connected: boolean = false;
   constructor(redisOptions: ioredis.RedisOptions) {
-    // this.client = redis.createClient(redisOptions);
     this.client = new ioredis(redisOptions);
 
     this.client
