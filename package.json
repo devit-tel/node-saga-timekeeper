@@ -39,7 +39,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@melonade/melonade-declaration": "^0.3.2",
-    "@nv4re/node-rdkafka": "^2.7.2-a",
+    "@nv4re/node-rdkafka": "^2.7.2-4",
     "ioredis": "^4.14.1",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
