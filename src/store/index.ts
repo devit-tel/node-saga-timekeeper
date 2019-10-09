@@ -23,6 +23,11 @@ export interface ITimerInstanceStore extends IStore {
   watch(callback: WatcherCallback): void;
 }
 
+export interface ITimerLeaderStore extends IStore {
+  isLeader(): boolean;
+  list(): number[];
+}
+
 export class TimerInstanceStore {
   client: ITimerInstanceStore;
 
@@ -52,4 +57,22 @@ export class TimerInstanceStore {
   }
 }
 
+export class TimerLeaderStore {
+  client: ITimerLeaderStore;
+
+  setClient(client: ITimerLeaderStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  isLeader() {
+    return this.client.isLeader();
+  }
+
+  list() {
+    return this.client.list();
+  }
+}
+
 export const timerInstanceStore = new TimerInstanceStore();
+export const timerLeaderStore = new TimerLeaderStore();

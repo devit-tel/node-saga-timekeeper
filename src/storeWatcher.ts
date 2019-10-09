@@ -1,4 +1,4 @@
-import { timerInstanceStore } from './store';
+import { timerInstanceStore, timerLeaderStore } from './store';
 import { updateTask, dispatch } from './kafka';
 import { State } from '@melonade/melonade-declaration';
 
@@ -33,16 +33,18 @@ const handleDelayTask = async (taskId: string) => {
 
 export const executor = () => {
   timerInstanceStore.watch((type, taskId) => {
-    switch (type) {
-      case 'ACK_TIMEOUT':
-        handleTimeoutTask(taskId, State.TaskStates.AckTimeOut);
-        break;
-      case 'TIMEOUT':
-        handleTimeoutTask(taskId, State.TaskStates.Timeout);
-        break;
-      case 'DELAY':
-        handleDelayTask(taskId);
-        break;
+    if (timerLeaderStore.isLeader()) {
+      switch (type) {
+        case 'ACK_TIMEOUT':
+          handleTimeoutTask(taskId, State.TaskStates.AckTimeOut);
+          break;
+        case 'TIMEOUT':
+          handleTimeoutTask(taskId, State.TaskStates.Timeout);
+          break;
+        case 'DELAY':
+          handleDelayTask(taskId);
+          break;
+      }
     }
   });
 };

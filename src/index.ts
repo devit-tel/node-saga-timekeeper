@@ -3,6 +3,7 @@ import * as config from './config';
 import * as store from './store';
 // import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
 import { TimerInstanceRedisStore } from './store/redis/timerInstance';
+import { TimerLeaderZookeeperStore } from './store/zookeeper/timerLeader';
 import './kafka';
 import { executor as eventExecutor } from './eventWatcher';
 import { executor as storeExecutor } from './storeWatcher';
@@ -24,6 +25,22 @@ switch (config.timerInstanceStoreConfig.type) {
   case Store.StoreType.Redis:
     store.timerInstanceStore.setClient(
       new TimerInstanceRedisStore(config.timerInstanceStoreConfig.redisConfig),
+    );
+    break;
+  default:
+    throw new Error(
+      `TimerInstance Store: ${config.timerInstanceStoreConfig.type} is invalid`,
+    );
+}
+
+switch (config.timerLeaderStoreConfig.type) {
+  case Store.StoreType.ZooKeeper:
+    store.timerLeaderStore.setClient(
+      new TimerLeaderZookeeperStore(
+        config.timerLeaderStoreConfig.zookeeperConfig.root,
+        config.timerLeaderStoreConfig.zookeeperConfig.connectionString,
+        config.timerLeaderStoreConfig.zookeeperConfig.options,
+      ),
     );
     break;
   default:
