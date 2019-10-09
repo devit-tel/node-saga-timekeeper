@@ -25,19 +25,20 @@ export class TimerInstanceRedisStore extends RedisStore
       'pmessage',
       async (_pattern: string, channel: string, message: string) => {
         if (message === 'expired') {
-          const extractedTimeoutChannel = new RegExp(
-            `^__keyspace@2__:${prefix}.(ackTimeout|timeout)\.(.*)`,
+          const extractedChannel = new RegExp(
+            `^__keyspace@2__:${prefix}.(ackTimeout|timeout|delay)\.(.*)`,
           ).exec(channel);
 
-          const extractedDelayChannel = new RegExp(
-            `^__keyspace@2__:${prefix}.delay\.(.*)`,
-          ).exec(channel);
-
-          if (extractedTimeoutChannel) {
-            console.log(extractedTimeoutChannel[1], extractedTimeoutChannel[2]);
-            callback('TIMEOUT', extractedTimeoutChannel[2]);
-          } else if (extractedDelayChannel) {
-            callback('DELAY', extractedDelayChannel[1]);
+          switch (extractedChannel[1]) {
+            case 'ackTimeout':
+              callback('ACK_TIMEOUT', extractedChannel[2]);
+              break;
+            case 'timeout':
+              callback('TIMEOUT', extractedChannel[2]);
+              break;
+            case 'delay':
+              callback('DELAY', extractedChannel[2]);
+              break;
           }
         }
       },

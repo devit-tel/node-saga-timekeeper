@@ -11,7 +11,7 @@ export interface IStore {
 }
 
 export type WatcherCallback = (
-  type: 'DELAY' | 'TIMEOUT',
+  type: 'DELAY' | 'TIMEOUT' | 'ACK_TIMEOUT',
   taskId: string,
 ) => void;
 
