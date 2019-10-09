@@ -1,55 +1,28 @@
-import { Store } from '@melonade/melonade-declaration';
-import * as config from './config';
-import * as store from './store';
-// import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
-import { TimerInstanceRedisStore } from './store/redis/timerInstance';
-import { TimerLeaderZookeeperStore } from './store/zookeeper/timerLeader';
-import './kafka';
-import { executor as eventExecutor } from './eventWatcher';
-import { executor as storeExecutor } from './storeWatcher';
-import { executor as taskExecutor } from './taskWatcher';
-import { executor as timerExecutor } from './timerWatcher';
+import * as cluster from 'cluster';
+import * as os from 'os';
+import * as dotenv from 'dotenv';
 
-switch (config.timerInstanceStoreConfig.type) {
-  // case StoreType.Memory:
-  //   store.workflowInstanceStore.setClient(new MemoryStore());
-  //   break;
-  // case StoreType.MongoDB:
-  //   store.timerInstanceStore.setClient(
-  //     new TimerInstanceMongooseStore(
-  //       config.timerInstanceStoreConfig.mongoDBConfig.uri,
-  //       config.timerInstanceStoreConfig.mongoDBConfig.options,
-  //     ),
-  //   );
-  //   break;
-  case Store.StoreType.Redis:
-    store.timerInstanceStore.setClient(
-      new TimerInstanceRedisStore(config.timerInstanceStoreConfig.redisConfig),
-    );
-    break;
-  default:
-    throw new Error(
-      `TimerInstance Store: ${config.timerInstanceStoreConfig.type} is invalid`,
-    );
+dotenv.config();
+
+const maxRunnerNumber = Number.isNaN(+process.env['runners.max'])
+  ? os.cpus().length
+  : +process.env['runners.max'];
+
+if (cluster.isMaster) {
+  cluster.on('exit', (worker: cluster.Worker) => {
+    console.log(`Worker: ${worker.id} are dead`);
+    cluster.fork();
+    console.log(`Starting new worker`);
+  });
+
+  cluster.on('fork', (worker: cluster.Worker) => {
+    console.log(`Worker ${worker.process.pid} started`);
+  });
+
+  const runnerCount = Math.min(os.cpus().length, maxRunnerNumber);
+  for (let i = 0; i < runnerCount; i++) {
+    cluster.fork();
+  }
+} else {
+  require('./bootstrap');
 }
-
-switch (config.timerLeaderStoreConfig.type) {
-  case Store.StoreType.ZooKeeper:
-    store.timerLeaderStore.setClient(
-      new TimerLeaderZookeeperStore(
-        config.timerLeaderStoreConfig.zookeeperConfig.root,
-        config.timerLeaderStoreConfig.zookeeperConfig.connectionString,
-        config.timerLeaderStoreConfig.zookeeperConfig.options,
-      ),
-    );
-    break;
-  default:
-    throw new Error(
-      `TimerInstance Store: ${config.timerInstanceStoreConfig.type} is invalid`,
-    );
-}
-
-storeExecutor();
-timerExecutor();
-taskExecutor();
-eventExecutor();
