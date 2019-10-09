@@ -12,7 +12,7 @@ const handleTimeoutTask = async (taskId: string) => {
       isSystem: true,
     });
     await timerInstanceStore.delete(timerData.task.taskId);
-    console.log('send timeout task');
+    console.log('send timeout task', timerData.task.taskId);
   } catch (error) {
     // Sometime handleDelayTask did not delete key and before ttl runout
     // So to make sure it only prob here just log to make sure
