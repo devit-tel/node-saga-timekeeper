@@ -1,5 +1,5 @@
 import { Timer } from '@melonade/melonade-declaration';
-import { poll, consumerTimerClient, dispatch } from './kafka';
+import { consumerTimerClient, poll, reloadTask } from './kafka';
 import { timerInstanceStore } from './store';
 
 const handleDelayTimers = async (timers: Timer.AllTimerType[]) => {
@@ -20,7 +20,7 @@ const handleDelayTimers = async (timers: Timer.AllTimerType[]) => {
             delayTimer.task.retryDelay + delayTimer.task.endTime - Date.now(),
         });
       }
-      return dispatch(delayTimer.task);
+      return reloadTask(delayTimer.task);
     }),
   );
 };

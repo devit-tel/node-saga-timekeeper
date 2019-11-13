@@ -1,6 +1,6 @@
-import { timerInstanceStore } from './store';
-import { updateTask, dispatch } from './kafka';
 import { State } from '@melonade/melonade-declaration';
+import { reloadTask, updateTask } from './kafka';
+import { timerInstanceStore } from './store';
 
 const handleTimeoutTask = async (taskId: string) => {
   const timerData = await timerInstanceStore.get(taskId);
@@ -22,7 +22,7 @@ const handleTimeoutTask = async (taskId: string) => {
 
 const handleDelayTask = async (taskId: string) => {
   const timerData = await timerInstanceStore.get(taskId);
-  dispatch(timerData.task);
+  reloadTask(timerData.task);
   await timerInstanceStore.delete(timerData.task.taskId);
   console.log('send delay task');
 };

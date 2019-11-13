@@ -1,5 +1,5 @@
+import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
 import { KafkaConsumer, Producer } from '@nv4re/node-rdkafka';
-import { Task, Kafka, Event } from '@melonade/melonade-declaration';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
 
@@ -79,11 +79,16 @@ export const updateTask = (taskUpdate: Event.ITaskUpdate) =>
     Date.now(),
   );
 
-export const dispatch = (task: Task.ITask) =>
+export const reloadTask = (task: Task.ITask) =>
   producerClient.produce(
-    config.kafkaTopicName.systemTask,
+    config.kafkaTopicName.command,
     null,
-    Buffer.from(JSON.stringify(task)),
+    Buffer.from(
+      JSON.stringify(<Command.IReloadTaskCommand>{
+        type: Command.CommandTypes.ReloadTask,
+        task,
+      }),
+    ),
     task.transactionId,
     Date.now(),
   );
