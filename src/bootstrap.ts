@@ -1,11 +1,11 @@
 import { Store } from '@melonade/melonade-declaration';
 import * as config from './config';
+import { executor as eventExecutor } from './eventWatcher';
+import './kafka';
 import * as store from './store';
 // import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
 import { TimerInstanceRedisStore } from './store/redis/timerInstance';
 import { TimerLeaderZookeeperStore } from './store/zookeeper/timerLeader';
-import './kafka';
-import { executor as eventExecutor } from './eventWatcher';
 import { executor as storeExecutor } from './storeWatcher';
 import { executor as taskExecutor } from './taskWatcher';
 import { executor as timerExecutor } from './timerWatcher';
@@ -45,7 +45,7 @@ switch (config.timerLeaderStoreConfig.type) {
     break;
   default:
     throw new Error(
-      `TimerInstance Store: ${config.timerInstanceStoreConfig.type} is invalid`,
+      `TimerLeader Store: ${config.timerLeaderStoreConfig.type} is invalid`,
     );
 }
 
