@@ -1,7 +1,7 @@
 {
-  "name": "node-typescript-boilerplate",
-  "version": "0.0.0",
-  "description": "Minimalistic boilerplate to quick-start Node.js development in TypeScript.",
+  "name": "melonade-time-keeper",
+  "version": "0.6.0",
+  "description": "Melonade tinme keeper",
   "engines": {
     "node": ">= 10.13 <11"
   },
@@ -34,7 +34,7 @@
     "test:watch": "jest --watch",
     "start:watch": "nodemon"
   },
-  "author": "Jakub Synowiec <github@jakubsynowiec.info>",
+  "author": "NV4RE",
   "license": "Apache-2.0",
   "dependencies": {
     "@melonade/melonade-declaration": "^0.5.2",
