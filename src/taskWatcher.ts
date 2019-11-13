@@ -1,5 +1,5 @@
-import { Task, State } from '@melonade/melonade-declaration';
-import { poll, consumerTasksClient, updateTask } from './kafka';
+import { State, Task } from '@melonade/melonade-declaration';
+import { consumerTasksClient, poll, updateTask } from './kafka';
 import { timerInstanceStore } from './store';
 
 const handleScheduleTask = async (tasks: Task.ITask[]) => {

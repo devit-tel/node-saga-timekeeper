@@ -86,6 +86,7 @@ export const reloadTask = (task: Task.ITask) =>
     Buffer.from(
       JSON.stringify(<Command.IReloadTaskCommand>{
         type: Command.CommandTypes.ReloadTask,
+        transactionId: task.transactionId,
         task,
       }),
     ),
