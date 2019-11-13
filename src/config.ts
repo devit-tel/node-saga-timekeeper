@@ -82,3 +82,16 @@ export const timerInstanceStoreConfig = {
     ...pickAndReplaceFromENV('^timer-instance\\.redis\\.'),
   },
 };
+
+export const timerLeaderStoreConfig = {
+  type: process.env['timer-leader.type'],
+  zookeeperConfig: {
+    root: `/melonade-${melonade.namespace}/timer-leader`,
+    connectionString: process.env['timer-leader.zookeeper.connections'],
+    options: {
+      sessionTimeout: 200,
+      spinDelay: 100,
+      retries: 0,
+    },
+  },
+};

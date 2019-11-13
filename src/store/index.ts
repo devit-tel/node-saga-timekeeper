@@ -11,7 +11,7 @@ export interface IStore {
 }
 
 export type WatcherCallback = (
-  type: 'DELAY' | 'TIMEOUT',
+  type: 'DELAY' | 'TIMEOUT' | 'ACK_TIMEOUT',
   taskId: string,
 ) => void;
 
@@ -21,6 +21,11 @@ export interface ITimerInstanceStore extends IStore {
   delete(taskId: string): Promise<any>;
   update(timerUpdate: ITimerUpdate): Promise<Timer.ITimerData>;
   watch(callback: WatcherCallback): void;
+}
+
+export interface ITimerLeaderStore extends IStore {
+  isLeader(): boolean;
+  list(): number[];
 }
 
 export class TimerInstanceStore {
@@ -52,4 +57,22 @@ export class TimerInstanceStore {
   }
 }
 
+export class TimerLeaderStore {
+  client: ITimerLeaderStore;
+
+  setClient(client: ITimerLeaderStore) {
+    if (this.client) throw new Error('Already set client');
+    this.client = client;
+  }
+
+  isLeader() {
+    return this.client.isLeader();
+  }
+
+  list() {
+    return this.client.list();
+  }
+}
+
 export const timerInstanceStore = new TimerInstanceStore();
+export const timerLeaderStore = new TimerLeaderStore();

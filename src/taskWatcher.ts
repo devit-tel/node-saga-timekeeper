@@ -10,10 +10,15 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
     scheduleTasks.map(async (task: Task.ITask) => {
       const beforeAckTimeout = task.ackTimeout + task.startTime - Date.now();
       const beforeTimeout = task.timeout + task.startTime - Date.now();
-      if (
-        (task.ackTimeout > 0 && beforeAckTimeout < 0) ||
-        (task.timeout > 0 && beforeTimeout < 0)
-      ) {
+      if (task.ackTimeout > 0 && beforeAckTimeout < 0) {
+        console.log('send acktimeout delay consume');
+        updateTask({
+          taskId: task.taskId,
+          transactionId: task.transactionId,
+          isSystem: true,
+          status: State.TaskStates.AckTimeOut,
+        });
+      } else if (task.timeout > 0 && beforeTimeout < 0) {
         console.log('send timeout delay consume');
         updateTask({
           taskId: task.taskId,
