@@ -1,5 +1,5 @@
 import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
-import { KafkaConsumer, Producer } from '@nv4re/node-rdkafka';
+import { KafkaConsumer, Producer } from 'node-rdkafka';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
 
@@ -28,7 +28,8 @@ consumerTasksClient.connect();
 consumerTasksClient.on('ready', () => {
   console.log('Consumer Tasks kafka are ready');
   consumerTasksClient.subscribe([
-    new RegExp(`^${config.kafkaTopicName.task}.*`),
+    // Internal lib already support Regexp
+    new RegExp(`^${config.kafkaTopicName.task}.*`) as any,
   ]);
 });
 
