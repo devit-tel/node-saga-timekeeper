@@ -32,6 +32,11 @@ export const kafkaTopicName = {
   timer: `${prefix}.${Kafka.topicSuffix.timer}`,
 };
 
+export const kafkaAdminConfig = {
+  ...pickAndReplaceFromENV('^kafka\\.conf\\.'),
+  ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
+};
+
 export const kafkaTaskWatcherConfig = {
   config: {
     'enable.auto.commit': 'false',

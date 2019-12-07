@@ -1,7 +1,9 @@
 import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
-import { KafkaConsumer, Producer } from 'node-rdkafka';
+import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
 import * as config from '../config';
 import { jsonTryParse } from '../utils/common';
+
+export const adminClient = AdminClient.create(config.kafkaAdminConfig);
 
 export const consumerTasksClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.config,
@@ -35,16 +37,36 @@ consumerTasksClient.on('ready', () => {
 
 consumerEventsClient.setDefaultConsumeTimeout(5);
 consumerEventsClient.connect();
-consumerEventsClient.on('ready', () => {
+consumerEventsClient.on('ready', async () => {
   console.log('Consumer Event kafka are ready');
-  consumerEventsClient.subscribe([config.kafkaTopicName.event]);
+  try {
+    await createTopic(config.kafkaTopicName.event, 20, 1);
+  } catch (error) {
+    console.warn(
+      `Create topic "${
+        config.kafkaTopicName.event
+      }" error: ${error.toString()}`,
+    );
+  } finally {
+    consumerEventsClient.subscribe([config.kafkaTopicName.event]);
+  }
 });
 
 consumerTimerClient.setDefaultConsumeTimeout(5);
 consumerTimerClient.connect();
-consumerTimerClient.on('ready', () => {
+consumerTimerClient.on('ready', async () => {
   console.log('Consumer Timer kafka are ready');
-  consumerTimerClient.subscribe([config.kafkaTopicName.timer]);
+  try {
+    await createTopic(config.kafkaTopicName.event, 20, 1);
+  } catch (error) {
+    console.warn(
+      `Create topic "${
+        config.kafkaTopicName.timer
+      }" error: ${error.toString()}`,
+    );
+  } finally {
+    consumerTimerClient.subscribe([config.kafkaTopicName.timer]);
+  }
 });
 
 producerClient.connect();
@@ -52,6 +74,33 @@ producerClient.setPollInterval(100);
 producerClient.on('ready', () => {
   console.log('Producer kafka are ready');
 });
+
+export const createTopic = (
+  tipicName: string,
+  numPartitions: number = 10,
+  replicationFactor: number = 1,
+  config?: any,
+): Promise<any> =>
+  new Promise((resolve: Function, reject: Function) => {
+    adminClient.createTopic(
+      {
+        topic: tipicName,
+        num_partitions: numPartitions,
+        replication_factor: replicationFactor,
+        config: {
+          'cleanup.policy': 'compact',
+          'compression.type': 'snappy',
+          'delete.retention.ms': '86400000',
+          'file.delete.delay.ms': '60000',
+          ...config,
+        },
+      },
+      (error: Error, data: any) => {
+        if (error) return reject(error);
+        resolve(data);
+      },
+    );
+  });
 
 export const poll = (
   consumer: KafkaConsumer,
