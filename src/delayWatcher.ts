@@ -1,6 +1,6 @@
 import { State } from '@melonade/melonade-declaration';
-import { KafkaConsumer } from 'node-rdkafka';
 import * as R from 'ramda';
+import * as config from './config';
 import {
   consumerDelaysClients,
   consumerTimerClient,
@@ -104,7 +104,8 @@ const handleDelayTimers = async (timerEvents: ITimerEvent[]) => {
   );
 };
 
-const executor = async (delayConsumer: KafkaConsumer) => {
+const executor = async (delayNumber: number) => {
+  const delayConsumer = consumerDelaysClients[delayNumber];
   try {
     const timerEvents: ITimerEvent[] = await poll(delayConsumer, 100);
     if (timerEvents.length) {
@@ -114,11 +115,12 @@ const executor = async (delayConsumer: KafkaConsumer) => {
   } catch (error) {
     console.log(error);
   } finally {
-    setImmediate(() => executor(delayConsumer));
+    setTimeout(
+      () => executor(delayNumber),
+      config.DELAY_TOPIC_STATES[delayNumber],
+    );
   }
 };
 
 export const executors = () =>
-  consumerDelaysClients.map(consumerDelaysClient =>
-    executor(consumerDelaysClient),
-  );
+  config.DELAY_TOPIC_STATES.map((_delay, index) => executor(index));
