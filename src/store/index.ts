@@ -54,7 +54,8 @@ export class TimerInstanceStore extends EventEmitter {
     }, when - Date.now());
   };
 
-  create(timerData: Timer.ITimerData) {
+  create = async (timerData: Timer.ITimerData) => {
+    await this.client.create(timerData);
     if (timerData.ackTimeout) {
       this.setTimer(
         TimerType.AckTimeout,
@@ -75,8 +76,8 @@ export class TimerInstanceStore extends EventEmitter {
       this.setTimer(TimerType.Delay, timerData.task.taskId, timerData.delay);
     }
 
-    return this.client.create(timerData);
-  }
+    return timerData;
+  };
 
   private clearTimer = (type: TimerType, taskId: string): void => {
     if (this.localTimers[`${type}-${taskId}`]) {
