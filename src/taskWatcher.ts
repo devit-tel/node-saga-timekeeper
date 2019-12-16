@@ -8,8 +8,10 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
   );
   await Promise.all(
     scheduleTasks.map(async (task: Task.ITask) => {
-      const beforeAckTimeout = task.ackTimeout + task.startTime - Date.now();
-      const beforeTimeout = task.timeout + task.startTime - Date.now();
+      const whenAckTimeout = task.ackTimeout + task.startTime;
+      const whenTimeout = task.timeout + task.startTime;
+      const beforeAckTimeout = whenAckTimeout - Date.now();
+      const beforeTimeout = whenTimeout - Date.now();
       if (task.ackTimeout > 0 && beforeAckTimeout < 0) {
         console.log('send acktimeout delay consume');
         updateTask({
@@ -29,8 +31,8 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
       } else if (task.ackTimeout > 0 || task.timeout > 0) {
         await timerInstanceStore.create({
           task,
-          ackTimeout: task.ackTimeout > 0 ? beforeAckTimeout : 0,
-          timeout: task.timeout > 0 ? beforeTimeout : 0,
+          ackTimeout: task.ackTimeout > 0 ? whenAckTimeout : 0,
+          timeout: task.timeout > 0 ? whenTimeout : 0,
           delay: 0,
         });
       }
