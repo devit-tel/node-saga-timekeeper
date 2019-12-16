@@ -33,7 +33,7 @@ export const consumerDelaysClients = config.DELAY_TOPIC_STATES.map(
       {
         ...config.kafkaTaskWatcherConfig.config,
         'enable.auto.offset.store': 'false',
-        'max.poll.interval.ms': `${Math.max(delay * 5, 30000)}`,
+        'max.poll.interval.ms': Math.max(delay * 5, 30000),
       },
       config.kafkaTaskWatcherConfig.topic,
     );
@@ -178,8 +178,8 @@ export const poll = (
   });
 
 const findFitDelay = (timeBeforeSchedule: number) => {
-  const matchDelay = config.DELAY_TOPIC_STATES.find(
-    (delay: number) => timeBeforeSchedule > delay,
+  const matchDelay = config.DELAY_TOPIC_STATES.reverse().find(
+    (delay: number) => delay <= timeBeforeSchedule,
   );
   if (matchDelay) {
     return matchDelay;

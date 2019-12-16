@@ -26,8 +26,9 @@ const handleTimeoutTask = async (timerId: string, status: State.TaskStates) => {
 
   // Check if timer was cancelled
   if (
-    (status === State.TaskStates.AckTimeOut && timerData.ackTimeout) ||
-    (status === State.TaskStates.Timeout && timerData.timeout)
+    (status === State.TaskStates.AckTimeOut &&
+      R.prop('ackTimeout', timerData)) ||
+    (status === State.TaskStates.Timeout && R.prop('timeout', timerData))
   ) {
     await timerInstanceStore.update({
       timerId,
