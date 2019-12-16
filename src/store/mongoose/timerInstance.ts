@@ -92,12 +92,14 @@ export class TimerInstanceMongooseStore extends MongooseStore
       },
     );
 
-    if (
-      !timerInstance.ackTimeout &&
-      !timerInstance.timeout &&
-      !timerInstance.delay
-    ) {
-      await this.delete(timerUpdate.taskId);
+    if (timerInstance) {
+      if (
+        !timerInstance.ackTimeout &&
+        !timerInstance.timeout &&
+        !timerInstance.delay
+      ) {
+        await this.delete(timerUpdate.taskId);
+      }
     }
 
     return timerInstance;
