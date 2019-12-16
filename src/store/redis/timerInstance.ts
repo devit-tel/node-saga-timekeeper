@@ -33,18 +33,20 @@ export class TimerInstanceRedisStore extends RedisStore
   update = async (timerUpdate: ITimerUpdate): Promise<any> => {
     const timerInstance = await this.get(timerUpdate.taskId);
 
-    timerInstance.ackTimeout = timerUpdate.ackTimeout
-      ? 0
-      : timerInstance.ackTimeout;
-    timerInstance.timeout = timerUpdate.timeout ? 0 : timerInstance.timeout;
+    if (timerInstance) {
+      timerInstance.ackTimeout = timerUpdate.ackTimeout
+        ? 0
+        : timerInstance.ackTimeout;
+      timerInstance.timeout = timerUpdate.timeout ? 0 : timerInstance.timeout;
 
-    if (!timerInstance.ackTimeout && !timerInstance.timeout) {
-      await this.delete(timerUpdate.taskId);
-    } else {
-      await this.client.set(
-        `${prefix}.timer.${timerUpdate.taskId}`,
-        JSON.stringify(timerInstance),
-      );
+      if (!timerInstance.ackTimeout && !timerInstance.timeout) {
+        await this.delete(timerUpdate.taskId);
+      } else {
+        await this.client.set(
+          `${prefix}.timer.${timerUpdate.taskId}`,
+          JSON.stringify(timerInstance),
+        );
+      }
     }
   };
 }
