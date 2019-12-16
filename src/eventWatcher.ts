@@ -1,5 +1,5 @@
 import { Event, State } from '@melonade/melonade-declaration';
-import { poll, consumerEventsClient } from './kafka';
+import { consumerEventsClient, poll } from './kafka';
 import { timerInstanceStore } from './store';
 
 const handleAckTask = async (tasks: Event.ITaskUpdate[]) => {
@@ -9,7 +9,7 @@ const handleAckTask = async (tasks: Event.ITaskUpdate[]) => {
   return Promise.all(
     inprogressTasks.map((task: Event.ITaskUpdate) => {
       return timerInstanceStore.update({
-        taskId: task.taskId,
+        timerId: task.taskId,
         ackTimeout: true,
         timeout: false,
       });
@@ -24,7 +24,7 @@ const handleFinishedTask = async (tasks: Event.ITaskUpdate[]) => {
   return Promise.all(
     finishedTasks.map((task: Event.ITaskUpdate) => {
       return timerInstanceStore.update({
-        taskId: task.taskId,
+        timerId: task.taskId,
         ackTimeout: true,
         timeout: true,
       });
