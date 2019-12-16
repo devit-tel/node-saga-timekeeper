@@ -32,7 +32,6 @@ export const consumerDelaysClients = config.DELAY_TOPIC_STATES.map(
     const consumer = new KafkaConsumer(
       {
         ...config.kafkaTaskWatcherConfig.config,
-        'enable.auto.offset.store': 'false',
         'max.poll.interval.ms': Math.max(delay * 5, 30000),
       },
       config.kafkaTaskWatcherConfig.topic,

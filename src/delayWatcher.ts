@@ -3,7 +3,6 @@ import * as R from 'ramda';
 import * as config from './config';
 import {
   consumerDelaysClients,
-  consumerTimerClient,
   delayTimer,
   ITimerEvent,
   poll,
@@ -21,29 +20,23 @@ const groupByTimerId = R.compose<
   R.groupBy(R.propOr('', 'timerId')),
 );
 
-const handleTimeoutTask = async (timerId: string, status: State.TaskStates) => {
-  const timerData = await timerInstanceStore.get(timerId);
-
+const handleAckTimeoutTask = async (timerId: string) => {
+  const timerData = await timerInstanceStore.update({
+    timerId,
+    delay: false,
+    ackTimeout: true,
+    timeout: false,
+  });
   // Check if timer was cancelled
-  if (
-    (status === State.TaskStates.AckTimeOut &&
-      R.prop('ackTimeout', timerData)) ||
-    (status === State.TaskStates.Timeout && R.prop('timeout', timerData))
-  ) {
-    await timerInstanceStore.update({
-      timerId,
-      delay: false,
-      ackTimeout: true,
-      timeout: true,
-    });
+  if (R.prop('ackTimeout', timerData)) {
     updateTask({
       taskId: timerData.task.taskId,
       transactionId: timerData.task.transactionId,
-      status,
+      status: State.TaskStates.AckTimeOut,
       isSystem: true,
     });
     console.log(
-      'send timeout task',
+      'Send ack timeout task',
       timerData.task.taskId,
       timerData.task.transactionId,
     );
@@ -51,7 +44,36 @@ const handleTimeoutTask = async (timerId: string, status: State.TaskStates) => {
     // Sometime Event's topic consume faster than Tasks's topic
     // And task already finished but Timekeeper just picked up messages from Tasks's topic
     // So it make false timeout
-    console.log(timerId, status, timerData);
+    // console.log(timerId, timerData);
+  }
+};
+
+const handleTimeoutTask = async (timerId: string) => {
+  const timerData = await timerInstanceStore.update({
+    timerId,
+    delay: false,
+    ackTimeout: true,
+    timeout: true,
+  });
+
+  // Check if timer was cancelled
+  if (R.prop('timeout', timerData)) {
+    updateTask({
+      taskId: timerData.task.taskId,
+      transactionId: timerData.task.transactionId,
+      status: State.TaskStates.Timeout,
+      isSystem: true,
+    });
+    console.log(
+      'Send timeout task',
+      timerData.task.taskId,
+      timerData.task.transactionId,
+    );
+  } else {
+    // Sometime Event's topic consume faster than Tasks's topic
+    // And task already finished but Timekeeper just picked up messages from Tasks's topic
+    // So it make false timeout
+    // console.log(timerId, timerData);
   }
 };
 
@@ -81,16 +103,10 @@ const handleDelayTimers = async (timerEvents: ITimerEvent[]) => {
           if (timeBeforeSchedule < 0) {
             switch (timerEvent.type) {
               case TimerType.AckTimeout:
-                await handleTimeoutTask(
-                  timerEvent.timerId,
-                  State.TaskStates.AckTimeOut,
-                );
+                await handleAckTimeoutTask(timerEvent.timerId);
                 break;
               case TimerType.Timeout:
-                await handleTimeoutTask(
-                  timerEvent.timerId,
-                  State.TaskStates.Timeout,
-                );
+                await handleTimeoutTask(timerEvent.timerId);
                 break;
               case TimerType.Delay:
                 await handleDelayTask(timerEvent.timerId);
@@ -106,20 +122,30 @@ const handleDelayTimers = async (timerEvents: ITimerEvent[]) => {
 };
 
 const executor = async (delayNumber: number) => {
+  const startTime = Date.now();
   const delayConsumer = consumerDelaysClients[delayNumber];
   try {
     const timerEvents: ITimerEvent[] = await poll(delayConsumer, 100);
     if (timerEvents.length) {
-      await handleDelayTimers(timerEvents);
+      console.time(`${config.DELAY_TOPIC_STATES[delayNumber]}`);
+      try {
+        await handleDelayTimers(timerEvents);
+      } catch (error) {
+      } finally {
+        console.timeEnd(`${config.DELAY_TOPIC_STATES[delayNumber]}`);
+      }
     }
-    consumerTimerClient.commit();
+    delayConsumer.commit();
   } catch (error) {
-    console.log(error);
+    console.log(error, config.DELAY_TOPIC_STATES[delayNumber]);
   } finally {
-    setTimeout(
-      () => executor(delayNumber),
-      config.DELAY_TOPIC_STATES[delayNumber],
+    const timeUsed = Date.now() - startTime;
+    const waitTime = Math.max(
+      config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
+      0,
     );
+
+    setTimeout(() => executor(delayNumber), waitTime);
   }
 };
 
