@@ -1,5 +1,5 @@
-import { IStore } from '../../store';
 import ioredis from 'ioredis';
+import { IStore } from '../../store';
 
 export class RedisStore implements IStore {
   client: ioredis.Redis;
@@ -38,33 +38,5 @@ export class RedisStore implements IStore {
 
   checkKeys(keys: string[]) {
     return this.client.exists(...keys);
-  }
-}
-
-export class RedisSubscriber implements IStore {
-  client: ioredis.Redis;
-  connected: boolean = false;
-  constructor(redisOptions: ioredis.RedisOptions, patterns: string[]) {
-    this.client = new ioredis(redisOptions);
-
-    this.client
-      .on('connect', () => {
-        this.connected = true;
-      })
-      .on('close', () => {
-        this.connected = false;
-      });
-
-    this.client.config('SET', 'notify-keyspace-events', 'xK');
-
-    this.client.psubscribe(
-      ...patterns.map(
-        (pattern: string) => `__keyspace@${redisOptions.db}__:${pattern}`,
-      ),
-    );
-  }
-
-  isHealthy(): boolean {
-    return this.connected;
   }
 }

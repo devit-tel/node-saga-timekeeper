@@ -1,86 +1,20 @@
-import ioredis from 'ioredis';
 import { Timer } from '@melonade/melonade-declaration';
-import { RedisStore, RedisSubscriber } from '../redis';
-import {
-  ITimerInstanceStore,
-  ITimerUpdate,
-  WatcherCallback,
-} from '../../store';
+import ioredis from 'ioredis';
 import { prefix } from '../../config';
+import { ITimerInstanceStore, ITimerUpdate } from '../../store';
+import { RedisStore } from '../redis';
 
 export class TimerInstanceRedisStore extends RedisStore
   implements ITimerInstanceStore {
-  subscriber: RedisSubscriber;
   constructor(redisOptions: ioredis.RedisOptions) {
     super(redisOptions);
-    this.subscriber = new RedisSubscriber(redisOptions, [
-      `${prefix}.delay.*`,
-      `${prefix}.ackTimeout.*`,
-      `${prefix}.timeout.*`,
-    ]);
-  }
-
-  watch(callback: WatcherCallback) {
-    this.subscriber.client.on(
-      'pmessage',
-      async (_pattern: string, channel: string, message: string) => {
-        if (message === 'expired') {
-          const extractedChannel = new RegExp(
-            `^__keyspace@2__:${prefix}.(ackTimeout|timeout|delay)\.(.*)`,
-          ).exec(channel);
-
-          switch (extractedChannel[1]) {
-            case 'ackTimeout':
-              callback('ACK_TIMEOUT', extractedChannel[2]);
-              break;
-            case 'timeout':
-              callback('TIMEOUT', extractedChannel[2]);
-              break;
-            case 'delay':
-              callback('DELAY', extractedChannel[2]);
-              break;
-          }
-        }
-      },
-    );
   }
 
   create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
-    const key = `${prefix}.timer.${timerData.task.taskId}`;
-
-    const pipeline = this.client.pipeline().set(key, JSON.stringify(timerData));
-
-    if (timerData.ackTimeout) {
-      // console.log('set ackTimeout');
-      pipeline.set(
-        `${prefix}.ackTimeout.${timerData.task.taskId}`,
-        '',
-        'PX',
-        timerData.ackTimeout,
-      );
-    }
-
-    if (timerData.timeout) {
-      // console.log('set timeout');
-      pipeline.set(
-        `${prefix}.timeout.${timerData.task.taskId}`,
-        '',
-        'PX',
-        timerData.timeout,
-      );
-    }
-
-    if (timerData.delay) {
-      // console.log('set delay');
-      pipeline.set(
-        `${prefix}.delay.${timerData.task.taskId}`,
-        '',
-        'PX',
-        timerData.delay,
-      );
-    }
-
-    await pipeline.exec();
+    await this.client.set(
+      `${prefix}.timer.${timerData.task.taskId}`,
+      JSON.stringify(timerData),
+    );
 
     return timerData;
   };
@@ -93,39 +27,24 @@ export class TimerInstanceRedisStore extends RedisStore
   };
 
   delete(taskId: string): Promise<any> {
-    return this.unsetValue([
-      `${prefix}.timer.${taskId}`,
-      `${prefix}.delay.${taskId}`,
-      `${prefix}.ackTimeout.${taskId}`,
-      `${prefix}.timeout.${taskId}`,
-    ]);
+    return this.unsetValue([`${prefix}.timer.${taskId}`]);
   }
 
   update = async (timerUpdate: ITimerUpdate): Promise<any> => {
-    const ackTimeoutKey = `${prefix}.ackTimeout.${timerUpdate.taskId}`;
-    const timeoutKey = `${prefix}.timeout.${timerUpdate.taskId}`;
+    const timerInstance = await this.get(timerUpdate.taskId);
 
-    let [notExpiredAckTimeout, notExpiredTimeout] = await Promise.all([
-      this.checkKeys([ackTimeoutKey]),
-      this.checkKeys([timeoutKey]),
-    ]);
+    timerInstance.ackTimeout = timerUpdate.ackTimeout
+      ? 0
+      : timerInstance.ackTimeout;
+    timerInstance.timeout = timerUpdate.timeout ? 0 : timerInstance.timeout;
 
-    const pipeline = this.client.pipeline();
-
-    if (timerUpdate.ackTimeout) {
-      pipeline.del(ackTimeoutKey);
-      notExpiredAckTimeout--;
+    if (!timerInstance.ackTimeout && !timerInstance.timeout) {
+      await this.delete(timerUpdate.taskId);
+    } else {
+      await this.client.set(
+        `${prefix}.timer.${timerUpdate.taskId}`,
+        JSON.stringify(timerInstance),
+      );
     }
-
-    if (timerUpdate.timeout) {
-      pipeline.del(timeoutKey);
-      notExpiredTimeout--;
-    }
-
-    if (notExpiredAckTimeout <= 0 && notExpiredTimeout <= 0) {
-      pipeline.del(`${prefix}.timer.${timerUpdate.taskId}`);
-    }
-
-    await pipeline.exec();
   };
 }

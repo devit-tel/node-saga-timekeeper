@@ -9,15 +9,14 @@ const handleDelayTimers = async (timers: Timer.AllTimerType[]) => {
 
   return Promise.all(
     delayTimers.map((delayTimer: Timer.IDelayTaskTimer) => {
-      const beforeDispatch =
-        delayTimer.task.retryDelay + delayTimer.task.endTime - Date.now();
+      const whenDispatch = delayTimer.task.retryDelay + delayTimer.task.endTime;
+      const beforeDispatch = whenDispatch - Date.now();
       if (beforeDispatch > 0) {
         return timerInstanceStore.create({
           task: delayTimer.task,
           ackTimeout: 0,
           timeout: 0,
-          delay:
-            delayTimer.task.retryDelay + delayTimer.task.endTime - Date.now(),
+          delay: whenDispatch,
         });
       }
       return reloadTask(delayTimer.task);
