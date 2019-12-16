@@ -24,19 +24,11 @@ export class RedisStore implements IStore {
     return this.client.set(key, value);
   }
 
-  setValueExpire(key: string, value: string, ms: number): Promise<string> {
-    return this.client.set(key, value, 'PX', ms);
-  }
-
   unsetValue(keys: string[]): Promise<number> {
     return this.client.del(...keys);
   }
 
   getValue(key: string): Promise<string> {
     return this.client.get(key);
-  }
-
-  checkKeys(keys: string[]) {
-    return this.client.exists(...keys);
   }
 }
