@@ -88,10 +88,15 @@ export class TimerInstanceMongooseStore extends MongooseStore
       {
         ackTimeout: timerUpdate.ackTimeout ? 0 : undefined,
         timeout: timerUpdate.timeout ? 0 : undefined,
+        delay: timerUpdate.delay ? 0 : undefined,
       },
     );
 
-    if (!timerInstance.ackTimeout && !timerInstance.timeout) {
+    if (
+      !timerInstance.ackTimeout &&
+      !timerInstance.timeout &&
+      !timerInstance.delay
+    ) {
       await this.delete(timerUpdate.taskId);
     }
 

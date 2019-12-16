@@ -38,8 +38,13 @@ export class TimerInstanceRedisStore extends RedisStore
         ? 0
         : timerInstance.ackTimeout;
       timerInstance.timeout = timerUpdate.timeout ? 0 : timerInstance.timeout;
+      timerInstance.delay = timerUpdate.delay ? 0 : timerInstance.delay;
 
-      if (!timerInstance.ackTimeout && !timerInstance.timeout) {
+      if (
+        !timerInstance.ackTimeout &&
+        !timerInstance.timeout &&
+        !timerInstance.delay
+      ) {
         await this.delete(timerUpdate.taskId);
       } else {
         await this.client.set(

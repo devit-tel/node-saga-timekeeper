@@ -11,23 +11,34 @@ const handleTimeoutTask = async (taskId: string, status: State.TaskStates) => {
       status,
       isSystem: true,
     });
-    await timerInstanceStore.delete(timerData.task.taskId);
+    await timerInstanceStore.update({
+      taskId: timerData.task.taskId,
+      delay: false,
+      ackTimeout: true,
+      timeout: true,
+    });
     console.log(
       'send timeout task',
       timerData.task.taskId,
       timerData.task.transactionId,
     );
   } catch (error) {
-    // Sometime handleDelayTask did not delete key and before ttl runout
-    // So to make sure it only prob here just log to make sure
-    console.log(taskId, timerData, error);
+    // Sometime Event's topic consume faster than Tasks's topic
+    // And task already finished but Timekeeper just picked up messages from Tasks's topic
+    // So it make false timeout
+    console.log(taskId, status, timerData, error);
   }
 };
 
 const handleDelayTask = async (taskId: string) => {
   const timerData = await timerInstanceStore.get(taskId);
   reloadTask(timerData.task);
-  await timerInstanceStore.delete(timerData.task.taskId);
+  await timerInstanceStore.update({
+    taskId: timerData.task.taskId,
+    delay: true,
+    ackTimeout: false,
+    timeout: false,
+  });
   console.log('send delay task');
 };
 

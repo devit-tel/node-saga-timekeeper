@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 export interface ITimerUpdate {
   ackTimeout?: boolean;
   timeout?: boolean;
+  delay?: boolean;
   taskId: string;
 }
 
@@ -100,6 +101,10 @@ export class TimerInstanceStore extends EventEmitter {
 
     if (timerUpdate.timeout) {
       this.clearTimer(TimerType.Timeout, timerUpdate.taskId);
+    }
+
+    if (timerUpdate.delay) {
+      this.clearTimer(TimerType.Delay, timerUpdate.taskId);
     }
 
     return this.client.update(timerUpdate);
