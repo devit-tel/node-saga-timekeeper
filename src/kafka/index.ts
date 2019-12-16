@@ -1,5 +1,6 @@
 import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
+import * as R from 'ramda';
 import * as config from '../config';
 import { TimerType } from '../store';
 import { jsonTryParse } from '../utils/common';
@@ -177,9 +178,11 @@ export const poll = (
   });
 
 const findFitDelay = (timeBeforeSchedule: number) => {
-  const matchDelay = config.DELAY_TOPIC_STATES.reverse().find(
+  const matchDelay = R.findLast(
     (delay: number) => delay <= timeBeforeSchedule,
+    config.DELAY_TOPIC_STATES,
   );
+
   if (matchDelay) {
     return matchDelay;
   } else {
