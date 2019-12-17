@@ -52,7 +52,7 @@ const handleTimeoutTask = async (timerId: string) => {
   });
 
   // Check if timer was cancelled
-  if (R.prop('ackTimeout', timerData)) {
+  if (R.prop('timeout', timerData)) {
     updateTask({
       taskId: timerData.task.taskId,
       transactionId: timerData.task.transactionId,
