@@ -37,7 +37,7 @@ export class TimerInstanceRedisStore extends RedisStore
     return this.unsetValue([`${prefix}.timer.${timerId}`]);
   }
 
-  update = async (timerUpdate: ITimerUpdate): Promise<any> => {
+  update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
     const timerInstance = await this.get(timerUpdate.timerId);
 
     if (timerInstance) {
@@ -59,6 +59,9 @@ export class TimerInstanceRedisStore extends RedisStore
           JSON.stringify(timerInstance),
         );
       }
+      return timerInstance;
     }
+    console.log('update not found');
+    return null;
   };
 }

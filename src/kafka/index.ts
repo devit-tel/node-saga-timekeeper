@@ -84,7 +84,7 @@ consumerTasksClient.on('ready', () => {
   ]);
 });
 
-consumerEventsClient.setDefaultConsumeTimeout(5);
+consumerEventsClient.setDefaultConsumeTimeout(200);
 consumerEventsClient.connect();
 consumerEventsClient.on('ready', async () => {
   console.log('Consumer Event kafka are ready');

@@ -79,7 +79,7 @@ export class TimerInstanceMongooseStore extends MongooseStore
   }
 
   // Mongoose ack undefined as not set
-  update = async (timerUpdate: ITimerUpdate): Promise<any> => {
+  update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
     const timerInstance = await this.model.findOneAndUpdate(
       {
         _id: timerUpdate.timerId,
