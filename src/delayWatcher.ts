@@ -21,7 +21,9 @@ const groupByTimerId = R.compose<
 );
 
 const handleAckTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.update({
+  const timerData = await timerInstanceStore.get(timerId);
+
+  await timerInstanceStore.update({
     timerId,
     delay: false,
     ackTimeout: true,
@@ -47,7 +49,9 @@ const handleAckTimeoutTask = async (timerId: string) => {
 };
 
 const handleTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.update({
+  const timerData = await timerInstanceStore.get(timerId);
+
+  await timerInstanceStore.update({
     timerId,
     delay: false,
     ackTimeout: true,
