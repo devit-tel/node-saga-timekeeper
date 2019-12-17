@@ -63,7 +63,7 @@ export class TimerInstanceMongooseStore extends MongooseStore
   get = async (timerId: string): Promise<Timer.ITimerData> => {
     return this.model
       .findOne({
-        _id: timerId,
+        'task.taskId': timerId,
       })
       .lean()
       .exec();
@@ -72,7 +72,7 @@ export class TimerInstanceMongooseStore extends MongooseStore
   delete(timerId: string): Promise<any> {
     return this.model
       .deleteOne({
-        _id: timerId,
+        'task.taskId': timerId,
       })
       .lean()
       .exec();
@@ -82,7 +82,7 @@ export class TimerInstanceMongooseStore extends MongooseStore
   update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
     const timerInstance = await this.model.findOneAndUpdate(
       {
-        _id: timerUpdate.timerId,
+        'task.taskId': timerUpdate.timerId,
       },
       {
         ackTimeout: timerUpdate.ackTimeout ? 0 : undefined,
