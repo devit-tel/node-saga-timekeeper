@@ -13,7 +13,6 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
       const beforeAckTimeout = whenAckTimeout - Date.now();
       const beforeTimeout = whenTimeout - Date.now();
       if (task.ackTimeout > 0 && beforeAckTimeout < 0) {
-        console.log('send acktimeout delay consume');
         updateTask({
           taskId: task.taskId,
           transactionId: task.transactionId,
@@ -21,7 +20,6 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
           status: State.TaskStates.AckTimeOut,
         });
       } else if (task.timeout > 0 && beforeTimeout < 0) {
-        console.log('send timeout delay consume');
         updateTask({
           taskId: task.taskId,
           transactionId: task.transactionId,

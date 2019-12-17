@@ -1,7 +1,15 @@
 import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
+import * as R from 'ramda';
 import * as config from '../config';
+import { TimerType } from '../store';
 import { jsonTryParse } from '../utils/common';
+
+export interface ITimerEvent {
+  timerId: string;
+  scheduledAt: number;
+  type: TimerType;
+}
 
 export const adminClient = AdminClient.create(config.kafkaAdminConfig);
 
@@ -20,6 +28,47 @@ export const consumerTimerClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.topic,
 );
 
+export const consumerDelaysClients = config.DELAY_TOPIC_STATES.map(
+  (delay: number) => {
+    const consumer = new KafkaConsumer(
+      {
+        ...config.kafkaTaskWatcherConfig.config,
+        'max.poll.interval.ms': Math.max(delay * 5, 30000),
+      },
+      config.kafkaTaskWatcherConfig.topic,
+    );
+
+    consumer.setDefaultConsumeTimeout(5);
+    consumer.connect();
+    return consumer;
+  },
+);
+
+for (
+  let clintNumber = 0;
+  clintNumber < config.DELAY_TOPIC_STATES.length;
+  clintNumber++
+) {
+  const consumerDelaysClient = consumerDelaysClients[clintNumber];
+  consumerDelaysClient.on('ready', async () => {
+    console.log(
+      `Consumer Delay ${config.DELAY_TOPIC_STATES[clintNumber]} kafka are ready`,
+    );
+    const topicName = `${config.kafkaTopicName.timer}-${config.DELAY_TOPIC_STATES[clintNumber]}`;
+    try {
+      await createTopic(
+        topicName,
+        config.kafkaTopic.num_partitions,
+        config.kafkaTopic.replication_factor,
+      );
+    } catch (error) {
+      console.warn(`Create topic "${topicName}" error: ${error.toString()}`);
+    } finally {
+      consumerDelaysClient.subscribe([topicName]);
+    }
+  });
+}
+
 export const producerClient = new Producer(
   config.kafkaProducerConfig.config,
   config.kafkaProducerConfig.topic,
@@ -35,7 +84,7 @@ consumerTasksClient.on('ready', () => {
   ]);
 });
 
-consumerEventsClient.setDefaultConsumeTimeout(5);
+consumerEventsClient.setDefaultConsumeTimeout(200);
 consumerEventsClient.connect();
 consumerEventsClient.on('ready', async () => {
   console.log('Consumer Event kafka are ready');
@@ -127,6 +176,30 @@ export const poll = (
       },
     );
   });
+
+const findFitDelay = (timeBeforeSchedule: number) => {
+  const matchDelay = R.findLast(
+    (delay: number) => delay <= timeBeforeSchedule,
+    config.DELAY_TOPIC_STATES,
+  );
+
+  if (matchDelay) {
+    return matchDelay;
+  } else {
+    return config.DELAY_TOPIC_STATES[0];
+  }
+};
+
+export const delayTimer = (timerEvent: ITimerEvent) =>
+  producerClient.produce(
+    `${config.kafkaTopicName.timer}-${findFitDelay(
+      timerEvent.scheduledAt - Date.now(),
+    )}`,
+    null,
+    Buffer.from(JSON.stringify(timerEvent)),
+    timerEvent.timerId,
+    Date.now(),
+  );
 
 export const updateTask = (taskUpdate: Event.ITaskUpdate) =>
   producerClient.produce(

@@ -42,6 +42,17 @@ export const kafkaAdminConfig = {
   ...pickAndReplaceFromENV('^admin\\.kafka\\.conf\\.'),
 };
 
+// This list have to be sorted
+export const DELAY_TOPIC_STATES = [
+  1000,
+  2000,
+  5000,
+  10000,
+  60000,
+  300000,
+  1800000,
+];
+
 export const kafkaTaskWatcherConfig = {
   config: {
     'enable.auto.commit': 'false',

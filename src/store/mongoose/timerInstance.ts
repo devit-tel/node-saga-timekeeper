@@ -56,34 +56,33 @@ export class TimerInstanceMongooseStore extends MongooseStore
   }
 
   create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
-    await this.model.create(timerData);
-
-    return timerData;
+    const timer = await this.model.create(timerData);
+    return timer;
   };
 
-  get = async (taskId: string): Promise<Timer.ITimerData> => {
+  get = async (timerId: string): Promise<Timer.ITimerData> => {
     return this.model
       .findOne({
-        'task.taskId': taskId,
+        'task.taskId': timerId,
       })
       .lean()
       .exec();
   };
 
-  delete(taskId: string): Promise<any> {
+  delete(timerId: string): Promise<any> {
     return this.model
       .deleteOne({
-        'task.taskId': taskId,
+        'task.taskId': timerId,
       })
       .lean()
       .exec();
   }
 
   // Mongoose ack undefined as not set
-  update = async (timerUpdate: ITimerUpdate): Promise<any> => {
+  update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
     const timerInstance = await this.model.findOneAndUpdate(
       {
-        'task.taskId': timerUpdate.taskId,
+        'task.taskId': timerUpdate.timerId,
       },
       {
         ackTimeout: timerUpdate.ackTimeout ? 0 : undefined,
@@ -92,12 +91,14 @@ export class TimerInstanceMongooseStore extends MongooseStore
       },
     );
 
-    if (
-      !timerInstance.ackTimeout &&
-      !timerInstance.timeout &&
-      !timerInstance.delay
-    ) {
-      await this.delete(timerUpdate.taskId);
+    if (timerInstance) {
+      if (
+        !timerInstance.ackTimeout &&
+        !timerInstance.timeout &&
+        !timerInstance.delay
+      ) {
+        await this.delete(timerUpdate.timerId);
+      }
     }
 
     return timerInstance;

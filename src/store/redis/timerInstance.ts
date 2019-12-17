@@ -1,8 +1,19 @@
 import { Timer } from '@melonade/melonade-declaration';
 import ioredis from 'ioredis';
+import * as R from 'ramda';
 import { prefix } from '../../config';
 import { ITimerInstanceStore, ITimerUpdate } from '../../store';
 import { RedisStore } from '../redis';
+
+const isNumber = R.is(Number);
+
+const upsetFieldTimerField = (
+  oldTimerData: Timer.ITimerData,
+  TimerData: Timer.ITimerData,
+  field: string,
+): any => {
+  return isNumber(oldTimerData[field]) ? oldTimerData[field] : TimerData[field];
+};
 
 export class TimerInstanceRedisStore extends RedisStore
   implements ITimerInstanceStore {
@@ -11,47 +22,80 @@ export class TimerInstanceRedisStore extends RedisStore
   }
 
   create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
-    await this.client.set(
-      `${prefix}.timer.${timerData.task.taskId}`,
-      JSON.stringify(timerData),
-    );
+    const timerId = timerData.task.taskId;
+    const timerKey = `${prefix}.timer.${timerId}`;
+    const results = await this.client
+      .pipeline()
+      .get(timerKey)
+      .setnx(timerKey, JSON.stringify(timerData))
+      .exec();
 
-    return timerData;
+    // If already set upsert
+    if (results[1][1] !== 1) {
+      const oldTimerData: Timer.ITimerData = JSON.parse(results[0][1]);
+      const newTimerData: Timer.ITimerData = {
+        ackTimeout: upsetFieldTimerField(oldTimerData, timerData, 'ackTimeout'),
+        timeout: upsetFieldTimerField(oldTimerData, timerData, 'timeout'),
+        delay: timerData.delay || oldTimerData.delay, // case of delay always overides
+        task: timerData.task,
+      };
+      await this.client.set(timerKey, JSON.stringify(newTimerData));
+      return newTimerData;
+    } else {
+      return timerData;
+    }
   };
 
-  get = async (taskId: string): Promise<Timer.ITimerData> => {
-    const taskData = await this.getValue(`${prefix}.timer.${taskId}`);
+  get = async (timerId: string): Promise<Timer.ITimerData> => {
+    const taskData = await this.getValue(`${prefix}.timer.${timerId}`);
 
     if (taskData) return JSON.parse(taskData);
     return null;
   };
 
-  delete(taskId: string): Promise<any> {
-    return this.unsetValue([`${prefix}.timer.${taskId}`]);
+  delete(timerId: string): Promise<any> {
+    return this.unsetValue([`${prefix}.timer.${timerId}`]);
   }
 
-  update = async (timerUpdate: ITimerUpdate): Promise<any> => {
-    const timerInstance = await this.get(timerUpdate.taskId);
+  update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
+    const timerKey = `${prefix}.timer.${timerUpdate.timerId}`;
 
-    if (timerInstance) {
-      timerInstance.ackTimeout = timerUpdate.ackTimeout
-        ? 0
-        : timerInstance.ackTimeout;
-      timerInstance.timeout = timerUpdate.timeout ? 0 : timerInstance.timeout;
-      timerInstance.delay = timerUpdate.delay ? 0 : timerInstance.delay;
+    const timerData = {
+      ackTimeout: timerUpdate.ackTimeout ? 0 : undefined,
+      timeout: timerUpdate.timeout ? 0 : undefined,
+      delay: timerUpdate.delay ? 0 : undefined,
+    };
+
+    const results = await this.client
+      .pipeline()
+      .get(timerKey)
+      .setnx(timerKey, JSON.stringify(timerData))
+      .exec();
+
+    if (results[1][1] !== 1) {
+      const oldTimerData: Timer.ITimerData = JSON.parse(results[0][1]);
+      const newTimerData: Timer.ITimerData = {
+        ackTimeout: timerUpdate.ackTimeout ? 0 : oldTimerData.ackTimeout,
+        timeout: timerUpdate.timeout ? 0 : oldTimerData.timeout,
+        delay: timerUpdate.delay ? 0 : oldTimerData.delay,
+        task: oldTimerData.task,
+      };
 
       if (
-        !timerInstance.ackTimeout &&
-        !timerInstance.timeout &&
-        !timerInstance.delay
+        !newTimerData.ackTimeout &&
+        !newTimerData.timeout &&
+        !newTimerData.delay
       ) {
-        await this.delete(timerUpdate.taskId);
+        await this.client.del(timerKey);
       } else {
-        await this.client.set(
-          `${prefix}.timer.${timerUpdate.taskId}`,
-          JSON.stringify(timerInstance),
-        );
+        await this.client.set(timerKey, JSON.stringify(newTimerData));
       }
+      return newTimerData;
+    } else {
+      if (!timerData.ackTimeout && !timerData.timeout && !timerData.delay) {
+        await this.client.del(timerKey);
+      }
+      return timerData as Timer.ITimerData;
     }
   };
 }

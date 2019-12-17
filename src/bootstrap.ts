@@ -1,12 +1,12 @@
 import { Store } from '@melonade/melonade-declaration';
 import * as config from './config';
+import { executors as delayExecutors } from './delayWatcher';
 import { executor as eventExecutor } from './eventWatcher';
 import './kafka';
 import * as store from './store';
 // import { TimerInstanceMongooseStore } from './store/mongoose/timerInstance';
 import { TimerInstanceRedisStore } from './store/redis/timerInstance';
 import { TimerLeaderZookeeperStore } from './store/zookeeper/timerLeader';
-import { executor as storeExecutor } from './storeWatcher';
 import { executor as taskExecutor } from './taskWatcher';
 import { executor as timerExecutor } from './timerWatcher';
 
@@ -49,7 +49,7 @@ switch (config.timerLeaderStoreConfig.type) {
     );
 }
 
-storeExecutor();
+delayExecutors();
 timerExecutor();
 taskExecutor();
 eventExecutor();

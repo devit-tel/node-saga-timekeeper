@@ -1,11 +1,11 @@
 import { Timer } from '@melonade/melonade-declaration';
-import { EventEmitter } from 'events';
+import { delayTimer } from '../kafka';
 
 export interface ITimerUpdate {
   ackTimeout?: boolean;
   timeout?: boolean;
   delay?: boolean;
-  taskId: string;
+  timerId: string;
 }
 
 export interface IStore {
@@ -21,9 +21,9 @@ export enum TimerType {
 export type WatcherCallback = (type: TimerType, taskId: string) => void;
 
 export interface ITimerInstanceStore extends IStore {
-  get(taskId: string): Promise<Timer.ITimerData>;
-  create(taskData: Timer.ITimerData): Promise<Timer.ITimerData>;
-  delete(taskId: string): Promise<any>;
+  get(timerId: string): Promise<Timer.ITimerData>;
+  create(timerData: Timer.ITimerData): Promise<Timer.ITimerData>;
+  delete(timerId: string): Promise<void>;
   update(timerUpdate: ITimerUpdate): Promise<Timer.ITimerData>;
 }
 
@@ -32,81 +32,47 @@ export interface ITimerLeaderStore extends IStore {
   list(): number[];
 }
 
-export class TimerInstanceStore extends EventEmitter {
+export class TimerInstanceStore {
   client: ITimerInstanceStore;
   localTimers: { [key: string]: any } = {};
-
-  constructor() {
-    super();
-  }
 
   setClient(client: ITimerInstanceStore) {
     if (this.client) throw new Error('Already set client');
     this.client = client;
   }
 
-  get(taskId: string) {
-    return this.client.get(taskId);
+  get(timerId: string) {
+    return this.client.get(timerId);
   }
-
-  private setTimer = (type: TimerType, taskId: string, when: number): void => {
-    this.localTimers[`${type}-${taskId}`] = setTimeout(() => {
-      this.emit(type, taskId);
-    }, when - Date.now());
-  };
 
   create = async (timerData: Timer.ITimerData) => {
-    await this.client.create(timerData);
-    if (timerData.ackTimeout) {
-      this.setTimer(
-        TimerType.AckTimeout,
-        timerData.task.taskId,
-        timerData.ackTimeout,
-      );
+    const timerInstance = await this.client.create(timerData);
+    if (timerInstance.ackTimeout) {
+      delayTimer({
+        scheduledAt: timerData.ackTimeout,
+        timerId: timerInstance.task.taskId,
+        type: TimerType.AckTimeout,
+      });
+    }
+    if (timerInstance.timeout) {
+      delayTimer({
+        scheduledAt: timerData.timeout,
+        timerId: timerInstance.task.taskId,
+        type: TimerType.Timeout,
+      });
+    }
+    if (timerInstance.delay) {
+      delayTimer({
+        scheduledAt: timerData.delay,
+        timerId: timerInstance.task.taskId,
+        type: TimerType.Delay,
+      });
     }
 
-    if (timerData.timeout) {
-      this.setTimer(
-        TimerType.Timeout,
-        timerData.task.taskId,
-        timerData.timeout,
-      );
-    }
-
-    if (timerData.delay) {
-      this.setTimer(TimerType.Delay, timerData.task.taskId, timerData.delay);
-    }
-
-    return timerData;
+    return timerInstance;
   };
-
-  private clearTimer = (type: TimerType, taskId: string): void => {
-    if (this.localTimers[`${type}-${taskId}`]) {
-      clearTimeout(this.localTimers[`${type}-${taskId}`]);
-    }
-  };
-
-  delete(taskId: string) {
-    this.clearTimer(TimerType.AckTimeout, taskId);
-    this.clearTimer(TimerType.Timeout, taskId);
-    this.clearTimer(TimerType.Delay, taskId);
-
-    return this.client.delete(taskId);
-  }
 
   update(timerUpdate: ITimerUpdate) {
-    if (timerUpdate.ackTimeout) {
-      this.clearTimer(TimerType.AckTimeout, timerUpdate.taskId);
-    }
-
-    if (timerUpdate.timeout) {
-      this.clearTimer(TimerType.Timeout, timerUpdate.taskId);
-    }
-
-    if (timerUpdate.delay) {
-      this.clearTimer(TimerType.Delay, timerUpdate.taskId);
-    }
-
     return this.client.update(timerUpdate);
   }
 }

@@ -11,5 +11,6 @@ This is prototype of saga implementation, written in Node.
 - [x] Load timer from store on startup
 - [x] Delay start task
 - [x] Cleanup store after all timer killed
+- [ ] Mongodb timer upsert atomic
 
 ## Known issues
