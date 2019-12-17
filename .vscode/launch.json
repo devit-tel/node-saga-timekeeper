@@ -9,8 +9,10 @@
       "request": "launch",
       "name": "Start",
       "program": "${workspaceFolder}/src/bootstrap.ts",
-      "preLaunchTask": "tsc: build - tsconfig.release.json",
-      "outFiles": ["${workspaceFolder}/build/**/*.js"],
+      "preLaunchTask": "build",
+      "outFiles": [
+        "${workspaceFolder}/build/**/*.js"
+      ],
       "runtimeVersion": "10.16.3"
     },
     {
@@ -18,7 +20,9 @@
       "request": "launch",
       "name": "Jest All",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runInBand"],
+      "args": [
+        "--runInBand"
+      ],
       "console": "integratedTerminal",
       "disableOptimisticBPs": true,
       "windows": {
