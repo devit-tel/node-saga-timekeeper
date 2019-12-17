@@ -22,8 +22,8 @@ export type WatcherCallback = (type: TimerType, taskId: string) => void;
 
 export interface ITimerInstanceStore extends IStore {
   get(timerId: string): Promise<Timer.ITimerData>;
-  create(timerData: Timer.ITimerData): Promise<string>;
-  delete(timerId: string): Promise<any>;
+  create(timerData: Timer.ITimerData): Promise<Timer.ITimerData>;
+  delete(timerId: string): Promise<void>;
   update(timerUpdate: ITimerUpdate): Promise<Timer.ITimerData>;
 }
 
@@ -46,30 +46,30 @@ export class TimerInstanceStore {
   }
 
   create = async (timerData: Timer.ITimerData) => {
-    const timerId = await this.client.create(timerData);
-    if (timerData.ackTimeout) {
+    const timerInstance = await this.client.create(timerData);
+    if (timerInstance.ackTimeout) {
       delayTimer({
         scheduledAt: timerData.ackTimeout,
-        timerId,
+        timerId: timerInstance.task.taskId,
         type: TimerType.AckTimeout,
       });
     }
-    if (timerData.timeout) {
+    if (timerInstance.timeout) {
       delayTimer({
         scheduledAt: timerData.timeout,
-        timerId,
+        timerId: timerInstance.task.taskId,
         type: TimerType.Timeout,
       });
     }
-    if (timerData.delay) {
+    if (timerInstance.delay) {
       delayTimer({
         scheduledAt: timerData.delay,
-        timerId,
+        timerId: timerInstance.task.taskId,
         type: TimerType.Delay,
       });
     }
 
-    return timerId;
+    return timerInstance;
   };
 
   update(timerUpdate: ITimerUpdate) {

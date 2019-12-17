@@ -42,10 +42,7 @@ const handleAckTimeoutTask = async (timerId: string) => {
       timerData.task.transactionId,
     );
   } else {
-    // Sometime Event's topic consume faster than Tasks's topic
-    // And task already finished but Timekeeper just picked up messages from Tasks's topic
-    // So it make false timeout
-    // console.log(timerId, timerData);
+    console.log('skip ackTimeout');
   }
 };
 
@@ -72,10 +69,7 @@ const handleTimeoutTask = async (timerId: string) => {
       timerData.task.transactionId,
     );
   } else {
-    // Sometime Event's topic consume faster than Tasks's topic
-    // And task already finished but Timekeeper just picked up messages from Tasks's topic
-    // So it make false timeout
-    // console.log(timerId, timerData);
+    console.log('skip timeout');
   }
 };
 
@@ -129,15 +123,9 @@ const executor = async (delayNumber: number) => {
   try {
     const timerEvents: ITimerEvent[] = await poll(delayConsumer, 100);
     if (timerEvents.length) {
-      console.time(`${config.DELAY_TOPIC_STATES[delayNumber]}`);
-      try {
-        await handleDelayTimers(timerEvents);
-      } catch (error) {
-      } finally {
-        console.timeEnd(`${config.DELAY_TOPIC_STATES[delayNumber]}`);
-      }
+      await handleDelayTimers(timerEvents);
+      delayConsumer.commit();
     }
-    delayConsumer.commit();
   } catch (error) {
     console.log(error, config.DELAY_TOPIC_STATES[delayNumber]);
   } finally {

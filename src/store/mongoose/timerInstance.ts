@@ -55,9 +55,9 @@ export class TimerInstanceMongooseStore extends MongooseStore
     super(uri, mongoOption, 'timer-instance', timerSchama);
   }
 
-  create = async (timerData: Timer.ITimerData): Promise<string> => {
+  create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
     const timer = await this.model.create(timerData);
-    return timer._id;
+    return timer;
   };
 
   get = async (timerId: string): Promise<Timer.ITimerData> => {

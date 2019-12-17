@@ -29,7 +29,6 @@ const handleScheduleTask = async (tasks: Task.ITask[]) => {
           status: State.TaskStates.Timeout,
         });
       } else if (task.ackTimeout > 0 || task.timeout > 0) {
-        console.log('register', task.taskId);
         await timerInstanceStore.create({
           task,
           ackTimeout: task.ackTimeout > 0 ? whenAckTimeout : 0,

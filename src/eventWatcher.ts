@@ -3,7 +3,6 @@ import { consumerEventsClient, poll } from './kafka';
 import { timerInstanceStore } from './store';
 
 const handleAckTask = async (task: Event.ITaskUpdate) => {
-  console.log('ack', task.taskId);
   return timerInstanceStore.update({
     timerId: task.taskId,
     ackTimeout: true,
@@ -12,7 +11,6 @@ const handleAckTask = async (task: Event.ITaskUpdate) => {
 };
 
 const handleFinishedTask = async (task: Event.ITaskUpdate) => {
-  console.log('done', task.taskId);
   return timerInstanceStore.update({
     timerId: task.taskId,
     ackTimeout: true,
