@@ -21,15 +21,15 @@ const groupByTimerId = R.compose<
 );
 
 const handleAckTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.get(timerId);
+  const timerData = await timerInstanceStore.update({
+    timerId,
+    delay: false,
+    ackTimeout: true,
+    timeout: false,
+  });
+
   // Check if timer was cancelled
   if (R.prop('ackTimeout', timerData)) {
-    await timerInstanceStore.update({
-      timerId,
-      delay: false,
-      ackTimeout: true,
-      timeout: false,
-    });
     updateTask({
       taskId: timerData.task.taskId,
       transactionId: timerData.task.transactionId,
@@ -47,16 +47,15 @@ const handleAckTimeoutTask = async (timerId: string) => {
 };
 
 const handleTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.get(timerId);
+  const timerData = await timerInstanceStore.update({
+    timerId,
+    delay: false,
+    ackTimeout: true,
+    timeout: true,
+  });
 
   // Check if timer was cancelled
   if (R.prop('ackTimeout', timerData)) {
-    await timerInstanceStore.update({
-      timerId,
-      delay: false,
-      ackTimeout: true,
-      timeout: true,
-    });
     updateTask({
       taskId: timerData.task.taskId,
       transactionId: timerData.task.transactionId,
