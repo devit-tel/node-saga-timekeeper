@@ -5,7 +5,6 @@ import { timerInstanceStore } from './store';
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   const whenDispatch = timer.task.retryDelay + timer.task.endTime;
   const beforeDispatch = whenDispatch - Date.now();
-  console.log('register delay');
   if (beforeDispatch > 0) {
     return timerInstanceStore.create({
       task: timer.task,

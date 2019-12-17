@@ -38,13 +38,6 @@ const handleAckTimeoutTask = async (timerId: string) => {
       status: State.TaskStates.AckTimeOut,
       isSystem: true,
     });
-    console.log(
-      'Send ack timeout task',
-      timerData.task.taskId,
-      timerData.task.transactionId,
-    );
-  } else {
-    console.log('skip ackTimeout');
   }
 };
 
@@ -66,13 +59,6 @@ const handleTimeoutTask = async (timerId: string) => {
       status: State.TaskStates.Timeout,
       isSystem: true,
     });
-    console.log(
-      'Send timeout task',
-      timerData.task.taskId,
-      timerData.task.transactionId,
-    );
-  } else {
-    console.log('skip timeout');
   }
 };
 
@@ -86,9 +72,6 @@ const handleDelayTask = async (timerId: string) => {
       ackTimeout: false,
       timeout: false,
     });
-    console.log('Sent delay task');
-  } else {
-    console.log('Delay task was cancelled');
   }
 };
 

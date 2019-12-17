@@ -32,7 +32,6 @@ export class TimerInstanceRedisStore extends RedisStore
 
     // If already set upsert
     if (results[1][1] !== 1) {
-      console.log('Create Timer already exist', timerId);
       const oldTimerData: Timer.ITimerData = JSON.parse(results[0][1]);
       const newTimerData: Timer.ITimerData = {
         ackTimeout: upsetFieldTimerField(oldTimerData, timerData, 'ackTimeout'),
@@ -43,7 +42,6 @@ export class TimerInstanceRedisStore extends RedisStore
       await this.client.set(timerKey, JSON.stringify(newTimerData));
       return newTimerData;
     } else {
-      console.log('Create Timer not exist', timerId);
       return timerData;
     }
   };
@@ -75,7 +73,6 @@ export class TimerInstanceRedisStore extends RedisStore
       .exec();
 
     if (results[1][1] !== 1) {
-      console.log('Update Timer already exists', timerUpdate.timerId);
       const oldTimerData: Timer.ITimerData = JSON.parse(results[0][1]);
       const newTimerData: Timer.ITimerData = {
         ackTimeout: timerUpdate.ackTimeout ? 0 : oldTimerData.ackTimeout,
@@ -89,17 +86,13 @@ export class TimerInstanceRedisStore extends RedisStore
         !newTimerData.timeout &&
         !newTimerData.delay
       ) {
-        console.log('update - cleanup 1');
         await this.client.del(timerKey);
       } else {
-        console.log('update - update');
         await this.client.set(timerKey, JSON.stringify(newTimerData));
       }
       return newTimerData;
     } else {
-      console.log('Update Timer not exists', timerUpdate.timerId);
       if (!timerData.ackTimeout && !timerData.timeout && !timerData.delay) {
-        console.log('update - cleanup 2');
         await this.client.del(timerKey);
       }
       return timerData as Timer.ITimerData;
