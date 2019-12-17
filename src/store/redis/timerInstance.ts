@@ -89,7 +89,7 @@ export class TimerInstanceRedisStore extends RedisStore
         !newTimerData.timeout &&
         !newTimerData.delay
       ) {
-        console.log('update - cleanup');
+        console.log('update - cleanup 1');
         await this.client.del(timerKey);
       } else {
         console.log('update - update');
@@ -98,12 +98,8 @@ export class TimerInstanceRedisStore extends RedisStore
       return newTimerData;
     } else {
       console.log('Update Timer not exists', timerUpdate.timerId);
-      if (
-        !timerUpdate.ackTimeout &&
-        !timerUpdate.timeout &&
-        !timerUpdate.delay
-      ) {
-        console.log('update - cleanup');
+      if (!timerData.ackTimeout && !timerData.timeout && !timerData.delay) {
+        console.log('update - cleanup 2');
         await this.client.del(timerKey);
       }
       return timerData as Timer.ITimerData;
