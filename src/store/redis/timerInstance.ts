@@ -98,6 +98,14 @@ export class TimerInstanceRedisStore extends RedisStore
       return newTimerData;
     } else {
       console.log('Update Timer not exists', timerUpdate.timerId);
+      if (
+        !timerUpdate.ackTimeout &&
+        !timerUpdate.timeout &&
+        !timerUpdate.delay
+      ) {
+        console.log('update - cleanup');
+        await this.client.del(timerKey);
+      }
       return timerData as Timer.ITimerData;
     }
   };
