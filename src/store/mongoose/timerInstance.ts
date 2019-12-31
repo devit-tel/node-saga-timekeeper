@@ -1,12 +1,10 @@
-import { Timer } from '@melonade/melonade-declaration';
-import mongoose from 'mongoose';
+import * as mongoose from 'mongoose';
+import * as mongooseLeanVirtuals from 'mongoose-lean-virtuals';
 import { MongooseStore } from '.';
-import { ITimerInstanceStore, ITimerUpdate } from '../../store';
+import { ITimerInstanceStore, TimerInstance } from '../../store';
 
 const timerSchama = new mongoose.Schema({
-  ackTimeout: Number,
-  timeout: Number,
-  delay: Number,
+  type: String,
   task: {
     taskId: {
       type: String,
@@ -49,58 +47,43 @@ const timerSchama = new mongoose.Schema({
   },
 });
 
+timerSchama
+  .virtual('timerId')
+  .get(function() {
+    return this._id;
+  })
+  .set(function() {
+    return this._id;
+  });
+
+timerSchama.plugin(mongooseLeanVirtuals);
+
 export class TimerInstanceMongooseStore extends MongooseStore
   implements ITimerInstanceStore {
   constructor(uri: string, mongoOption: mongoose.ConnectionOptions) {
     super(uri, mongoOption, 'timer-instance', timerSchama);
   }
 
-  create = async (timerData: Timer.ITimerData): Promise<Timer.ITimerData> => {
+  create = async (timerData: TimerInstance): Promise<TimerInstance> => {
     const timer = await this.model.create(timerData);
     return timer;
   };
 
-  get = async (timerId: string): Promise<Timer.ITimerData> => {
+  get = async (timerId: string): Promise<TimerInstance> => {
     return this.model
       .findOne({
-        'task.taskId': timerId,
+        _id: timerId,
       })
-      .lean()
+      .lean({ virtuals: true })
       .exec();
   };
 
   delete(timerId: string): Promise<any> {
     return this.model
       .deleteOne({
-        'task.taskId': timerId,
+        _id: timerId,
       })
-      .lean()
+      .lean({ virtuals: true })
       .exec();
   }
-
-  // Mongoose ack undefined as not set
-  update = async (timerUpdate: ITimerUpdate): Promise<Timer.ITimerData> => {
-    const timerInstance = await this.model.findOneAndUpdate(
-      {
-        'task.taskId': timerUpdate.timerId,
-      },
-      {
-        ackTimeout: timerUpdate.ackTimeout ? 0 : undefined,
-        timeout: timerUpdate.timeout ? 0 : undefined,
-        delay: timerUpdate.delay ? 0 : undefined,
-      },
-    );
-
-    if (timerInstance) {
-      if (
-        !timerInstance.ackTimeout &&
-        !timerInstance.timeout &&
-        !timerInstance.delay
-      ) {
-        await this.delete(timerUpdate.timerId);
-      }
-    }
-
-    return timerInstance;
-  };
 }

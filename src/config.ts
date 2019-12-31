@@ -94,7 +94,7 @@ export const timerInstanceStoreConfig = {
       useNewUrlParser: true,
       useCreateIndex: true,
       reconnectTries: Number.MAX_SAFE_INTEGER,
-      poolSize: 100,
+      poolSize: 20,
       useFindAndModify: false,
     },
   },

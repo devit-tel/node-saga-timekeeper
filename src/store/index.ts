@@ -1,30 +1,23 @@
-import { Timer } from '@melonade/melonade-declaration';
-import { delayTimer } from '../kafka';
+import { Task } from '@melonade/melonade-declaration';
+import { TimerInstanceTypes } from '../kafka';
 
-export interface ITimerUpdate {
-  ackTimeout?: boolean;
-  timeout?: boolean;
-  delay?: boolean;
+export interface IDelayTaskTimerInstance {
   timerId: string;
+  type: TimerInstanceTypes.Delay;
+  task: Task.ITask;
 }
+
+// Rn we only have 1 instance type
+export type TimerInstance = IDelayTaskTimerInstance;
 
 export interface IStore {
   isHealthy(): boolean;
 }
 
-export enum TimerType {
-  Delay = 'DELAY',
-  Timeout = 'TIMEOUT',
-  AckTimeout = 'ACK_TIMEOUT',
-}
-
-export type WatcherCallback = (type: TimerType, taskId: string) => void;
-
 export interface ITimerInstanceStore extends IStore {
-  get(timerId: string): Promise<Timer.ITimerData>;
-  create(timerData: Timer.ITimerData): Promise<Timer.ITimerData>;
+  get(timerId: string): Promise<TimerInstance>;
+  create(timerData: TimerInstance): Promise<TimerInstance>;
   delete(timerId: string): Promise<void>;
-  update(timerUpdate: ITimerUpdate): Promise<Timer.ITimerData>;
 }
 
 export interface ITimerLeaderStore extends IStore {
@@ -45,35 +38,12 @@ export class TimerInstanceStore {
     return this.client.get(timerId);
   }
 
-  create = async (timerData: Timer.ITimerData) => {
-    const timerInstance = await this.client.create(timerData);
-    if (timerInstance.ackTimeout) {
-      delayTimer({
-        scheduledAt: timerData.ackTimeout,
-        timerId: timerInstance.task.taskId,
-        type: TimerType.AckTimeout,
-      });
-    }
-    if (timerInstance.timeout) {
-      delayTimer({
-        scheduledAt: timerData.timeout,
-        timerId: timerInstance.task.taskId,
-        type: TimerType.Timeout,
-      });
-    }
-    if (timerInstance.delay) {
-      delayTimer({
-        scheduledAt: timerData.delay,
-        timerId: timerInstance.task.taskId,
-        type: TimerType.Delay,
-      });
-    }
+  create(timerData: TimerInstance) {
+    return this.client.create(timerData);
+  }
 
-    return timerInstance;
-  };
-
-  update(timerUpdate: ITimerUpdate) {
-    return this.client.update(timerUpdate);
+  delete(timerId: string) {
+    return this.client.delete(timerId);
   }
 }
 
