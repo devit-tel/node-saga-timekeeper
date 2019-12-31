@@ -1,19 +1,24 @@
 import { Timer } from '@melonade/melonade-declaration';
-import { consumerTimerClient, poll, reloadTask } from './kafka';
-import { timerInstanceStore } from './store';
+import {
+  consumerTimerClient,
+  delayTimer,
+  poll,
+  reloadTask,
+  TimerInstanceTypes,
+} from './kafka';
 
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   const whenDispatch = timer.task.retryDelay + timer.task.endTime;
   const beforeDispatch = whenDispatch - Date.now();
   if (beforeDispatch > 0) {
-    return timerInstanceStore.create({
+    delayTimer({
+      scheduledAt: beforeDispatch,
+      type: TimerInstanceTypes.Delay,
       task: timer.task,
-      ackTimeout: 0,
-      timeout: 0,
-      delay: whenDispatch,
     });
+  } else {
+    reloadTask(timer.task);
   }
-  return reloadTask(timer.task);
 };
 
 export const executor = async () => {
@@ -23,11 +28,11 @@ export const executor = async () => {
       await Promise.all(
         timers.map((timer: Timer.AllTimerType) => {
           switch (timer.type) {
-            case Timer.TimerType.delayTask:
+            case Timer.TimerTypes.delayTask:
               return handleDelayTimer(timer);
 
             // Not support cron workflow yet
-            case Timer.TimerType.cronWorkflow:
+            case Timer.TimerTypes.cronWorkflow:
             default:
               return Promise.resolve();
           }

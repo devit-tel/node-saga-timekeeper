@@ -84,35 +84,3 @@ export const kafkaProducerConfig = {
     ...pickAndReplaceFromENV('^producer\\.kafka\\.topic-confg\\.'),
   },
 };
-
-export const timerInstanceStoreConfig = {
-  type: process.env['timer-instance.type'],
-  mongoDBConfig: {
-    uri: process.env['timer-instance.mongodb.uri'],
-    options: {
-      dbName: `melonade-${melonade.namespace}`,
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      reconnectTries: Number.MAX_SAFE_INTEGER,
-      poolSize: 100,
-      useFindAndModify: false,
-    },
-  },
-  redisConfig: {
-    db: '2',
-    ...pickAndReplaceFromENV('^timer-instance\\.redis\\.'),
-  },
-};
-
-export const timerLeaderStoreConfig = {
-  type: process.env['timer-leader.type'],
-  zookeeperConfig: {
-    root: `/melonade-${melonade.namespace}/timer-leader`,
-    connectionString: process.env['timer-leader.zookeeper.connections'],
-    options: {
-      sessionTimeout: 200,
-      spinDelay: 100,
-      retries: 0,
-    },
-  },
-};

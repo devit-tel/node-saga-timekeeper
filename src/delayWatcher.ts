@@ -1,113 +1,66 @@
 import { State } from '@melonade/melonade-declaration';
-import * as R from 'ramda';
 import * as config from './config';
 import {
+  AllTimerEvents,
   consumerDelaysClients,
   delayTimer,
-  ITimerEvent,
+  ITimerAcktimeoutEvent,
+  ITimerDelayEvent,
+  ITimerTimeoutEvent,
   poll,
   reloadTask,
+  TimerInstanceTypes,
   updateTask,
 } from './kafka';
-import { timerInstanceStore, TimerType } from './store';
 
-const groupByTimerId = R.compose<
-  ITimerEvent[],
-  { [timerId: string]: ITimerEvent[] },
-  ITimerEvent[][]
->(
-  R.values,
-  R.groupBy(R.propOr('', 'timerId')),
-);
-
-const handleAckTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.get(timerId);
-
-  await timerInstanceStore.update({
-    timerId,
-    delay: false,
-    ackTimeout: true,
-    timeout: false,
+const handleAckTimeoutTask = async (timer: ITimerAcktimeoutEvent) => {
+  updateTask({
+    taskId: timer.taskId,
+    transactionId: timer.transactionId,
+    status: State.TaskStates.AckTimeOut,
+    isSystem: true,
   });
-
-  // Check if timer was cancelled
-  if (R.prop('ackTimeout', timerData)) {
-    updateTask({
-      taskId: timerData.task.taskId,
-      transactionId: timerData.task.transactionId,
-      status: State.TaskStates.AckTimeOut,
-      isSystem: true,
-    });
-  }
 };
 
-const handleTimeoutTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.get(timerId);
-
-  await timerInstanceStore.update({
-    timerId,
-    delay: false,
-    ackTimeout: true,
-    timeout: true,
+const handleTimeoutTask = async (timer: ITimerTimeoutEvent) => {
+  updateTask({
+    taskId: timer.taskId,
+    transactionId: timer.transactionId,
+    status: State.TaskStates.Timeout,
+    isSystem: true,
   });
-
-  // Check if timer was cancelled
-  if (R.prop('timeout', timerData)) {
-    updateTask({
-      taskId: timerData.task.taskId,
-      transactionId: timerData.task.transactionId,
-      status: State.TaskStates.Timeout,
-      isSystem: true,
-    });
-  }
 };
 
-const handleDelayTask = async (timerId: string) => {
-  const timerData = await timerInstanceStore.get(timerId);
-  if (R.prop('delay', timerData)) {
-    reloadTask(timerData.task);
-    await timerInstanceStore.update({
-      timerId: timerData.task.taskId,
-      delay: true,
-      ackTimeout: false,
-      timeout: false,
-    });
-  }
+const handleDelayTask = async (timer: ITimerDelayEvent) => {
+  reloadTask(timer.task);
 };
 
-const handleDelayTimers = async (timerEvents: ITimerEvent[]) => {
-  return Promise.all(
-    // Run sequntial for same timerId
-    groupByTimerId(timerEvents).map(
-      async (groupedTimerEvents: ITimerEvent[]) => {
-        for (const timerEvent of groupedTimerEvents) {
-          const timeBeforeSchedule = timerEvent.scheduledAt - Date.now();
-          if (timeBeforeSchedule < 0) {
-            switch (timerEvent.type) {
-              case TimerType.AckTimeout:
-                await handleAckTimeoutTask(timerEvent.timerId);
-                break;
-              case TimerType.Timeout:
-                await handleTimeoutTask(timerEvent.timerId);
-                break;
-              case TimerType.Delay:
-                await handleDelayTask(timerEvent.timerId);
-                break;
-            }
-          } else {
-            delayTimer(timerEvent);
-          }
-        }
-      },
-    ),
-  );
+const handleDelayTimers = async (timerEvents: AllTimerEvents[]) => {
+  for (const timerEvent of timerEvents) {
+    const timeBeforeSchedule = timerEvent.scheduledAt - Date.now();
+    if (timeBeforeSchedule < 0) {
+      switch (timerEvent.type) {
+        case TimerInstanceTypes.AckTimeout:
+          await handleAckTimeoutTask(timerEvent);
+          break;
+        case TimerInstanceTypes.Timeout:
+          handleTimeoutTask(timerEvent);
+          break;
+        case TimerInstanceTypes.Delay:
+          handleDelayTask(timerEvent);
+          break;
+      }
+    } else {
+      delayTimer(timerEvent);
+    }
+  }
 };
 
 const executor = async (delayNumber: number) => {
   const startTime = Date.now();
   const delayConsumer = consumerDelaysClients[delayNumber];
   try {
-    const timerEvents: ITimerEvent[] = await poll(delayConsumer, 100);
+    const timerEvents: AllTimerEvents[] = await poll(delayConsumer, 100);
     if (timerEvents.length) {
       await handleDelayTimers(timerEvents);
       delayConsumer.commit();

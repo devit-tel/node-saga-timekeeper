@@ -2,14 +2,39 @@ import { Command, Event, Kafka, Task } from '@melonade/melonade-declaration';
 import { AdminClient, KafkaConsumer, Producer } from 'node-rdkafka';
 import * as R from 'ramda';
 import * as config from '../config';
-import { TimerType } from '../store';
 import { jsonTryParse } from '../utils/common';
 
-export interface ITimerEvent {
-  timerId: string;
-  scheduledAt: number;
-  type: TimerType;
+export enum TimerInstanceTypes {
+  Delay = 'DELAY',
+  Timeout = 'TIMEOUT',
+  AckTimeout = 'ACK_TIMEOUT',
 }
+
+interface IBaseTimer {
+  scheduledAt: number;
+}
+
+export interface ITimerDelayEvent extends IBaseTimer {
+  task: Task.ITask;
+  type: TimerInstanceTypes.Delay;
+}
+
+export interface ITimerAcktimeoutEvent extends IBaseTimer {
+  taskId: string;
+  transactionId: string;
+  type: TimerInstanceTypes.AckTimeout;
+}
+
+export interface ITimerTimeoutEvent extends IBaseTimer {
+  taskId: string;
+  transactionId: string;
+  type: TimerInstanceTypes.Timeout;
+}
+
+export type AllTimerEvents =
+  | ITimerDelayEvent
+  | ITimerAcktimeoutEvent
+  | ITimerTimeoutEvent;
 
 export const adminClient = AdminClient.create(config.kafkaAdminConfig);
 
@@ -190,14 +215,16 @@ const findFitDelay = (timeBeforeSchedule: number) => {
   }
 };
 
-export const delayTimer = (timerEvent: ITimerEvent) =>
+export const delayTimer = (timerEvent: AllTimerEvents) =>
   producerClient.produce(
     `${config.kafkaTopicName.timer}-${findFitDelay(
       timerEvent.scheduledAt - Date.now(),
     )}`,
     null,
     Buffer.from(JSON.stringify(timerEvent)),
-    timerEvent.timerId,
+    timerEvent.type === TimerInstanceTypes.Delay
+      ? timerEvent.task.transactionId
+      : timerEvent.transactionId,
     Date.now(),
   );
 
