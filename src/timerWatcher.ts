@@ -1,27 +1,20 @@
 import { Timer } from '@melonade/melonade-declaration';
 import {
   consumerTimerClient,
+  delayTimer,
   poll,
   reloadTask,
   TimerInstanceTypes,
 } from './kafka';
-import { timerInstanceStore } from './store';
 
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   const whenDispatch = timer.task.retryDelay + timer.task.endTime;
   const beforeDispatch = whenDispatch - Date.now();
   if (beforeDispatch > 0) {
-    await timerInstanceStore.create({
-      task: timer.task,
-      type: TimerInstanceTypes.Delay,
-      delay: whenDispatch,
-    });
-
     delayTimer({
       scheduledAt: beforeDispatch,
-      type: TimerInstanceTypes.AckTimeout,
-      transactionId: task.transactionId,
-      taskId: task.taskId,
+      type: TimerInstanceTypes.Delay,
+      task: timer.task,
     });
   }
   return reloadTask(timer.task);

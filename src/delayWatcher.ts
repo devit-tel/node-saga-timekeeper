@@ -12,7 +12,6 @@ import {
   TimerInstanceTypes,
   updateTask,
 } from './kafka';
-import { timerInstanceStore } from './store';
 
 const handleAckTimeoutTask = async (timer: ITimerAcktimeoutEvent) => {
   updateTask({
@@ -33,11 +32,7 @@ const handleTimeoutTask = async (timer: ITimerTimeoutEvent) => {
 };
 
 const handleDelayTask = async (timer: ITimerDelayEvent) => {
-  const timerData = await timerInstanceStore.get(timer.timerId);
-  if (timerData) {
-    reloadTask(timerData.task);
-    await timerInstanceStore.delete(timer.timerId);
-  }
+  reloadTask(timer.task);
 };
 
 const handleDelayTimers = async (timerEvents: AllTimerEvents[]) => {

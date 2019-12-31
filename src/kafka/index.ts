@@ -15,7 +15,7 @@ interface IBaseTimer {
 }
 
 export interface ITimerDelayEvent extends IBaseTimer {
-  timerId: string;
+  task: Task.ITask;
   type: TimerInstanceTypes.Delay;
 }
 
@@ -223,7 +223,7 @@ export const delayTimer = (timerEvent: AllTimerEvents) =>
     null,
     Buffer.from(JSON.stringify(timerEvent)),
     timerEvent.type === TimerInstanceTypes.Delay
-      ? timerEvent.timerId
+      ? timerEvent.task.transactionId
       : timerEvent.transactionId,
     Date.now(),
   );
