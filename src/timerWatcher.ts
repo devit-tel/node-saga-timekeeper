@@ -16,8 +16,9 @@ const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
       type: TimerInstanceTypes.Delay,
       task: timer.task,
     });
+  } else {
+    reloadTask(timer.task);
   }
-  return reloadTask(timer.task);
 };
 
 export const executor = async () => {
