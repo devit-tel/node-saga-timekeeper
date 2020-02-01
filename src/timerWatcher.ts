@@ -9,9 +9,10 @@ import {
 
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   const beforeDispatch = timer.task.startTime - Date.now();
+
   if (beforeDispatch > 0) {
     delayTimer({
-      scheduledAt: beforeDispatch,
+      scheduledAt: timer.task.startTime,
       type: TimerInstanceTypes.Delay,
       task: timer.task,
     });
