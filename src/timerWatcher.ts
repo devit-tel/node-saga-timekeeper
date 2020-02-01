@@ -8,8 +8,7 @@ import {
 } from './kafka';
 
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
-  const whenDispatch = timer.task.retryDelay + timer.task.endTime;
-  const beforeDispatch = whenDispatch - Date.now();
+  const beforeDispatch = timer.task.startTime - Date.now();
   if (beforeDispatch > 0) {
     delayTimer({
       scheduledAt: beforeDispatch,
