@@ -12,6 +12,7 @@ import {
   TimerInstanceTypes,
   updateTask,
 } from './kafka';
+import { sleep } from './utils/common';
 
 const handleAckTimeoutTask = async (timer: ITimerAcktimeoutEvent) => {
   updateTask({
@@ -67,6 +68,7 @@ const executor = async (delayNumber: number) => {
     }
   } catch (error) {
     console.log(error, config.DELAY_TOPIC_STATES[delayNumber]);
+    await sleep(1000);
   } finally {
     const timeUsed = Date.now() - startTime;
     const waitTime = Math.max(

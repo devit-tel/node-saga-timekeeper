@@ -6,6 +6,7 @@ import {
   reloadTask,
   TimerInstanceTypes,
 } from './kafka';
+import { sleep } from './utils/common';
 
 const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   const beforeDispatch = timer.task.startTime - Date.now();
@@ -41,7 +42,8 @@ export const executor = async () => {
     }
     consumerTimerClient.commit();
   } catch (error) {
-    console.log(error);
+    console.warn(error);
+    await sleep(1000);
   } finally {
     setImmediate(executor);
   }
