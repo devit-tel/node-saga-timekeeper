@@ -6,6 +6,7 @@ import {
   TimerInstanceTypes,
   updateTask,
 } from './kafka';
+import { sleep } from './utils/common';
 
 const handleScheduleTask = (tasks: Task.ITask[]) => {
   const scheduleTasks = tasks.filter(
@@ -68,7 +69,8 @@ export const executor = async () => {
 
     consumerTasksClient.commit();
   } catch (error) {
-    console.log(error);
+    console.warn(error);
+    await sleep(1000);
   } finally {
     setImmediate(executor);
   }
