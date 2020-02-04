@@ -43,11 +43,6 @@ export const consumerTasksClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.topic,
 );
 
-export const consumerEventsClient = new KafkaConsumer(
-  config.kafkaTaskWatcherConfig.config,
-  config.kafkaTaskWatcherConfig.topic,
-);
-
 export const consumerTimerClient = new KafkaConsumer(
   config.kafkaTaskWatcherConfig.config,
   config.kafkaTaskWatcherConfig.topic,
@@ -107,27 +102,6 @@ consumerTasksClient.on('ready', () => {
     // Internal lib already support Regexp
     new RegExp(`^${config.kafkaTopicName.task}.*`) as any,
   ]);
-});
-
-consumerEventsClient.setDefaultConsumeTimeout(200);
-consumerEventsClient.connect();
-consumerEventsClient.on('ready', async () => {
-  console.log('Consumer Event kafka are ready');
-  try {
-    await createTopic(
-      config.kafkaTopicName.event,
-      config.kafkaTopic.num_partitions,
-      config.kafkaTopic.replication_factor,
-    );
-  } catch (error) {
-    console.warn(
-      `Create topic "${
-        config.kafkaTopicName.event
-      }" error: ${error.toString()}`,
-    );
-  } finally {
-    consumerEventsClient.subscribe([config.kafkaTopicName.event]);
-  }
 });
 
 consumerTimerClient.setDefaultConsumeTimeout(5);
