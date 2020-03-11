@@ -9,7 +9,7 @@ import {
 } from './kafka';
 import { sleep } from './utils/common';
 
-const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
+const handleDelayTimer = (timer: Timer.IDelayTaskTimer) => {
   const beforeDispatch = timer.task.startTime - Date.now();
 
   if (beforeDispatch > 0) {
@@ -23,7 +23,7 @@ const handleDelayTimer = async (timer: Timer.IDelayTaskTimer) => {
   }
 };
 
-const handleScheduleTimer = async (timer: Timer.IScheduleTaskTimer) => {
+const handleScheduleTimer = (timer: Timer.IScheduleTaskTimer) => {
   const beforeDispatch = timer.completedAt - Date.now();
   updateTask({
     transactionId: timer.transactionId,
@@ -31,7 +31,7 @@ const handleScheduleTimer = async (timer: Timer.IScheduleTaskTimer) => {
     isSystem: true,
     status: State.TaskStates.Inprogress,
   });
-
+  console.log(beforeDispatch, timer.transactionId);
   if (beforeDispatch > 0) {
     delayTimer({
       scheduledAt: timer.completedAt,
@@ -53,20 +53,20 @@ export const executor = async () => {
   try {
     const timers: Timer.AllTimerType[] = await poll(consumerTimerClient, 100);
     if (timers.length) {
-      await Promise.all(
-        timers.map((timer: Timer.AllTimerType) => {
-          switch (timer.type) {
-            case Timer.TimerTypes.delayTask:
-              return handleDelayTimer(timer);
-            case Timer.TimerTypes.scheduleTask:
-              return handleScheduleTimer(timer);
-            // Not support cron workflow yet
-            case Timer.TimerTypes.cronWorkflow:
-            default:
-              return Promise.resolve();
-          }
-        }),
-      );
+      for (const timer of timers) {
+        switch (timer.type) {
+          case Timer.TimerTypes.delayTask:
+            handleDelayTimer(timer);
+            break;
+          case Timer.TimerTypes.scheduleTask:
+            handleScheduleTimer(timer);
+            break;
+          // Not support cron workflow yet
+          case Timer.TimerTypes.cronWorkflow:
+          default:
+            break;
+        }
+      }
     }
     consumerTimerClient.commit();
   } catch (error) {
