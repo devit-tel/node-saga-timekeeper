@@ -8,6 +8,7 @@ export enum TimerInstanceTypes {
   Delay = 'DELAY',
   Timeout = 'TIMEOUT',
   AckTimeout = 'ACK_TIMEOUT',
+  Complete = 'COMPLETE',
 }
 
 interface IBaseTimer {
@@ -31,10 +32,17 @@ export interface ITimerTimeoutEvent extends IBaseTimer {
   type: TimerInstanceTypes.Timeout;
 }
 
+export interface ITimerCompleteEvent extends IBaseTimer {
+  taskId: string;
+  transactionId: string;
+  type: TimerInstanceTypes.Complete;
+}
+
 export type AllTimerEvents =
   | ITimerDelayEvent
   | ITimerAcktimeoutEvent
-  | ITimerTimeoutEvent;
+  | ITimerTimeoutEvent
+  | ITimerCompleteEvent;
 
 export const adminClient = AdminClient.create(config.kafkaAdminConfig);
 
@@ -189,6 +197,18 @@ const findFitDelay = (timeBeforeSchedule: number) => {
   }
 };
 
+const getEventTransactionId = (timerEvent: AllTimerEvents): string => {
+  switch (timerEvent.type) {
+    case TimerInstanceTypes.Delay:
+      return timerEvent.task.transactionId;
+    case TimerInstanceTypes.AckTimeout:
+    case TimerInstanceTypes.Timeout:
+    case TimerInstanceTypes.Complete:
+    default:
+      return timerEvent.transactionId;
+  }
+};
+
 export const delayTimer = (timerEvent: AllTimerEvents) =>
   producerClient.produce(
     `${config.kafkaTopicName.timer}-${findFitDelay(
@@ -196,9 +216,7 @@ export const delayTimer = (timerEvent: AllTimerEvents) =>
     )}`,
     null,
     Buffer.from(JSON.stringify(timerEvent)),
-    timerEvent.type === TimerInstanceTypes.Delay
-      ? timerEvent.task.transactionId
-      : timerEvent.transactionId,
+    getEventTransactionId(timerEvent),
     Date.now(),
   );
 

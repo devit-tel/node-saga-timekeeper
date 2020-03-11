@@ -5,6 +5,7 @@ import {
   consumerDelaysClients,
   delayTimer,
   ITimerAcktimeoutEvent,
+  ITimerCompleteEvent,
   ITimerDelayEvent,
   ITimerTimeoutEvent,
   poll,
@@ -14,7 +15,7 @@ import {
 } from './kafka';
 import { sleep } from './utils/common';
 
-const handleAckTimeoutTask = async (timer: ITimerAcktimeoutEvent) => {
+const handleAckTimeoutTask = (timer: ITimerAcktimeoutEvent) => {
   updateTask({
     taskId: timer.taskId,
     transactionId: timer.transactionId,
@@ -23,7 +24,7 @@ const handleAckTimeoutTask = async (timer: ITimerAcktimeoutEvent) => {
   });
 };
 
-const handleTimeoutTask = async (timer: ITimerTimeoutEvent) => {
+const handleTimeoutTask = (timer: ITimerTimeoutEvent) => {
   updateTask({
     taskId: timer.taskId,
     transactionId: timer.transactionId,
@@ -32,23 +33,36 @@ const handleTimeoutTask = async (timer: ITimerTimeoutEvent) => {
   });
 };
 
-const handleDelayTask = async (timer: ITimerDelayEvent) => {
+const handleDelayTask = (timer: ITimerDelayEvent) => {
   reloadTask(timer.task);
 };
 
-const handleDelayTimers = async (timerEvents: AllTimerEvents[]) => {
+const handleCompleteTask = (timer: ITimerCompleteEvent) => {
+  updateTask({
+    taskId: timer.taskId,
+    transactionId: timer.transactionId,
+    status: State.TaskStates.Completed,
+    isSystem: true,
+  });
+};
+
+const handleDelayTimers = (timerEvents: AllTimerEvents[]) => {
   for (const timerEvent of timerEvents) {
     const timeBeforeSchedule = timerEvent.scheduledAt - Date.now();
-    if (timeBeforeSchedule < 0) {
+
+    if (timeBeforeSchedule <= 0) {
       switch (timerEvent.type) {
         case TimerInstanceTypes.AckTimeout:
-          await handleAckTimeoutTask(timerEvent);
+          handleAckTimeoutTask(timerEvent);
           break;
         case TimerInstanceTypes.Timeout:
           handleTimeoutTask(timerEvent);
           break;
         case TimerInstanceTypes.Delay:
           handleDelayTask(timerEvent);
+          break;
+        case TimerInstanceTypes.Complete:
+          handleCompleteTask(timerEvent);
           break;
       }
     } else {
@@ -63,11 +77,10 @@ const executor = async (delayNumber: number) => {
   try {
     const timerEvents: AllTimerEvents[] = await poll(delayConsumer, 100);
     if (timerEvents.length) {
-      await handleDelayTimers(timerEvents);
+      handleDelayTimers(timerEvents);
       delayConsumer.commit();
     }
   } catch (error) {
-    console.log(error, config.DELAY_TOPIC_STATES[delayNumber]);
     await sleep(1000);
   } finally {
     const timeUsed = Date.now() - startTime;
