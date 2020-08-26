@@ -50,29 +50,29 @@ const handleScheduleTimer = (timer: Timer.IScheduleTaskTimer) => {
 };
 
 export const executor = async () => {
-  try {
-    const timers: Timer.AllTimerType[] = await poll(consumerTimerClient, 100);
-    if (timers.length) {
-      for (const timer of timers) {
-        switch (timer.type) {
-          case Timer.TimerTypes.delayTask:
-            handleDelayTimer(timer);
-            break;
-          case Timer.TimerTypes.scheduleTask:
-            handleScheduleTimer(timer);
-            break;
-          // Not support cron workflow yet
-          case Timer.TimerTypes.cronWorkflow:
-          default:
-            break;
+  while (true) {
+    try {
+      const timers: Timer.AllTimerType[] = await poll(consumerTimerClient, 100);
+      if (timers.length) {
+        for (const timer of timers) {
+          switch (timer.type) {
+            case Timer.TimerTypes.delayTask:
+              handleDelayTimer(timer);
+              break;
+            case Timer.TimerTypes.scheduleTask:
+              handleScheduleTimer(timer);
+              break;
+            // Not support cron workflow yet
+            case Timer.TimerTypes.cronWorkflow:
+            default:
+              break;
+          }
         }
       }
+      consumerTimerClient.commit();
+    } catch (error) {
+      console.warn(error);
+      await sleep(1000);
     }
-    consumerTimerClient.commit();
-  } catch (error) {
-    console.warn(error);
-    await sleep(1000);
-  } finally {
-    setImmediate(executor);
   }
 };
