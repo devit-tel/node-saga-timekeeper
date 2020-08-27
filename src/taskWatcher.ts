@@ -55,23 +55,23 @@ const handleScheduleTask = (tasks: Task.ITask[]) => {
 };
 
 export const executor = async () => {
-  try {
-    const tasks: Task.ITask[] = await poll(consumerTasksClient, 100);
+  while (true) {
+    try {
+      const tasks: Task.ITask[] = await poll(consumerTasksClient, 100);
 
-    handleScheduleTask(
-      tasks.filter((task: Task.ITask) => {
-        return (
-          task.type === Task.TaskTypes.Task &&
-          (task.ackTimeout > 0 || task.timeout > 0)
-        );
-      }),
-    );
+      handleScheduleTask(
+        tasks.filter((task: Task.ITask) => {
+          return (
+            task.type === Task.TaskTypes.Task &&
+            (task.ackTimeout > 0 || task.timeout > 0)
+          );
+        }),
+      );
 
-    consumerTasksClient.commit();
-  } catch (error) {
-    console.warn(error);
-    await sleep(1000);
-  } finally {
-    setImmediate(executor);
+      consumerTasksClient.commit();
+    } catch (error) {
+      console.warn(error);
+      await sleep(1000);
+    }
   }
 };
