@@ -88,7 +88,9 @@ const executor = async (delayNumber: number) => {
         );
 
         console.log(
-          `Next poll (${delayConsumer}) => ${new Date(Date.now() + waitTime)}`,
+          `Next poll (${config.DELAY_TOPIC_STATES[delayNumber]}) => ${new Date(
+            Date.now() + waitTime,
+          )}`,
         );
         await sleep(waitTime);
       } else {
