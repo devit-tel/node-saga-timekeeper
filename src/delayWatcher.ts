@@ -15,7 +15,7 @@ import {
 } from './kafka';
 import { sleep } from './utils/common';
 
-const MAX_TIMER_POLL = 300;
+const MAX_TIMER_POLL = 100;
 
 const handleAckTimeoutTask = (timer: ITimerAcktimeoutEvent) => {
   updateTask({
