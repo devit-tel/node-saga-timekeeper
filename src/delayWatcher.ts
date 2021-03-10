@@ -72,24 +72,27 @@ const handleDelayTimers = (timerEvents: AllTimerEvents[]) => {
 };
 
 const executor = async (delayNumber: number) => {
-  const startTime = Date.now();
-  const delayConsumer = consumerDelaysClients[delayNumber];
-  try {
-    const timerEvents: AllTimerEvents[] = await poll(delayConsumer, 100);
-    if (timerEvents.length) {
-      handleDelayTimers(timerEvents);
-      delayConsumer.commit();
-    }
-  } catch (error) {
-    await sleep(1000);
-  } finally {
-    const timeUsed = Date.now() - startTime;
-    const waitTime = Math.max(
-      config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
-      0,
-    );
+  while (true) {
+    const startTime = Date.now();
+    const delayConsumer = consumerDelaysClients[delayNumber];
+    try {
+      const timerEvents: AllTimerEvents[] = await poll(delayConsumer, 10000);
+      if (timerEvents.length) {
+        handleDelayTimers(timerEvents);
+        delayConsumer.commit();
+      }
 
-    setTimeout(() => executor(delayNumber), waitTime);
+      const timeUsed = Date.now() - startTime;
+      const waitTime = Math.max(
+        config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
+        0,
+      );
+
+      await sleep(waitTime);
+    } catch (error) {
+      console.log('delayWatcher error', error);
+      await sleep(1000);
+    }
   }
 };
 

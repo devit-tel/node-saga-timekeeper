@@ -31,7 +31,7 @@ const handleScheduleTimer = (timer: Timer.IScheduleTaskTimer) => {
     isSystem: true,
     status: State.TaskStates.Inprogress,
   });
-  console.log(beforeDispatch, timer.transactionId);
+  console.log(beforeDispatch, timer.transactionId, timer.taskId);
   if (beforeDispatch > 0) {
     delayTimer({
       scheduledAt: timer.completedAt,
