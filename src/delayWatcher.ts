@@ -15,6 +15,8 @@ import {
 } from './kafka';
 import { sleep } from './utils/common';
 
+const MAX_TIMER_POLL = 300;
+
 const handleAckTimeoutTask = (timer: ITimerAcktimeoutEvent) => {
   updateTask({
     taskId: timer.taskId,
@@ -76,25 +78,36 @@ const executor = async (delayNumber: number) => {
     const startTime = Date.now();
     const delayConsumer = consumerDelaysClients[delayNumber];
     try {
-      const timerEvents: AllTimerEvents[] = await poll(delayConsumer, 10000);
+      const timerEvents: AllTimerEvents[] = await poll(
+        delayConsumer,
+        MAX_TIMER_POLL,
+      );
+
       if (timerEvents.length) {
         handleDelayTimers(timerEvents);
         delayConsumer.commit();
+      }
 
+      if (timerEvents.length === MAX_TIMER_POLL) {
+        // Drain now full queue
+        console.log(
+          `Full queue poll now (${config.DELAY_TOPIC_STATES[delayNumber]})`,
+        );
+        await sleep(1000);
+      } else if (timerEvents.length === 0) {
+        await sleep(1000);
+      } else {
         const timeUsed = Date.now() - startTime;
         const waitTime = Math.max(
           config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
           0,
         );
-
         console.log(
           `Next poll (${config.DELAY_TOPIC_STATES[delayNumber]}) => ${new Date(
             Date.now() + waitTime,
           )}`,
         );
         await sleep(waitTime);
-      } else {
-        await sleep(1000);
       }
     } catch (error) {
       console.log('delayWatcher error', error);
