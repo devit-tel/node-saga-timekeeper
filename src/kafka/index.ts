@@ -140,7 +140,7 @@ producerClient.on('ready', () => {
 });
 
 export const createTopic = (
-  tipicName: string,
+  topicName: string,
   numPartitions: number,
   replicationFactor: number,
   config?: any,
@@ -148,7 +148,7 @@ export const createTopic = (
   new Promise((resolve: Function, reject: Function) => {
     adminClient.createTopic(
       {
-        topic: tipicName,
+        topic: topicName,
         num_partitions: numPartitions,
         replication_factor: replicationFactor,
         config: {
@@ -209,7 +209,7 @@ const getEventTransactionId = (timerEvent: AllTimerEvents): string => {
   }
 };
 
-export const delayTimer = (timerEvent: AllTimerEvents) =>
+export const delayTimer = (timerEvent: AllTimerEvents) => {
   producerClient.produce(
     `${config.kafkaTopicName.timer}-${findFitDelay(
       timerEvent.scheduledAt - Date.now(),
@@ -220,7 +220,23 @@ export const delayTimer = (timerEvent: AllTimerEvents) =>
     Date.now(),
   );
 
-export const updateTask = (taskUpdate: Event.ITaskUpdate) =>
+  switch (timerEvent.type) {
+    case TimerInstanceTypes.Complete:
+    case TimerInstanceTypes.AckTimeout:
+    case TimerInstanceTypes.Timeout:
+      console.log(
+        `Set next schedule of "${timerEvent.taskId}" (${
+          timerEvent.type
+        }) to ${timerEvent.scheduledAt - Date.now()}ms`,
+      );
+      break;
+
+    default:
+      break;
+  }
+};
+
+export const updateTask = (taskUpdate: Event.ITaskUpdate) => {
   producerClient.produce(
     config.kafkaTopicName.event,
     null,
@@ -229,7 +245,10 @@ export const updateTask = (taskUpdate: Event.ITaskUpdate) =>
     Date.now(),
   );
 
-export const reloadTask = (task: Task.ITask) =>
+  console.log(`Update "${taskUpdate.taskId}" to ${taskUpdate.status}`);
+};
+
+export const reloadTask = (task: Task.ITask) => {
   producerClient.produce(
     config.kafkaTopicName.command,
     null,
@@ -243,3 +262,5 @@ export const reloadTask = (task: Task.ITask) =>
     task.transactionId,
     Date.now(),
   );
+  console.log(`Restart "${task.taskId}"`);
+};
