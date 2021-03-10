@@ -80,15 +80,20 @@ const executor = async (delayNumber: number) => {
       if (timerEvents.length) {
         handleDelayTimers(timerEvents);
         delayConsumer.commit();
+
+        const timeUsed = Date.now() - startTime;
+        const waitTime = Math.max(
+          config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
+          0,
+        );
+
+        console.log(
+          `Next poll (${delayConsumer}) => ${new Date(Date.now() + waitTime)}`,
+        );
+        await sleep(waitTime);
+      } else {
+        await sleep(1000);
       }
-
-      const timeUsed = Date.now() - startTime;
-      const waitTime = Math.max(
-        config.DELAY_TOPIC_STATES[delayNumber] - timeUsed,
-        0,
-      );
-
-      await sleep(waitTime);
     } catch (error) {
       console.log('delayWatcher error', error);
       await sleep(1000);
